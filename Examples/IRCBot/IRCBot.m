@@ -21,6 +21,10 @@
 #import <Foundation/NSData.h>
 #import <Foundation/NSValue.h>
 
+#include <string.h>
+#include <stdio.h>
+#include <unistd.h>
+
 static inline NSData *chomp_line(NSMutableData *data)
 {
 	char *memory = [data mutableBytes];
