@@ -18,13 +18,38 @@
 #import <netclasses/NetTCP.h>
 #import <netclasses/NetBase.h>
 
+#import <Foundation/Foundation.h>
+
 int main(void)
 {
+	NSString *string1;
+	NSHost *host;
+	NSAutoreleasePool *apr;
+	TCPSystem *system;
+	uint32_t num;
+	
 	char buffer[199];
-	
-	printf("Please enter an ip address: ");
+
+	apr = [NSAutoreleasePool new];
+
+	system = [TCPSystem sharedInstance];
+
+	printf("Please enter a host: ");
 	scanf("%200[^\n]%*c", buffer);
-
 	
+	string1 = [NSString stringWithCString: buffer];
+	host = [NSHost hostWithName: string1];
+	
+	printf("Host: %s\n", [[host name] cString]);
+	printf("Address: %s\n", [[host address] cString]);
+	num = 0;
+	[system hostOrderInteger: &num fromHost: host];
+	printf("Host order integer: %Xl\n", num);
+	num = 0;
+	[system networkOrderInteger: &num fromHost: host];
+	printf("Network order integer: %Xl\n", num);
 
+	RELEASE(apr);
+	
+	return 0;
 }
