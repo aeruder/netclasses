@@ -1934,11 +1934,11 @@ static void rec_error(IRCObject *client, NSString *command, NSString *prefix,
 	}
 	if ([aReason length] == 0)
 	{
-		[self writeString: @"KICK %@ %@", aPerson, aChannel];
+		[self writeString: @"KICK %@ %@", aChannel, aPerson];
 		return self;
 	}
 
-	[self writeString: @"KICK %@ %@ :%@", aPerson, aChannel, aReason];
+	[self writeString: @"KICK %@ %@ :%@", aChannel, aPerson, aReason];
 	return self;
 }
 /**
