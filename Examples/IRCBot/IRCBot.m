@@ -75,17 +75,24 @@ static inline NSData *chomp_line(NSMutableData *data)
 	  withPassword: nil];
 	return self;
 }
-- versionRequestReceived: (NSString *)query from: (NSString *)aPerson
+- CTCPRequestReceived: (NSString *)aCTCP withArgument: (NSString *)argument
+    from: (NSString *)aPerson
 {
-	[self sendVersionReplyTo: ExtractIRCNick(aPerson) name: @"netclasses"
-	 version: @"0.98"  environment: @"GNUstep"];
+	aCTCP = [aCTCP uppercaseIRCString];
+
+	if ([aCTCP compare: @"PING"] == NSOrderedSame)
+	{
+		[self sendCTCPReply: @"PING" withArgument: argument
+		  to: ExtractIRCNick(aPerson)];
+	}
+	if ([aCTCP compare: @"VERSION"] == NSOrderedSame)
+	{
+		[self sendCTCPReply: @"VERSION" withArgument: @"netclasses:0.992:GNUstep"
+		  to: ExtractIRCNick(aPerson)];
+	}
+
 	return self;
-}
-- pingRequestReceived: (NSString *)argument from: (NSString *)aPerson
-{
-	[self sendPingReplyTo: ExtractIRCNick(aPerson) withArgument: argument];
-	return self;
-}
+}		
 - messageReceived: (NSString *)aMessage to: (NSString *)to
                from: (NSString *)whom
 {
