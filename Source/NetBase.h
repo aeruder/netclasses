@@ -37,7 +37,7 @@
  * means of transporting data to the other side of the connection through
  * methods such as -readData: and -writeData:.
  */
-@protocol NetTransport
+@protocol NetTransport <NSObject>
 /**
  * Returns an object representing the local side of a connection.  The actual
  * object depends on the implementation of this protocol.
@@ -87,7 +87,7 @@
  * to be attached to it, and it will instantiate an object of that type
  * upon receiving a new connection.
  */
-@protocol NetPort
+@protocol NetPort <NSObject>
 /**
  * Sets the class of the object that should be attached to the port.  This
  * class should implement the [(NetObject)] protocol.
@@ -102,7 +102,7 @@
  * The port should should use this new connection to instantiate a object
  * of the class set by -setNetObject:.
  */
-- (id <NetObject>)newConnection;
+- newConnection;
 /**
  * Returns the low-level file descriptor.
  */
@@ -118,7 +118,7 @@
  * When a connection is received by a [(NetPort)], the object attached to
  * the port is created and given the transport.
  */
-@protocol NetObject
+@protocol NetObject <NSObject>
 /**
  * Called when [NetApplication-disconnectObject:] is called with this
  * object as a argument.  This object will no longer receive data or other

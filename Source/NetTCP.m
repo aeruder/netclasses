@@ -767,7 +767,7 @@ static TCPSystem *default_system = nil;
  * Called when a new connection occurs.  Will initialize a new object
  * of the class set with -setNetObject: with the new connection.
  */
-- (id <NetObject>)newConnection
+- newConnection
 {
 	int newDesc;
 	struct sockaddr_in sin;
