@@ -27,9 +27,9 @@ int main(int argc, char **argv, char **env)
 	TCPPort *x;
 	CREATE_AUTORELEASE_POOL(arp);
 
-	x = AUTORELEASE([[[TCPPort alloc] initOnPort: 6666] 
+	x = AUTORELEASE([[[TCPPort alloc] initOnPort: 0] 
 	                setNetObject: [EchoServ class]]);
-	NSLog(@"Ready to go on port 6666");
+	NSLog(@"Ready to go on port %d", [x port]);
 
 	if (!x)
 	{

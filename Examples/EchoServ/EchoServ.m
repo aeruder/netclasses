@@ -28,7 +28,7 @@
 }
 - connectionEstablished: aTransport
 {
-    NSString *greetingString = [NSString stringWithFormat: @"Welcome to EchoServ v0.0.001, %@\r\n", [(NSHost *)[aTransport address] name]];
+    NSString *greetingString = [NSString stringWithFormat: @"Welcome to EchoServ v0.0.001, %@\r\n", [(NSHost *)[aTransport remoteHost] name]];
 	NSData *greetingData = [NSData
 	       dataWithBytes: [greetingString cString]
 	              length: [greetingString cStringLength]];
