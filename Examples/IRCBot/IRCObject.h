@@ -16,6 +16,7 @@
  ***************************************************************************/
 
 #import "LineObject.h"
+#import "NetTCP.h"
 #import <Foundation/NSObject.h>
 
 extern NSString *IRCException;
@@ -211,6 +212,86 @@ NSArray *SeparateIRCNickAndHost(NSString *prefix);
 - lineReceived: (NSData *)aLine;
 
 - writeString: (NSString *)format, ...;
+@end
+
+/* The DCC support's ideas(and much of the code) came mostly from
+ * Juan Pablo Mendoza <jpablo@gnome.org>
+ */
+
+@interface IRCObject (DCCSupport)
+- DCCSendRequestReceived: (NSDictionary *)fileInfo from: (NSString *)sender;
+- DCCInitiated: aConnection;
+- DCCStatusChanged: (NSString *)aStatus forObject: aConnection;
+- DCCReceivedData: (NSData *)data forObject: aConnection;
+- DCCDone: aConnection;
+- DCCNeedsMoreData: aConnection;
+- sendDCCSendRequest: (NSDictionary *)info to: (NSString *)person;
+@end
+
+extern NSString *DCCStatusTransferring;
+extern NSString *DCCStatusError;
+extern NSString *DCCStatusTimeout;
+extern NSString *DCCStatusDone;
+extern NSString *DCCStatusConnecting;
+extern NSString *DCCStatusAborted;
+
+extern NSString *DCCInfoFileName; //NSString
+extern NSString *DCCInfoFileSize; //NSNumber 
+extern NSString *DCCInfoPort;     //NSNumber
+extern NSString *DCCInfoHost;     //NSString
+
+@interface DCCObject : NSObject < NetObject >
+	{
+		int transferredBytes;
+		IRCObject *delegate;
+		NSString *status;
+		NSDictionary *info;
+		NSDictionary *userInfo;
+		id transport;
+	}
+- initWithDelegate: (IRCObject *)aDelegate withInfo: (NSDictionary *)info
+   withUserInfo: (NSDictionary *)userInfo;
+
+- (int)transferredBytes;
+- (void)abortConnection;
+
+- (void)connectionLost;
+- connectionEstablished: aTransport;
+- dataReceived: (NSData *)data;
+- transport;
+
+- (NSString *)status;
+- (NSDictionary *)info;
+- (NSDictionary *)userInfo;
+@end
+
+@interface DCCReceiveObject : DCCObject
+	{
+		id connection;
+	}
+- initWithReceiveOfFile: (NSDictionary *)info 
+    withDelegate: (IRCObject *)aDelegate
+	withTimeout: (int)seconds
+	withUserInfo: (NSDictionary *)userInfo;
+@end
+
+@interface DCCSendObject : DCCObject
+	{
+		TCPPort *port;
+		NSTimer *timeout;
+		int blockSize;
+		int confirmedBytes;
+		NSMutableData *receivedData;
+		NSMutableData *dataToWrite;
+		BOOL noMoreData;
+	}
+- initWithSendOfFile: (NSString *)name
+    withSize: (NSNumber *)size
+    withDelegate: (IRCObject *)aDelegate
+    withTimeout: (int)seconds
+    withBlockSize: (int)numBytes
+	withUserInfo: (NSDictionary *)userInfo;
+- writeData: (NSData *)someData;
 @end
 
 /* Below is all the numeric commands that you can receive as listed

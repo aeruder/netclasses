@@ -189,12 +189,12 @@ NetApplication *netApplication;
 	
 	NSMapRemove(descTable, desc);
 
-	[anObject connectionLost];
-	
 	RETAIN(anObject);
 	[whichOne removeObject: anObject];
 	AUTORELEASE(anObject);
 		
+	[anObject connectionLost];
+	
 	return self;
 }
 - closeEverything

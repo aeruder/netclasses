@@ -59,14 +59,14 @@ static inline NSData *chomp_line(NSMutableData *data)
 {
 	[transport close];
 	DESTROY(transport);
-	RELEASE(data);
+	RELEASE(_readData);
 }
 - connectionEstablished: aTransport
 {
 	transport = RETAIN(aTransport);
 	[[NetApplication sharedInstance] connectObject: self];
 	
-	data = [NSMutableData new];
+	_readData = [NSMutableData new];
 
 	return self;
 }
@@ -74,9 +74,9 @@ static inline NSData *chomp_line(NSMutableData *data)
 {
 	id newLine;
 	
-	[data appendData: newData];
+	[_readData appendData: newData];
 	
-	while ((newLine = chomp_line(data))) [self lineReceived: newLine];
+	while ((newLine = chomp_line(_readData))) [self lineReceived: newLine];
 	
 	return self;
 }

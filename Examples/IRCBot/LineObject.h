@@ -30,7 +30,7 @@
 @interface LineObject : NSObject < NetObject >
 	{
 		id transport;
-		NSMutableData *data;
+		NSMutableData *_readData;
 	}
 - (void)connectionLost;
 - connectionEstablished: aTransport;

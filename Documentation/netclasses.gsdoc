@@ -288,8 +288,8 @@
 				<desc>
 					This method will add another object for the NetApplication to poll for
 					events.  <em>anObject</em> must conform to either NetPort or NetObject.
-					NetPorts may be added through this method; however, NetObjects should
-					call this method themselves in the 
+					NetPorts should call this method themselves upon initialization, and 
+					NetObjects should call this method themselves in the 
 					<ref id="connectionEstablished:">connectionEstablished:</ref> method.
 				</desc>
 			</method>

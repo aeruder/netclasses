@@ -18,7 +18,10 @@
 #import "NetBase.h"
 #import <Foundation/NSObject.h>
 
+#include <netinet/in.h>
+
 @class NSString, NSNumber, NSString, NSData, NSMutableData, TCPConnecting;
+@class TCPTransport, TCPSystem;
 
 @interface TCPSystem : NSObject
 	{
@@ -41,10 +44,14 @@
 
 - (NSString *)hostFromIp: (NSString *)ip;
 - (NSString *)ipFromHost: (NSString *)host;
+- (NSString *)ipFromInt: (unsigned long int)ip;
+
+- (NSString *)localIpForTransport: (TCPTransport *)aTransport;
 @end
 
 @protocol TCPConnecting
 - connectingFailed: (NSString *)error;
+- connectingStarted: (TCPConnecting *)aConnection;
 @end
 
 @interface TCPConnecting : NSObject < NetObject >
@@ -66,6 +73,7 @@
     {
 		int desc;
 		Class netObjectClass;
+		struct sockaddr_in socketInfo;
 	}
 - initOnHost: (NSString *)aHost onPort: (int)aPort;
 - initOnPort: (int)aPort;
@@ -73,6 +81,7 @@
 - (int)desc;
 - (void)connectionLost;
 - newConnection;
+- (struct sockaddr_in *)socketInfo;
 @end
 
 @interface TCPTransport : NSObject < NetTransport >

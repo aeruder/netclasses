@@ -34,8 +34,6 @@ int main(int argc, char **argv, char **env)
 		return 0;
 	}
 	
-	[[NetApplication sharedInstance] connectObject: x];
-	
 	[[NSRunLoop currentRunLoop] run];
 		
 	RELEASE(arp);

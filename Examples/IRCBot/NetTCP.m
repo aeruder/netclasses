@@ -23,7 +23,6 @@
 #include <sys/types.h>
 #include <netdb.h>
 #include <fcntl.h>
-#include <netinet/in.h>
 
 #import "NetTCP.h"
 #import <Foundation/NSString.h>
@@ -78,6 +77,7 @@ static TCPSystem *default_system = nil;
 
 	writeBuffer = [NSMutableData new];
 	address = RETAIN(theAddress);
+		
 	owner = anObject;
 	connected = YES;
 	
@@ -231,7 +231,10 @@ static TCPSystem *default_system = nil;
 {
 	transport = RETAIN(aTransport);	
 	[[NetApplication sharedInstance] connectObject: self];
-
+	if ([netObject conformsTo: @protocol(TCPConnecting)])
+	{
+		[netObject connectingStarted: self];
+	}
 	return self;
 }
 - dataReceived: (NSData *)data
@@ -247,6 +250,8 @@ static TCPSystem *default_system = nil;
 @interface TCPSystem (InternalTCPSystem)
 - (int)openPort: (int)portNumber;
 - (int)openPort: (int)portNumber onHost: (NSString *)aHost;
+- (int)openPort: (int)portNumber onHost: (NSString *)aHost
+    withInfo: (struct sockaddr_in *)info;
 
 - (int)connectToIp: (NSString *)ip onPort: (int)portNumber 
        withTimeout: (int)timeout;
@@ -292,15 +297,20 @@ static const char *my_hstrerror(int aError)
 @implementation TCPSystem (InternalTCPSystem)
 - (int)openPort: (int)portNumber
 {
-	return [self openPort: portNumber onHost: nil];
+	return [self openPort: portNumber onHost: nil withInfo: 0];
 }
 - (int)openPort: (int)portNumber onHost: (NSString *)aHost
+{
+	return [self openPort: portNumber onHost: aHost withInfo: 0];
+}
+- (int)openPort: (int)portNumber onHost: (NSString *)aHost
+    withInfo: (struct sockaddr_in *)info
 {
 	struct sockaddr_in sin;
 	int temp;
 	int myDesc;
 	
-	if (portNumber <= 1024)
+	if (portNumber < 0)
 	{
 		[self setErrorString: 
 		 [NSString stringWithFormat: 
@@ -330,6 +340,7 @@ static const char *my_hstrerror(int aError)
 	}
 	
 	sin.sin_port = htons(portNumber);
+	sin.sin_family = AF_INET;
 	
 	if ((myDesc = socket(AF_INET, SOCK_STREAM, 0)) == -1)
 	{
@@ -338,7 +349,7 @@ static const char *my_hstrerror(int aError)
 		 portNumber, aHost, strerror(errno)]];
 		return -1;
 	}
-	if (bind(myDesc, (struct sockaddr *) &sin, sizeof(struct sockaddr)) == -1)
+	if (bind(myDesc, (struct sockaddr *) &sin, sizeof(struct sockaddr)) < 0)
 	{
 		close(myDesc);
 		[self setErrorString: [NSString stringWithFormat:
@@ -374,6 +385,14 @@ static const char *my_hstrerror(int aError)
 		 portNumber, aHost, strerror(errno)]];
 		return -1;
 	}
+	
+	if (info)
+	{
+		socklen_t len = sizeof(struct sockaddr_in);
+		memcpy(info, &sin, sizeof(struct sockaddr_in));
+		getsockname(myDesc, (struct sockaddr *)info, &len);
+	}
+
 	return myDesc;
 }
 - (int)connectToIp: (NSString *)ip onPort: (int)portNumber 
@@ -719,7 +738,6 @@ static const char *my_hstrerror(int aError)
 - (NSString *)ipFromHost: (NSString *)aHost
 {
 	struct hostent *host;
-	char *temp;
 	
 	if (!aHost)
 	{
@@ -735,15 +753,43 @@ static const char *my_hstrerror(int aError)
 			return nil;
 		
 	}
-	temp = inet_ntoa(*((struct in_addr *)host->h_addr));
-	if (!temp)
+	
+	return [NSString stringWithCString: 
+	  inet_ntoa(*((struct in_addr *)host->h_addr))];
+}
+- (NSString *)ipFromInt: (unsigned long int)ip
+{
+	struct in_addr addr;
+	char *temp;
+	
+	addr.s_addr = ip;
+
+	temp = inet_ntoa(addr);
+	if (temp)
+	{
+		return [NSString stringWithCString: temp];
+	}
+
+	return nil;
+}
+- (NSString *)localIpForTransport: (TCPTransport *)aTransport
+{
+	struct sockaddr_in x;
+	socklen_t address_length = sizeof(x);
+	
+	if (
+	 getsockname([aTransport desc], (struct sockaddr *)&x, &address_length) 
+	  != 0)
 	{
 		[self setErrorString: [NSString stringWithFormat: 
-		 @"[TCPSystem ipFromHost: %@] inet_ntoa() failed",
-		 aHost]];
+		 @"[TCPSystem localIpForTransport: %@] getsockname() failed: %s",
+		  [aTransport address], strerror(errno)]];
+		return nil;
 	}
-	return [NSString stringWithCString: temp];
+
+	return [NSString stringWithCString: inet_ntoa(x.sin_addr)];
 }
+	
 @end
 
 
@@ -752,7 +798,8 @@ static const char *my_hstrerror(int aError)
 {
 	if (!(self = [super init])) return nil;
 	
-	desc = [[TCPSystem sharedInstance] openPort: aPort onHost: aHost];
+	desc = [[TCPSystem sharedInstance] openPort: aPort onHost: aHost
+	  withInfo: &socketInfo];
 
 	if (desc < 0)
 	{
@@ -760,6 +807,7 @@ static const char *my_hstrerror(int aError)
 		return nil;
 	}
 
+	[[NetApplication sharedInstance] connectObject: self];
 	return self;
 }
 - initOnPort: (int)aPort
@@ -826,6 +874,11 @@ static const char *my_hstrerror(int aError)
 	
 	return self;
 }
+- (struct sockaddr_in *)socketInfo
+{
+	return &socketInfo;
+}
+@end
 
 static NetApplication *net_app = nil; 
 

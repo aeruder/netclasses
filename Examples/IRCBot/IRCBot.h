@@ -21,8 +21,7 @@
 
 @interface IRCBot : IRCObject
 	{
+		id dcc;
+		NSMutableData *fileData;
 	}
-- registeredWithServer;
-- messageReceived: (NSString *)aMessage to: (NSString *)to
-               from: (NSString *)whom;
 @end
