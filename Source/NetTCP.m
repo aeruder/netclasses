@@ -44,7 +44,7 @@
 #include <arpa/inet.h>
 #include <sys/time.h>
 
-#ifdef __APPLE__
+#ifndef GNUSTEP 
 #ifndef socklen_t
 typedef int socklen_t;
 #endif

@@ -152,7 +152,7 @@ extern NSString *NetException;
  */
 extern NSString *FatalNetException;
 
-#ifdef __APPLE__
+#ifndef GNUSTEP
 /**
  * Used for OS X compatibility.  This type is an extension to GNUstep.  On
  * OS X, a compatibility layer is created to recreate the GNUstep extensions

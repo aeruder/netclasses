@@ -43,7 +43,7 @@ NSString *FatalNetException = @"FatalNetException";
 
 NetApplication *netApplication;
 
-#ifdef __APPLE__
+#ifndef GNUSTEP
 #include <CoreFoundation/CoreFoundation.h>
 
 static NSMapTable *desc_to_info = 0;

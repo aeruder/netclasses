@@ -1,3 +1,6 @@
+2004-08-29 Andy Ruder <aeruder at ksu dot edu>
+ * Using GNUSTEP instead of __APPLE__ to determine if its cocoa or not
+
 2004-04-03 Andy Ruder <aeruder at ksu dot edu>
  * Got rid of the 2k per read limit imposed by the base system, speeds up
    local sends ~7 times.
