@@ -23,6 +23,15 @@
  * <version>Revision 1</version>
  * <date>November 8, 2003</date>
  * <copy>Andrew Ruder</copy>
+ * <p>
+ * Much of the information presented in this document is based off
+ * of information presented in RFC 1459 (Oikarinen and Reed 1999).
+ * This document is NOT aimed at reproducing the information in the RFC, 
+ * and the RFC should still always be consulted for various server-related
+ * replies to messages and proper format of the arguments.  In short, if you
+ * are doing a serious project dealing with IRC, even with the use of 
+ * netclasses, RFC 1459 is indispensable.
+ * </p>
  */
 
 #import "NetBase.h"
@@ -638,13 +647,8 @@ static void rec_error(IRCObject *client, NSString *command, NSString *prefix,
  * <p>
  * IRCObject handles all aspects of an IRC connection.  In almost all
  * cases, you will want to override this class and implement just the
- * callback methods to handle everything.
- * </p>
- * <p>
- * On any class ending with an argument like 'from: (NSString *)aString',
- * <var>aString</var> could be in the format of nickname!host.  Please see
- * the documentation for ExtractIRCNick(), ExtractIRCHost(), and 
- * SeparateIRCNickAndHost() for more information.
+ * callback methods specified in [IRCObject(Callbacks)] to handle 
+ * everything.
  * </p>
  * <p>
  * A lot of arguments may not contain spaces.  The general procedure on 
@@ -887,19 +891,40 @@ static void rec_error(IRCObject *client, NSString *command, NSString *prefix,
 	  @"netclasses", realName];
 	return self;
 }
+/** 
+ * Returns YES when the IRC object is fully connected and registered with
+ * the IRC server.  Returns NO if the connection has not made or this 
+ * connection has not fully registered with the server.
+ */
 - (BOOL)connected
 {
 	return connected;
 }
-- setEncoding: (NSStringEncoding)encoding
+/**
+ * Sets the encoding that will be used for incoming as well as outgoing
+ * messages.  <var>aEncoding</var> should be an 8-bit encoding for a typical
+ * IRC server.  Uses the system default by default.
+ */
+- setEncoding: (NSStringEncoding)aEncoding
 {
-	defaultEncoding = encoding;
+	defaultEncoding = aEncoding;
 	return self;
 }
+/**
+ * Returns the encoding currently being used by the connection.
+ */
 - (NSStringEncoding)encoding
 {
 	return defaultEncoding;
 }
+/**
+ * Sets the nickname to the <var>aNick</var>.  This method is quite similar
+ * to -setNick: but this will also actually send the nick change request to
+ * the server if connected, and will only affect the nickname stored by the 
+ * object (which is returned with -nick) if the the name change was successful
+ * or the object is not yet registered/connected.  Please see RFC 1459 for
+ * more information on the NICK command.
+ */
 - changeNick: (NSString *)aNick
 {
 	if ([aNick length] > 0)
@@ -914,11 +939,17 @@ static void rec_error(IRCObject *client, NSString *command, NSString *prefix,
 		{
 			[self setNick: aNick];
 		}
-					
+
 		[self writeString: @"NICK %@", aNick];
 	}
 	return self;
 }
+/** 
+ * Quits IRC with an optional message.  <var>aMessage</var> can have 
+ * spaces.  If <var>aMessage</var> is nil or zero-length, the server
+ * will often provide its own message.  Please see RFC 1459 for more
+ * information on the QUIT command.
+ */
 - quitWithMessage: (NSString *)aMessage
 {
 	if ([aMessage length] > 0)
@@ -931,48 +962,63 @@ static void rec_error(IRCObject *client, NSString *command, NSString *prefix,
 	}
 	return self;
 }
-- partChannel: (NSString *)channel withMessage: (NSString *)aMessage
+/**
+ * Leaves the channel <var>aChannel</var> with the optional message
+ * <var>aMessage</var>.  <var>aMessage</var> may contain spaces, and
+ * <var>aChannel</var> may not.  <var>aChannel</var> may also be a 
+ * comma separated list of channels.  Please see RFC 1459 for more 
+ * information on the PART command.
+ */
+- partChannel: (NSString *)aChannel withMessage: (NSString *)aMessage
 {
-	if ([channel length] == 0)
+	if ([aChannel length] == 0)
 	{
 		return self;
 	}
 	
-	if ([(channel = string_to_string(channel, @" ")) length] == 0)
+	if ([(aChannel = string_to_string(aChannel, @" ")) length] == 0)
 	{
 		[NSException raise: IRCException
 		 format: @"[IRCObject partChannel: '%@' ...] Unusable channel given",
-		  channel];
+		  aChannel];
 	}
 	
 	if ([aMessage length] > 0)
 	{
-		[self writeString: @"PART %@ :%@", channel, aMessage];
+		[self writeString: @"PART %@ :%@", aChannel, aMessage];
 	}
 	else
 	{
-		[self writeString: @"PART %@", channel];
+		[self writeString: @"PART %@", aChannel];
 	}
 	
 	return self;
 }
-- joinChannel: (NSString *)channel withPassword: (NSString *)aPassword
+/**
+ * Joins the channel <var>aChannel</var> with an optional password of
+ * <var>aPassword</var>.  Neither may contain spaces, and both may be
+ * comma separated for multiple channels/passwords.  If there is one
+ * or more passwords, it should match the number of channels specified
+ * by <var>aChannel</var>.  Please see RFC 1459 for more information on
+ * the JOIN command.
+ */
+- joinChannel: (NSString *)aChannel withPassword: (NSString *)aPassword
 {
-	if ([channel length] == 0)
+	if ([aChannel length] == 0)
 	{
 		return self;
 	}
 
-	if ([(channel = string_to_string(channel, @" ")) length] == 0)
+	if ([(aChannel = string_to_string(aChannel, @" ")) length] == 0)
 	{
 		[NSException raise: IRCException
 		 format: @"[IRCObject joinChannel: '%@' ...] Unusable channel",
-		  channel];
+		  aChannel];
 	}
 
 	if ([aPassword length] == 0)
 	{
-		[self writeString: @"JOIN %@", channel];
+		[self writeString: @"JOIN %@", aChannel];
 		return self;
 	}
 
@@ -983,10 +1029,17 @@ static void rec_error(IRCObject *client, NSString *command, NSString *prefix,
 		  aPassword];
 	}
 
-	[self writeString: @"JOIN %@ %@", channel, aPassword];
+	[self writeString: @"JOIN %@ %@", aChannel, aPassword];
 
 	return self;
 }
+/**
+ * Sends a CTCP <var>aCTCP</var> reply to <var>aPerson</var> with the 
+ * argument <var>args</var>.  <var>args</var> may contain spaces and is
+ * optional while the rest may not.  This method should be used to 
+ * respond to a CTCP message sent by another client. See
+ * -sendCTCPRequest:withArgument:to:
+ */
 - sendCTCPReply: (NSString *)aCTCP withArgument: (NSString *)args
    to: (NSString *)aPerson
 {
@@ -1015,6 +1068,13 @@ static void rec_error(IRCObject *client, NSString *command, NSString *prefix,
 		
 	return self;
 }
+/**
+ * Sends a CTCP <var>aCTCP</var> request to <var>aPerson</var> with an
+ * optional argument <var>args</var>.  <var>args</var> may contain a space
+ * while the rest may not.  This should be used to request CTCP information
+ * from another client and never for responding.  See 
+ * -sendCTCPReply:withArgument:to:
+ */
 - sendCTCPRequest: (NSString *)aCTCP withArgument: (NSString *)args
    to: (NSString *)aPerson
 {
@@ -1043,93 +1103,127 @@ static void rec_error(IRCObject *client, NSString *command, NSString *prefix,
 		
 	return self;
 }
-- sendMessage: (NSString *)message to: (NSString *)receiver
+/**
+ * Sends a message <var>aMessage</var> to <var>aReceiver</var>.
+ * <var>aReceiver</var> may be a nickname or a channel name.  
+ * <var>aMessage</var> may contain spaces.  This is used to carry 
+ * out the basic communication over IRC.  Please see RFC 1459 for more
+ * information on the PRIVMSG message.
+ */
+- sendMessage: (NSString *)aMessage to: (NSString *)aReceiver
 {
-	if ([message length] == 0)
+	if ([aMessage length] == 0)
 	{
 		return self;
 	}
-	if ([receiver length] == 0)
+	if ([aReceiver length] == 0)
 	{
 		return self;
 	}
-	if ([(receiver = string_to_string(receiver, @" ")) length] == 0)
+	if ([(aReceiver = string_to_string(aReceiver, @" ")) length] == 0)
 	{
 		[NSException raise: IRCException
 		 format: @"[IRCObject sendMessage: '%@' to: '%@'] Unusable receiver",
-		  message, receiver];
+		  aMessage, aReceiver];
 	}
 	
-	[self writeString: @"PRIVMSG %@ :%@", receiver, message];
+	[self writeString: @"PRIVMSG %@ :%@", aReceiver, aMessage];
 	
 	return self;
 }
-- sendNotice: (NSString *)message to: (NSString *)receiver
+/**
+ * Sends a notice <var>aNotice</var> to <var>aReceiver</var>.  
+ * <var>aReceiver</var> may not contain a space.  This is generally
+ * not used except for system messages and should rarely be used by
+ * a regular client.  Please see RFC 1459 for more information on the
+ * NOTICE command.
+ */
+- sendNotice: (NSString *)aNotice to: (NSString *)aReceiver
 {
-	if ([message length] == 0)
+	if ([aNotice length] == 0)
 	{
 		return self;
 	}
-	if ([receiver length] == 0)
+	if ([aReceiver length] == 0)
 	{
 		return self;
 	}
-	if ([(receiver = string_to_string(receiver, @" ")) length] == 0)
+	if ([(aReceiver = string_to_string(aReceiver, @" ")) length] == 0)
 	{
 		[NSException raise: IRCException
 		 format: @"[IRCObject sendNotice: '%@' to: '%@'] Unusable receiver",
-		  message, receiver];
+		  aNotice, aReceiver];
 	}
 	
-	[self writeString: @"NOTICE %@ :%@", receiver, message];
+	[self writeString: @"NOTICE %@ :%@", aReceiver, aNotice];
 	
 	return self;
 }
-- sendAction: (NSString *)anAction to: (NSString *)receiver
+/**
+ * Sends an action <var>anAction</var> to the receiver <var>aReceiver</var>.
+ * This is similar to a message but will often be displayed such as:<br /><br />
+ * &lt;nick&gt; &lt;anAction&gt;<br /><br /> and can be used effectively to display things
+ * that you are <em>doing</em> rather than saying.  <var>anAction</var>
+ * may contain spaces.
+ */
+- sendAction: (NSString *)anAction to: (NSString *)aReceiver
 {
 	if ([anAction length] == 0)
 	{
 		return self;
 	}
-	if ([receiver length] == 0)
+	if ([aReceiver length] == 0)
 	{
 		return self;
 	}
-	if ([(receiver = string_to_string(receiver, @" ")) length] == 0)
+	if ([(aReceiver = string_to_string(aReceiver, @" ")) length] == 0)
 	{
 		[NSException raise: IRCException
 		 format: @"[IRCObject sendAction: '%@' to: '%@'] Unusable receiver",
-		   anAction, receiver];
+		   anAction, aReceiver];
 	}
 
-	[self writeString: @"PRIVMSG %@ :\001ACTION %@\001", receiver, anAction];
+	[self writeString: @"PRIVMSG %@ :\001ACTION %@\001", aReceiver, anAction];
 	
 	return self;
 }
-- becomeOperatorWithName: (NSString *)aName withPassword: (NSString *)pass
+/**
+ * This method attempts to become an IRC operator with name <var>aName</var>
+ * and password <var>aPassword</var>.  Neither may contain spaces.  This is
+ * a totally different concept than channel operators since it refers to 
+ * operators of the server as a whole.  Please see RFC 1459 for more information
+ * on the OPER command.
+ */
+- becomeOperatorWithName: (NSString *)aName withPassword: (NSString *)aPassword
 {
-	if (([aName length] == 0) || ([pass length] == 0))
+	if (([aName length] == 0) || ([aPassword length] == 0))
 	{
 		return self;
 	}
-	if ([(pass = string_to_string(pass, @" ")) length] == 0)
+	if ([(aPassword = string_to_string(aPassword, @" ")) length] == 0)
 	{
 		[NSException raise: IRCException
 		 format: @"[IRCObject becomeOperatorWithName: %@ withPassword: %@] Unusable password",
-		  aName, pass];
+		  aName, aPassword];
 	}
 	if ([(aName = string_to_string(aName, @" ")) length] == 0)
 	{
 		[NSException raise: IRCException
 		 format: @"[IRCObject becomeOperatorWithName: %@ withPassword: %@] Unusable name",
-		  aName, pass];
+		  aName, aPassword];
 	}
 	
-	[self writeString: @"OPER %@ %@", aName, pass];
+	[self writeString: @"OPER %@ %@", aName, aPassword];
 	
 	return self;
 }
-- requestNamesOnChannel: (NSString *)aChannel fromServer: (NSString *)aServer
+/**
+ * Requests the names on a channel <var>aChannel</var>.  If <var>aChannel</var>
+ * is not specified, all users in all channels will be returned.  The information
+ * will be returned via a <var>RPL_NAMREPLY</var> numeric message.  See the
+ * RFC 1459 for more information on the NAMES command.
+ */
+- requestNamesOnChannel: (NSString *)aChannel
 {
 	if ([aChannel length] == 0)
 	{
@@ -1141,26 +1235,19 @@ static void rec_error(IRCObject *client, NSString *command, NSString *prefix,
 	{
 		[NSException raise: IRCException
 		 format: 
-		  @"[IRCObject requestNamesOnChannel: %@ fromServer: %@] Unusable channel",
-		   aChannel, aServer];
+		  @"[IRCObject requestNamesOnChannel: %@] Unusable channel",
+		   aChannel];
 	}
 			
-	if ([aServer length] == 0)
-	{
-		[self writeString: @"NAMES %@", aChannel];
-		return self;
-	}
+	[self writeString: @"NAMES %@", aChannel];
 
-	if ([(aServer = string_to_string(aServer, @" ")) length] == 0)
-	{
-		[NSException raise: IRCException
-		 format: @"[IRCObject requestNamesOnChannel: %@ fromServer: %@] Unusable server",
-		   aChannel, aServer];
-	}
-		
-	[self writeString: @"NAMES %@ %@", aChannel, aServer];
 	return self;
 }
+/**
+ * Requests the Message-Of-The-Day from server <var>aServer</var>.  <var>aServer</var>
+ * is optional and may not contain spaces if present.  The message of the day
+ * is returned through the <var>RPL_MOTD</var> numeric command.
+ */
 - requestMOTDOnServer: (NSString *)aServer
 {
 	if ([aServer length] == 0)
@@ -1178,6 +1265,11 @@ static void rec_error(IRCObject *client, NSString *command, NSString *prefix,
 	[self writeString: @"MOTD %@", aServer];
 	return self;
 }
+/**
+ * Requests size information from an optional <var>aServer</var> and
+ * optionally forwards it to <var>anotherServer</var>.  See RFC 1459 for
+ * more information on the LUSERS command
+ */
 - requestSizeInformationFromServer: (NSString *)aServer 
     andForwardTo: (NSString *)anotherServer
 {
@@ -1207,6 +1299,10 @@ static void rec_error(IRCObject *client, NSString *command, NSString *prefix,
 	[self writeString: @"LUSERS %@ %@", aServer, anotherServer];
 	return self;
 }	
+/**
+ * Queries the version of optional <var>aServer</var>.  Please see 
+ * RFC 1459 for more information on the VERSION command.
+ */
 - requestVersionOfServer: (NSString *)aServer
 {
 	if ([aServer length] == 0)
@@ -1224,6 +1320,12 @@ static void rec_error(IRCObject *client, NSString *command, NSString *prefix,
 	[self writeString: @"VERSION %@", aServer];
 	return self;
 }
+/**
+ * Returns a series of statistics from <var>aServer</var>.  Specific 
+ * queries can be made with the optional <var>query</var> argument.  
+ * Neither may contain spaces and both are optional.  See RFC 1459 for
+ * more information on the STATS message
+ */
 - requestServerStats: (NSString *)aServer for: (NSString *)query
 {
 	if ([query length] == 0)
@@ -1252,6 +1354,11 @@ static void rec_error(IRCObject *client, NSString *command, NSString *prefix,
 	[self writeString: @"STATS %@ %@", query, aServer];
 	return self;
 }
+/** 
+ * Used to list servers connected to optional <var>aServer</var> with
+ * an optional mask <var>aLink</var>.  Neither may contain spaces.
+ * See the RFC 1459 for more information on the LINKS command.
+ */
 - requestServerLink: (NSString *)aLink from: (NSString *)aServer
 {
 	if ([aLink length] == 0)
@@ -1280,6 +1387,11 @@ static void rec_error(IRCObject *client, NSString *command, NSString *prefix,
 	[self writeString: @"LINKS %@ %@", aServer, aLink];
 	return self;
 }
+/**
+ * Requests the local time from the optional server <var>aServer</var>.  
+ * <var>aServer</var> may not contain spaces.  See RFC 1459 for more 
+ * information on the TIME command.
+ */
 - requestTimeOnServer: (NSString *)aServer
 {
 	if ([aServer length] == 0)
@@ -1297,6 +1409,12 @@ static void rec_error(IRCObject *client, NSString *command, NSString *prefix,
 	[self writeString: @"TIME %@", aServer];
 	return self;
 }
+/**
+ * Requests that <var>aServer</var> connects to <var>connectServer</var> on
+ * port <var>aPort</var>.  <var>aServer</var> and <var>aPort</var> are optional
+ * and none may contain spaces.  See RFC 1459 for more information on the 
+ * CONNECT command.
+ */
 - requestServerToConnect: (NSString *)aServer to: (NSString *)connectServer
                   onPort: (NSString *)aPort
 {
@@ -1335,6 +1453,11 @@ static void rec_error(IRCObject *client, NSString *command, NSString *prefix,
 	[self writeString: @"CONNECT %@ %@ %@", connectServer, aPort, aServer];
 	return self;
 }
+/**
+ * This message will request the route to a specific server from a client.
+ * <var>aServer</var> is optional and may not contain spaces; please see
+ * RFC 1459 for more information on the TRACE command.
+ */
 - requestTraceOnServer: (NSString *)aServer
 {
 	if ([aServer length] == 0)
@@ -1352,6 +1475,11 @@ static void rec_error(IRCObject *client, NSString *command, NSString *prefix,
 	[self writeString: @"TRACE %@", aServer];
 	return self;
 }
+/**
+ * Request the name of the administrator on the optional server
+ * <var>aServer</var>.  <var>aServer</var> may not contain spaces.  Please
+ * see RFC 1459 for more information on the ADMIN command.
+ */
 - requestAdministratorOnServer: (NSString *)aServer
 {
 	if ([aServer length] == 0)
@@ -1369,6 +1497,11 @@ static void rec_error(IRCObject *client, NSString *command, NSString *prefix,
 	[self writeString: @"ADMIN %@", aServer];
 	return self;
 }
+/**
+ * Requests information on a server <var>aServer</var>.  <var>aServer</var>
+ * is optional and may not contain spaces.  Please see RFC 1459 for more 
+ * information on the INFO command.
+ */
 - requestInfoOnServer: (NSString *)aServer
 {
 	if ([aServer length] == 0)
@@ -1386,49 +1519,38 @@ static void rec_error(IRCObject *client, NSString *command, NSString *prefix,
 	[self writeString: @"INFO %@", aServer];
 	return self;
 }
-- requestServiceListWithMask: (NSString *)aMask ofType: (NSString *)type
-{
-	if ([aMask length] == 0)
-	{
-		[self writeString: @"SERVLIST"];
-		return self;
-	}
-	if ([(aMask = string_to_string(aMask, @" ")) length] == 0)
-	{
-		[NSException raise: IRCException format:
-		 @"[IRCObject requestServiceListWithMask: '%@' ofType: '%@'] Unusable mask",
-		  aMask, type];
-	}
-	if ([type length] == 0)
-	{
-		[self writeString: @"SERVLIST %@", aMask];
-		return self;
-	}
-	if ([(type = string_to_string(type, @" ")) length] == 0)
-	{
-		[NSException raise: IRCException format:
-		 @"[IRCObject requestServiceListWithMask: '%@' ofType: '%@'] Unusable type",
-		  aMask, type];
-	}
-
-	[self writeString: @"SERVLIST %@ %@", aMask, type];
-	return self;
-}
+/**
+ * Used to request that the current server reread its configuration files.
+ * Please see RFC 1459 for more information on the REHASH command.
+ */
 - requestServerRehash
 {
 	[self writeString: @"REHASH"];
 	return self;
 }
+/**
+ * Used to request a shutdown of a server.  Please see RFC 1459 for additional
+ * information on the DIE command.
+ */
 - requestServerShutdown
 {
 	[self writeString: @"DIE"];
 	return self;
 }
+/**
+ * Requests a restart of a server.  Please see RFC 1459 for additional 
+ * information on the RESTART command.
+ */
 - requestServerRestart
 {
 	[self writeString: @"RESTART"];
 	return self;
 }
+/** 
+ * Requests a list of users logged into <var>aServer</var>.  
+ * <var>aServer</var> is optional and may contain spaces.  Please see 
+ * RFC 1459 for additional information on the USERS message.
+ */
 - requestUserInfoOnServer: (NSString *)aServer
 {
 	if ([aServer length] == 0)
@@ -1446,6 +1568,13 @@ static void rec_error(IRCObject *client, NSString *command, NSString *prefix,
 	[self writeString: @"USERS %@", aServer];
 	return self;
 }
+/**
+ * Requests information on the precense of certain nicknames listed in 
+ * <var>userList</var> on the network.  <var>userList</var> is a space 
+ * separated list of users.  For each user that is present, its name will
+ * be added to the reply through the numeric message <var>RPL_ISON</var>.
+ * See RFC 1459 for more information on the ISON message.
+ */
 - areUsersOn: (NSString *)userList
 {
 	if ([userList length] == 0)
@@ -1456,36 +1585,29 @@ static void rec_error(IRCObject *client, NSString *command, NSString *prefix,
 	[self writeString: @"ISON %@", userList];
 	return self;
 }
-- sendWallops: (NSString *)message
+/**
+ * Sends a message to all operators currently online.  The actual implementation
+ * may vary from server to server in regards to who can send and receive it.
+ * <var>aMessage</var> is the message to be sent and may contain spaces. 
+ * Please see RFC 1459 for more information regarding the WALLOPS command.
+ */
+- sendWallops: (NSString *)aMessage
 {
-	if ([message length] == 0)
-	{
-		return self;
-	}
-
-	[self writeString: @"WALLOPS :%@", message];
-	return self;
-}
-- queryService: (NSString *)aService withMessage: (NSString *)aMessage
-{
-	if ([aService length] == 0)
-	{
-		return self;
-	}
-	if ([(aService = string_to_string(aService, @" ")) length] == 0)
-	{
-		[NSException raise: IRCException format:
-		 @"[IRCObject queryService: '%@' withMessage: '%@'] Unusable service",
-		  aService, aMessage];
-	}
 	if ([aMessage length] == 0)
 	{
 		return self;
 	}
 
-	[self writeString: @"SQUERY %@ :%@", aService, aMessage];
+	[self writeString: @"WALLOPS :%@", aMessage];
 	return self;
 }
+/**
+ * Requests a list of users with a matching mask <var>aMask</var> against 
+ * their username and/or host.  This can optionally be done just against 
+ * the IRC operators. The mask <var>aMask</var> is optional and may not 
+ * contain spaces.  Please see RFC 1459 for more information regarding the
+ * WHO message.
+ */
 - listWho: (NSString *)aMask onlyOperators: (BOOL)operators
 {
 	if ([aMask length] == 0)
@@ -1511,6 +1633,12 @@ static void rec_error(IRCObject *client, NSString *command, NSString *prefix,
 	
 	return self;
 }
+/**
+ * Requests information on a user <var>aPerson</var>.  <var>aPerson</var>
+ * may also be a comma separated list for additional users.  <var>aServer</var>
+ * is optional and neither argument may contain spaces.  Refer to RFC 1459 for
+ * additional information on the WHOIS command.
+ */
 - whois: (NSString *)aPerson onServer: (NSString *)aServer
 {
 	if ([aPerson length] == 0)
@@ -1538,6 +1666,13 @@ static void rec_error(IRCObject *client, NSString *command, NSString *prefix,
 	[self writeString: @"WHOIS %@ %@", aServer, aPerson];
 	return self;
 }
+/** 
+ * Requests information on a user <var>aPerson</var> that is no longer 
+ * connected to the server <var>aServer</var>.  A possible maximum number
+ * of entries <var>aNumber</var> may be displayed.  All arguments may not
+ * contain spaces and <var>aServer</var> and <var>aNumber</var> are optional.
+ * Please refer to RFC 1459 for more information regarding the WHOWAS message.
+ */
 - whowas: (NSString *)aPerson onServer: (NSString *)aServer
       withNumberEntries: (NSString *)aNumber
 {
@@ -1577,6 +1712,13 @@ static void rec_error(IRCObject *client, NSString *command, NSString *prefix,
 	[self writeString: @"WHOWAS %@ %@ %@", aPerson, aNumber, aServer];
 	return self;
 }
+/**
+ * Used to kill the connection to <var>aPerson</var> with a possible comment
+ * <var>aComment</var>.  This is often used by servers when duplicate nicknames
+ * are found and may be available to the IRC operators.  <var>aComment</var>
+ * is optional and <var>aPerson</var> may not contain spaces.  Please see 
+ * RFC 1459 for additional information on the KILL command.
+ */
 - kill: (NSString *)aPerson withComment: (NSString *)aComment
 {
 	if ([aPerson length] == 0)
@@ -1597,6 +1739,13 @@ static void rec_error(IRCObject *client, NSString *command, NSString *prefix,
 	[self writeString: @"KILL %@ :%@", aPerson, aComment];
 	return self;
 }
+/**
+ * Sets the topic for channel <var>aChannel</var> to <var>aTopic</var>.
+ * If the <var>aTopic</var> is omitted, the topic for <var>aChannel</var>
+ * will be returned through the <var>RPL_TOPIC</var> numeric message.  
+ * <var>aChannel</var> may not contain spaces.  Please refer to the 
+ * TOPIC command in RFC 1459 for more information.
+ */
 - setTopicForChannel: (NSString *)aChannel to: (NSString *)aTopic
 {
 	if ([aChannel length] == 0)
@@ -1621,8 +1770,24 @@ static void rec_error(IRCObject *client, NSString *command, NSString *prefix,
 
 	return self;
 }
+/** 
+ * Used to query or set the mode on <var>anObject</var> to the mode specified
+ * by <var>aMode</var>.  Flags can be added by adding a '+' to the <var>aMode</var>
+ * string or removed by adding a '-' to the <var>aMode</var> string.  These flags
+ * may optionally have arguments specified in <var>aList</var> and may be applied
+ * to the object specified by <var>anObject</var>.  Examples:
+ * <example>
+ * aMode: @"+i" anObject: @"#gnustep" withParams: nil
+ *   sets the channel "#gnustep" to invite only.
+ * aMode: @"+o" anObject: @"#gnustep" withParams: (@"aeruder")
+ *   makes aeruder a channel operator of #gnustep
+ * </example>
+ * Many servers have differing implementations of these modes and may have various
+ * modes available to users.  None of the arguments may contain spaces.  Please
+ * refer to RFC 1459 for additional information on the MODE message.
+ */
 - setMode: (NSString *)aMode on: (NSString *)anObject 
-                     withParams: (NSArray *)list
+                     withParams: (NSArray *)aList
 {
 	NSMutableString *aString;
 	NSEnumerator *iter;
@@ -1636,7 +1801,7 @@ static void rec_error(IRCObject *client, NSString *command, NSString *prefix,
 	{
 		[NSException raise: IRCException format:
 		  @"[IRCObject setMode:'%@' on:'%@' withParams:'%@'] Unusable object", 
-		    aMode, anObject, list];
+		    aMode, anObject, aList];
 	}
 	if ([aMode length] == 0)
 	{
@@ -1647,9 +1812,9 @@ static void rec_error(IRCObject *client, NSString *command, NSString *prefix,
 	{		
 		[NSException raise: IRCException format:
 		  @"[IRCObject setMode:'%@' on:'%@' withParams:'%@'] Unusable mode", 
-		    aMode, anObject, list];
+		    aMode, anObject, aList];
 	}
-	if (!list)
+	if (!aList)
 	{
 		[self writeString: @"MODE %@ %@", anObject, aMode];
 		return self;
@@ -1658,7 +1823,7 @@ static void rec_error(IRCObject *client, NSString *command, NSString *prefix,
 	aString = [NSMutableString stringWithFormat: @"MODE %@ %@", 
 	            anObject, aMode];
 				
-	iter = [list objectEnumerator];
+	iter = [aList objectEnumerator];
 	
 	while ((object = [iter nextObject]))
 	{
@@ -1670,6 +1835,13 @@ static void rec_error(IRCObject *client, NSString *command, NSString *prefix,
 
 	return self;
 }
+/**
+ * Lists channel information about the channel specified by <var>aChannel</var>
+ * on the server <var>aServer</var>.  <var>aChannel</var> may be a comma separated
+ * list and may not contain spaces.  <var>aServer</var> is optional.  If <var>aChannel</var>
+ * is omitted, then all channels on the server will be listed.  Please refer
+ * to RFC 1459 for additional information on the LIST command.
+ */
 - listChannel: (NSString *)aChannel onServer: (NSString *)aServer
 {
 	if ([aChannel length] == 0)
@@ -1698,6 +1870,12 @@ static void rec_error(IRCObject *client, NSString *command, NSString *prefix,
 	[self writeString: @"LIST %@ %@", aChannel, aServer];
 	return self;
 }
+/**
+ * This message will invite <var>aPerson</var> to the channel specified by
+ * <var>aChannel</var>.  Neither may contain spaces and both are required.
+ * Please refer to RFC 1459 concerning the INVITE command for additional 
+ * information.
+ */
 - invite: (NSString *)aPerson to: (NSString *)aChannel
 {
 	if ([aPerson length] == 0)
@@ -1724,7 +1902,15 @@ static void rec_error(IRCObject *client, NSString *command, NSString *prefix,
 	[self writeString: @"INVITE %@ %@", aPerson, aChannel];
 	return self;
 }
-- kick: (NSString *)aPerson offOf: (NSString *)aChannel for: (NSString *)reason
+/**
+ * Kicks the user <var>aPerson</var> off of the channel <var>aChannel</var>
+ * for the reason specified in <var>aReason</var>.  <var>aReason</var> may 
+ * contain spaces and is optional.  If omitted the server will most likely
+ * supply a default message.  <var>aPerson</var> and <var>aChannel</var> 
+ * are required and may not contain spaces.  Please see the KICK command for
+ * additional information in RFC 1459.
+ */
+- kick: (NSString *)aPerson offOf: (NSString *)aChannel for: (NSString *)aReason
 {
 	if ([aPerson length] == 0)
 	{
@@ -1738,34 +1924,48 @@ static void rec_error(IRCObject *client, NSString *command, NSString *prefix,
 	{
 		[NSException raise: IRCException format:
 		 @"[IRCObject kick:'%@' offOf:'%@' for:'%@'] Unusable person",
-		  aPerson, aChannel, reason];
+		  aPerson, aChannel, aReason];
 	}
 	if ([(aChannel = string_to_string(aChannel, @" ")) length] == 0)
 	{
 		[NSException raise: IRCException format:
 		 @"[IRCObject kick:'%@' offOf:'%@' for:'%@'] Unusable channel",
-		  aPerson, aChannel, reason];
+		  aPerson, aChannel, aReason];
 	}
-	if ([reason length] == 0)
+	if ([aReason length] == 0)
 	{
 		[self writeString: @"KICK %@ %@", aPerson, aChannel];
 		return self;
 	}
 
-	[self writeString: @"KICK %@ %@ :%@", aPerson, aChannel, reason];
+	[self writeString: @"KICK %@ %@ :%@", aPerson, aChannel, aReason];
 	return self;
 }
-- setAwayWithMessage: (NSString *)message
+/**
+ * Sets status to away with the message <var>aMessage</var>.  While away, if
+ * a user should send you a message, <var>aMessage</var> will be returned to
+ * them to explain your absence.  <var>aMessage</var> may contain spaces.  If
+ * omitted, the user is marked as being present.  Please refer to the AWAY 
+ * command in RFC 1459 for additional information.
+ */
+- setAwayWithMessage: (NSString *)aMessage
 {
-	if ([message length] == 0)
+	if ([aMessage length] == 0)
 	{
 		[self writeString: @"AWAY"];
 		return self;
 	}
 
-	[self writeString: @"AWAY :%@", message];
+	[self writeString: @"AWAY :%@", aMessage];
 	return self;
 }
+/**
+ * Requests a PONG message from the server.  The argument <var>aString</var>
+ * is essential but may contain spaces.  The server will respond immediately
+ * with a PONG message with the same argument.  This commnd is rarely needed
+ * by a client, but is sent out often by servers to ensure connectivity of 
+ * clients.  Please see RFC 1459 for more information on the PING command.
+ */
 - sendPingWithArgument: (NSString *)aString
 {
 	if (!aString)
@@ -1777,6 +1977,12 @@ static void rec_error(IRCObject *client, NSString *command, NSString *prefix,
 	
 	return self;
 }
+/**
+ * Used to respond to a PING message.  The argument sent with the PING message
+ * should be the argument specified by <var>aString</var>.  <var>aString</var>
+ * is required and may contain spaces.  See RFC 1459 for more informtion
+ * regarding the PONG command.
+ */
 - sendPongWithArgument: (NSString *)aString
 {
 	if (!aString)
@@ -1790,102 +1996,225 @@ static void rec_error(IRCObject *client, NSString *command, NSString *prefix,
 }
 @end
 
+/**
+ * This category represents all the callback methods in IRCObject.  You can
+ * override these with a subclass.  All of them do not do anything especially
+ * important by default, so feel free to not call the default implementation.
+ * 
+ * On any method ending with an argument like 'from: (NSString *)aString',
+ * <var>aString</var> could be in the format of nickname!host.  Please see
+ * the documentation for ExtractIRCNick(), ExtractIRCHost(), and 
+ * SeparateIRCNickAndHost() for more information.
+ */
 @implementation IRCObject (Callbacks)
+/**
+ * This method will be called when the connection is fully registered with
+ * the server.  At this point it is safe to start joining channels and carrying
+ * out other typical IRC functions. 
+ */
 - registeredWithServer
 {
 	return self;
 }
-- couldNotRegister: (NSString *)reason
+/**
+ * This method will be called if a connection cannot register for whatever reason.
+ * This reason will be outlined in <var>aReason</var>, but the best way to track
+ * the reason is to watch the numeric commands being received in the 
+ * -numericCommandReceived:withParams:from: method.
+ */
+- couldNotRegister: (NSString *)aReason
 {
 	return self;
 }	
+/**
+ * Called when a CTCP request has been received.  The CTCP request type is
+ * stored in <var>aCTCP</var>(could be such things as DCC, PING, VERSION, etc.)
+ * and the argument is stored in <var>anArgument</var>.  The actual location
+ * that the CTCP request is sent is stored in <var>aReceiver</var> and the 
+ * person who sent it is stored in <var>aPerson</var>.
+ */
 - CTCPRequestReceived: (NSString *)aCTCP
-   withArgument: (NSString *)argument to: (NSString *)receiver
+   withArgument: (NSString *)anArgument to: (NSString *)aReceiver
    from: (NSString *)aPerson
 {
 	return self;
 }
+/**
+ * Called when a CTCP reply has been received.  The CTCP reply type is
+ * stored in <var>aCTCP</var> with its argument in <var>anArgument</var>.
+ * The actual location that the CTCP reply was sent is stored in <var>aReceiver</var>
+ * and the person who sent it is stored in <var>aPerson</var>.
+ */
 - CTCPReplyReceived: (NSString *)aCTCP
-   withArgument: (NSString *)argument to: (NSString *)receiver
+   withArgument: (NSString *)anArgument to: (NSString *)aReceiver
    from: (NSString *)aPerson
 {
 	return self;
 }
+/**
+ * Called when an IRC error has occurred.  This is a message sent by the server
+ * and its argument is stored in <var>anError</var>.  Typically you will be 
+ * disconnected after receiving one of these.
+ */
 - errorReceived: (NSString *)anError
 {
 	return self;
 }
-- wallopsReceived: (NSString *)message from: (NSString *)sender
+/**
+ * Called when a Wallops has been received.  The message is stored in 
+ * <var>aMessage</var> and the person who sent it is stored in 
+ * <var>aSender</var>.
+ */
+- wallopsReceived: (NSString *)aMessage from: (NSString *)aSender
 {
 	return self;
 }
+/**
+ * Called when a user has been kicked out of a channel.  The person's nickname
+ * is stored in <var>aPerson</var> and the channel he/she was kicked out of is
+ * in <var>aChannel</var>.  <var>aReason</var> is the kicker-supplied reason for
+ * the removal.  <var>aKicker</var> is the person who did the kicking.  This will
+ * not be accompanied by a -channelParted:withMessage:from: message, so it is safe
+ * to assume they are no longer part of the channel after receiving this method.
+ */
 - userKicked: (NSString *)aPerson outOf: (NSString *)aChannel 
-         for: (NSString *)reason from: (NSString *)kicker
+         for: (NSString *)aReason from: (NSString *)aKicker
 {
 	return self;
 }
+/**
+ * Called when the client has been invited to another channel <var>aChannel</var>
+ * by <var>anInviter</var>.
+ */
 - invitedTo: (NSString *)aChannel from: (NSString *)anInviter
 {
 	return self;
 }
-- modeChanged: (NSString *)mode on: (NSString *)anObject 
+/**
+ * Called when the mode has been changed on <var>anObject</var>.  The actual
+ * mode change is stored in <var>aMode</var> and the parameters are stored in
+ * <var>paramList</var>.  The person who changed the mode is stored in 
+ * <var>aPerson</var>.  Consult RFC 1459 for further information.
+ */
+- modeChanged: (NSString *)aMode on: (NSString *)anObject 
     withParams: (NSArray *)paramList from: (NSString *)aPerson
 {
 	return self;
 }
-- numericCommandReceived: (NSString *)command withParams: (NSArray *)paramList 
-    from: (NSString *)sender
+/**
+ * Called when a numeric command has been received.  These are 3 digit numerical
+ * messages stored in <var>aCommand</var> with a number of parameters stored
+ * in <var>paramList</var>.  The sender, almost always the server, is stored
+ * in <var>aSender</var>.  These are often used for replies to requests such
+ * as user lists and channel lists and other times they are used for errors.
+ */
+- numericCommandReceived: (NSString *)aCommand withParams: (NSArray *)paramList 
+    from: (NSString *)aSender
 {
 	return self;
 }
+/**
+ * Called when someone changes his/her nickname.  The new nickname is stored in
+ * <var>newName</var> and the old name will be stored in <var>aPerson</var>.
+ */
 - nickChangedTo: (NSString *)newName from: (NSString *)aPerson
 {
 	return self;
 }
-- channelJoined: (NSString *)channel from: (NSString *)joiner
+/**
+ * Called when someone joins a channel.  The channel is stored in <var>aChannel</var>
+ * and the person who joined is stored in <var>aJoiner</var>.
+ */
+- channelJoined: (NSString *)aChannel from: (NSString *)aJoiner
 {
 	return self;
 }
-- channelParted: (NSString *)channel withMessage: (NSString *)aMessage
-             from: (NSString *)parter
+/**
+ * Called when someone leaves a channel.  The channel is stored in <var>aChannel</var>
+ * and the person who left is stored in <var>aParter</var>.  The parting message will
+ * be stored in <var>aMessage</var>.
+ */
+- channelParted: (NSString *)aChannel withMessage: (NSString *)aMessage
+             from: (NSString *)aParter
 {
 	return self;
 }
-- quitIRCWithMessage: (NSString *)aMessage from: (NSString *)quitter
+/**
+ * Called when someone quits IRC.  Their parting message will be stored in
+ * <var>aMessage</var> and the person who quit will be stored in 
+ * <var>aQuitter</var>.
+ */
+- quitIRCWithMessage: (NSString *)aMessage from: (NSString *)aQuitter
 {
 	return self;
 }
-- topicChangedTo: (NSString *)aTopic in: (NSString *)channel
+/**
+ * Called when the topic is changed in a channel <var>aChannel</var> to
+ * <var>aTopic</var> by <var>aPerson</var>.
+ */
+- topicChangedTo: (NSString *)aTopic in: (NSString *)aChannel
               from: (NSString *)aPerson
 {
 	return self;
 }
-- messageReceived: (NSString *)aMessage to: (NSString *)to
-               from: (NSString *)sender
+/**
+ * Called when a message <var>aMessage</var> is received from <var>aSender</var>.
+ * The person or channel that the message is addressed to is stored in <var>aReceiver</var>.
+ */
+- messageReceived: (NSString *)aMessage to: (NSString *)aReceiver
+               from: (NSString *)aSender
 {
 	return self;
 }
-- noticeReceived: (NSString *)aMessage to: (NSString *)to
-              from: (NSString *)sender
+/**
+ * Called when a notice <var>aNotice</var> is received from <var>aSender</var>.
+ * The person or channel that the notice is addressed to is stored in <var>aReceiver</var>.
+ */
+- noticeReceived: (NSString *)aNotice to: (NSString *)aReceiver
+              from: (NSString *)aSender
 {
 	return self;
 }
-- actionReceived: (NSString *)anAction to: (NSString *)to
-              from: (NSString *)sender
+/**
+ * Called when an action has been received.  The action is stored in <var>anAction</var>
+ * and the sender is stored in <var>aSender</var>.  The person or channel that
+ * the action is addressed to is stored in <var>aReceiver</var>.
+ */
+- actionReceived: (NSString *)anAction to: (NSString *)aReceiver
+              from: (NSString *)aSender
 {
 	return self;
 }
-- pingReceivedWithArgument: (NSString *)arg from: (NSString *)sender
+/** 
+ * Called when a ping is received.  These pings are generally sent by the
+ * server.  The correct method of handling these would be to respond to them
+ * with -sendPongWithArgument: using <var>anArgument</var> as the argument.
+ * The server that sent the ping is stored in <var>aSender</var>.
+ */
+- pingReceivedWithArgument: (NSString *)anArgument from: (NSString *)aSender
 {
 	return self;
 }
-- pongReceivedWithArgument: (NSString *)arg from: (NSString *)sender
+/**
+ * Called when a pong is received.  These are generally in answer to a 
+ * ping sent with -sendPingWithArgument:  The argument <var>anArgument</var>
+ * is generally the same as the argument sent with the ping.  <var>aSender</var>
+ * is the server that sent out the pong.
+ */
+- pongReceivedWithArgument: (NSString *)anArgument from: (NSString *)aSender
 {
 	return self;
 }
+/**
+ * Called when a new nickname was needed while registering because the other
+ * one was either invalid or already taken.  Without overriding this, this
+ * method will simply try adding a underscore onto it until it gets in. 
+ * This method can be overridden to do other nickname-changing schemes.  The
+ * new nickname should be directly set with -changeNick:
+ */
 - newNickNeededWhileRegistering
 {
-	[self changeNick: nick];
+	[self changeNick: [NSString stringWithFormat: @"%@_", nick]];
 	
 	return self;
 }

@@ -87,7 +87,7 @@ NSArray *SeparateIRCNickAndHost(NSString *prefix);
 
 - (BOOL)connected;
 
-- setEncoding: (NSStringEncoding)encoding;
+- setEncoding: (NSStringEncoding)aEncoding;
 - (NSStringEncoding)encoding;
 
 // IRC Operations
@@ -95,9 +95,9 @@ NSArray *SeparateIRCNickAndHost(NSString *prefix);
 
 - quitWithMessage: (NSString *)aMessage;
 
-- partChannel: (NSString *)channel withMessage: (NSString *)aMessage;
+- partChannel: (NSString *)aChannel withMessage: (NSString *)aMessage;
 
-- joinChannel: (NSString *)channel withPassword: (NSString *)aPassword;
+- joinChannel: (NSString *)aChannel withPassword: (NSString *)aPassword;
 
 - sendCTCPReply: (NSString *)aCTCP withArgument: (NSString *)args
    to: (NSString *)aPerson;
@@ -105,15 +105,15 @@ NSArray *SeparateIRCNickAndHost(NSString *prefix);
 - sendCTCPRequest: (NSString *)aCTCP withArgument: (NSString *)args
    to: (NSString *)aPerson;
 
-- sendMessage: (NSString *)message to: (NSString *)receiver;
+- sendMessage: (NSString *)aMessage to: (NSString *)aReceiver;
 
-- sendNotice: (NSString *)message to: (NSString *)receiver;
+- sendNotice: (NSString *)aNotice to: (NSString *)aReceiver;
 
-- sendAction: (NSString *)anAction to: (NSString *)receiver;
+- sendAction: (NSString *)anAction to: (NSString *)aReceiver;
 
-- becomeOperatorWithName: (NSString *)aName withPassword: (NSString *)pass;
+- becomeOperatorWithName: (NSString *)aName withPassword: (NSString *)aPassword;
 
-- requestNamesOnChannel: (NSString *)aChannel fromServer: (NSString *)aServer;
+- requestNamesOnChannel: (NSString *)aChannel;
 
 - requestMOTDOnServer: (NSString *)aServer;
 
@@ -137,8 +137,6 @@ NSArray *SeparateIRCNickAndHost(NSString *prefix);
 
 - requestInfoOnServer: (NSString *)aServer;
 
-- requestServiceListWithMask: (NSString *)aMask ofType: (NSString *)type;
-
 - requestServerRehash;
 
 - requestServerShutdown;
@@ -149,9 +147,7 @@ NSArray *SeparateIRCNickAndHost(NSString *prefix);
 
 - areUsersOn: (NSString *)userList;
 
-- sendWallops: (NSString *)message;
-
-- queryService: (NSString *)aService withMessage: (NSString *)aMessage;
+- sendWallops: (NSString *)aMessage;
 
 - listWho: (NSString *)aMask onlyOperators: (BOOL)operators;
 
@@ -165,15 +161,15 @@ NSArray *SeparateIRCNickAndHost(NSString *prefix);
 - setTopicForChannel: (NSString *)aChannel to: (NSString *)aTopic;
 
 - setMode: (NSString *)aMode on: (NSString *)anObject 
-                     withParams: (NSArray *)list;
+                     withParams: (NSArray *)aList;
 					 
 - listChannel: (NSString *)aChannel onServer: (NSString *)aServer;
 
 - invite: (NSString *)aPerson to: (NSString *)aChannel;
 
-- kick: (NSString *)aPerson offOf: (NSString *)aChannel for: (NSString *)reason;
+- kick: (NSString *)aPerson offOf: (NSString *)aChannel for: (NSString *)aReason;
 
-- setAwayWithMessage: (NSString *)message;
+- setAwayWithMessage: (NSString *)aMessage;
 
 - sendPingWithArgument: (NSString *)aString;
 
@@ -183,55 +179,55 @@ NSArray *SeparateIRCNickAndHost(NSString *prefix);
 @interface IRCObject (Callbacks)
 - registeredWithServer;
 
-- couldNotRegister: (NSString *)reason;
+- couldNotRegister: (NSString *)aReason;
 
 - CTCPRequestReceived: (NSString *)aCTCP 
-   withArgument: (NSString *)argument to: (NSString *)receiver
+   withArgument: (NSString *)anArgument to: (NSString *)aReceiver
    from: (NSString *)aPerson;
 
 - CTCPReplyReceived: (NSString *)aCTCP
-   withArgument: (NSString *)argument to: (NSString *)receiver
+   withArgument: (NSString *)anArgument to: (NSString *)aReceiver
    from: (NSString *)aPerson;
 
 - errorReceived: (NSString *)anError;
 
-- wallopsReceived: (NSString *)message from: (NSString *)sender;
+- wallopsReceived: (NSString *)aMessage from: (NSString *)aSender;
 
 - userKicked: (NSString *)aPerson outOf: (NSString *)aChannel 
-         for: (NSString *)reason from: (NSString *)kicker;
+         for: (NSString *)aReason from: (NSString *)aKicker;
 		 
 - invitedTo: (NSString *)aChannel from: (NSString *)anInviter;
 
-- modeChanged: (NSString *)mode on: (NSString *)anObject 
+- modeChanged: (NSString *)aMode on: (NSString *)anObject 
    withParams: (NSArray *)paramList from: (NSString *)aPerson;
    
-- numericCommandReceived: (NSString *)command withParams: (NSArray *)paramList 
-                      from: (NSString *)sender;
+- numericCommandReceived: (NSString *)aCommand withParams: (NSArray *)paramList 
+                      from: (NSString *)aSender;
 
 - nickChangedTo: (NSString *)newName from: (NSString *)aPerson;
 
-- channelJoined: (NSString *)channel from: (NSString *)joiner;
+- channelJoined: (NSString *)aChannel from: (NSString *)aJoiner;
 
-- channelParted: (NSString *)channel withMessage: (NSString *)aMessage
-             from: (NSString *)parter;
+- channelParted: (NSString *)aChannel withMessage: (NSString *)aMessage
+             from: (NSString *)aParter;
 
-- quitIRCWithMessage: (NSString *)aMessage from: (NSString *)quitter;
+- quitIRCWithMessage: (NSString *)aMessage from: (NSString *)aQuitter;
 
-- topicChangedTo: (NSString *)aTopic in: (NSString *)channel
+- topicChangedTo: (NSString *)aTopic in: (NSString *)aChannel
               from: (NSString *)aPerson;
 
-- messageReceived: (NSString *)aMessage to: (NSString *)to
-               from: (NSString *)sender;
+- messageReceived: (NSString *)aMessage to: (NSString *)aReceiver
+               from: (NSString *)aSender;
 
-- noticeReceived: (NSString *)aMessage to: (NSString *)to
-              from: (NSString *)sender;
+- noticeReceived: (NSString *)aNotice to: (NSString *)aReceiver
+              from: (NSString *)aSender;
 
-- actionReceived: (NSString *)anAction to: (NSString *)to
-              from: (NSString *)sender;
+- actionReceived: (NSString *)anAction to: (NSString *)aReceiver
+              from: (NSString *)aSender;
 
-- pingReceivedWithArgument: (NSString *)arg from: (NSString *)sender;
+- pingReceivedWithArgument: (NSString *)anArgument from: (NSString *)aSender;
 
-- pongReceivedWithArgument: (NSString *)arg from: (NSString *)sender;
+- pongReceivedWithArgument: (NSString *)anArgument from: (NSString *)aSender;
 
 - newNickNeededWhileRegistering;
 @end

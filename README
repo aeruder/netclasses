@@ -1,6 +1,5 @@
-netclasses
-===============================================================================
-netclasses is a small framework of Objective-C networking classes
+netclasses is a small framework of asynchronous Objective-C networking classes
+
 ===============================================================================
 Copyright (C) 2003 Andy Ruder
 
@@ -21,25 +20,55 @@ Copyright (C) 2003 Andy Ruder
 Comments are welcome.
 ===============================================================================
 
+
+
+**** Please see README.osx for instructions dealing with OSX compilation ****
+
+
+
+==========
 Compiling:
-    Typing 'make' will compile the netclasses framework. 
+==========
+	make
+	make install
 
-	On OSX, you must have gnustep-make installed to compile!
- 
-Installing:
-	Typing 'make install' as root will install the netclasses framework.
+======================
+Environment Variables:
+======================
+	GNUSTEP_INSTALLATION_DIR
+		Determines the root of where netclasses and its documentation
+		will be installed.  This is generally /usr/GNUstep/Local but
+		can be reassigned to other targets such as 
+		GNUSTEP_INSTALLATION_DIR=$GNUSTEP_USER_ROOT
+		to install into a user's home directory.
 
-	On OSX, you probably want 'GNUSTEP_INSTALLATION_DIR=/ make install'
-	to have it install into /Library
-
+==============
 Documentation:
-    Documentation/ holds the netclasses documentation.  To make html
-    files out of it, simply type 'make'
+==============
+    Documentation/ holds the netclasses documentation.  This documentation
+	will not be compiled and installed with netclasses.  This must be done
+	separately.  Simply type make followed by make install in the 
+	Documentation/ directory to build and install the documentation.  The 
+	resulting documentation will end up in:
+	
+	$(GNUSTEP_INSTALLATION_DIR)/Library/Documentation/Developer/netclasses
 
+	This documentation has a brief overview of netclasses as well as the 
+	class references.
+
+====
 Use:
+====
 	Simply link to the framework after it is installed in your application.
 	See the Examples/ directory for examples of the use of netclasses.
 
+========
+Authors:
+========
+	Main author: Andrew Ruder <aeruder at ksu dot edu>
+
+	Special thanks to the countless other people who provided insight, tips,
+	and suggestions to help make netclasses what it is.
+
 ===============================================================================
-Copyright (C) 2003 by Andy Ruder <aeruder@yahoo.com>
-	
+Copyright (C) 2003 Andy Ruder

@@ -1,0 +1,62 @@
+netclasses is a small framework of asynchronous Objective-C networking classes
+
+===============================================================================
+Copyright (C) 2003 Andy Ruder
+
+  netclasses is free software; you can redistribute it and/or modify
+  it under the terms of the GNU General Public License as published by
+  the Free Software Foundation; either version 2 of the License, or
+  (at your option) any later version.
+
+  This program is distributed in the hope that it will be useful,
+  but WITHOUT ANY WARRANTY; without even the implied warranty of
+  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  GNU General Public License for more details.
+
+  You should have received a copy of the GNU General Public License
+  along with this program; if not, write to the Free Software
+  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+
+Comments are welcome.
+===============================================================================
+
+
+****
+
+First off, let me say that since I do not own and never have owned a Mac 
+I have absolutely no way to actually maintain proper building methods on 
+OSX.  Therefore, building on OSX will be limited to gnustep-make style
+compilations.
+
+Secondly, if you cannot understand the instructions herein.  Please download
+the binaries rather than wasting my time with issues related to lack of skill
+with unix-like systems and the command line environment.
+
+****
+
+
+Step 1: 
+	Download gnustep-make from http://www.gnustep.org.  You do not need
+	gnustep-base or gnustep-gui; all you need is gnustep-make.  Read the
+	included documentation and proceed with its installation.
+
+Step 2:
+	Set OBJC_INCLUDE_PATH to the directory containing GNUstep.h.  This file
+	is found in the standard GNUstep distribution.  I have distributed it along
+	with netclasses in the Misc/ directory.
+
+Step 3:
+	Set GNUSTEP_INSTALLATION_DIR to the root directory that you wish to install
+	to.  All directories will be based off this root directory.  If you wish
+	to install into the stanard location for frameworks, you probably want
+	GNUSTEP_INSTALLATION_DIR=/.  If you do not have administrator rights, you
+	will need to use GNUSTEP_INSTALLATION_DIR=~/.
+
+Step 4:
+	Type make followed by make install.  netclasses should be installed.  
+	You will not be able to build the documentation without gnustep-base
+	installed.
+
+===============================================================================
+Copyright (C) 2003 by Andy Ruder
+	

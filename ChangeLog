@@ -1,3 +1,9 @@
+2003-12-17 Andy Ruder <aeruder at ksu dot edu>
+ * Finished documentation of all classes currently associated with
+   netclasses.
+ * Cleaned up the installation instructions and readme's in the 
+   distribution.
+
 2003-12-07 Andy Ruder <aeruder at ksu dot edu>
  * Maintaining a change log since netclasses is now a framework and
    other people may be needing to sync to any changes.
