@@ -1873,7 +1873,8 @@ static void rec_error(IRCObject *client, NSString *command, NSString *prefix,
 	va_list ap;
 
 	va_start(ap, format);
-	temp = [NSString stringWithFormat: format arguments: ap];
+	temp = AUTORELEASE([[NSString alloc] initWithFormat: format 
+	  arguments: ap]);
 
 	[transport writeData: [temp dataUsingEncoding: defaultEncoding]];
 	

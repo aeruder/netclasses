@@ -52,8 +52,7 @@ static void remove_info_for_socket(int desc)
 {
 	net_socket_info *x;
 
-	NSLog(@"Removing info for %d", desc);
-	x = NSMapGet(desc_to_info, desc);
+	x = NSMapGet(desc_to_info, (void *)desc);
 
 	if (!x) return;
 
@@ -65,14 +64,14 @@ static void remove_info_for_socket(int desc)
 	NSFreeMapTable(x->watchers);
 	free(x);
 
-	NSMapRemove(desc_to_info, desc);
+	NSMapRemove(desc_to_info, (void *)desc);
 
 	return;
 }
 
 static BOOL is_info_for_socket(int desc)
 {
-	return NSMapGet(desc_to_info, desc) != 0;
+	return NSMapGet(desc_to_info, (void *)desc) != 0;
 }
 
 static net_socket_info *info_for_socket(int desc)
@@ -81,7 +80,7 @@ static net_socket_info *info_for_socket(int desc)
 	CFRunLoopSourceRef source;
 	net_socket_info *x;
 
-	x = NSMapGet(desc_to_info, desc);
+	x = NSMapGet(desc_to_info, (void *)desc);
 
 	if (x) return x;
 
@@ -109,7 +108,7 @@ static net_socket_info *info_for_socket(int desc)
 	x->watchers = NSCreateMapTable(NSIntMapKeyCallBacks, 
 	 NSObjectMapValueCallBacks, 100);
 
-	NSMapInsert(desc_to_info, desc, x);
+	NSMapInsert(desc_to_info, (void *)desc, (void *)x);
 
 	CFRunLoopAddSource(CFRunLoopGetCurrent(), source, kCFRunLoopDefaultMode);
 
@@ -124,11 +123,8 @@ static void handle_cf_events(CFSocketRef s, CFSocketCallBackType callbackType,
 
 	desc = (int)CFSocketGetNative(s);
 
-	NSLog(@"Handling %d", desc);
-
 	if (!is_info_for_socket(desc))
 	{
-		NSLog(@"No desc!");
 		return;
 	}
 	x = info_for_socket(desc); 
@@ -137,14 +133,14 @@ static void handle_cf_events(CFSocketRef s, CFSocketCallBackType callbackType,
 
 	if (callbackType & kCFSocketWriteCallBack)
 	{
-		NSLog(@"Writing in %d", desc);
-		[NSMapGet(x->watchers, (1 << ET_WDESC)) receivedEvent: (void *)desc
+		[(id)NSMapGet(x->watchers, (void *)(1 << ET_WDESC)) 
+		  receivedEvent: (void *)desc
 		  type: ET_WDESC extra: 0 forMode: nil];
 	}
 	if (callbackType & kCFSocketReadCallBack)
 	{
-		NSLog(@"Reading in %d", desc);
-		[NSMapGet(x->watchers, (1 << ET_RDESC)) receivedEvent: (void *)desc
+		[(id)NSMapGet(x->watchers, (void *)(1 << ET_RDESC)) 
+		  receivedEvent: (void *)desc
 		  type: ET_RDESC extra: 0 forMode: nil];
 	}
 }
@@ -177,18 +173,14 @@ static void handle_cf_events(CFSocketRef s, CFSocketCallBackType callbackType,
 	switch(add_mode)
 	{
 		case ET_RDESC:
-			NSLog(@"Added read for %@ for %d", watcher, desc);
 			CFSocketEnableCallBacks( x->socket, kCFSocketReadCallBack );
 			x->modes |= (1 << add_mode);
-			NSMapInsert(x->watchers, (1 << add_mode), watcher);
-			NSLog(@"%@", NSStringFromMapTable(x->watchers));
+			NSMapInsert(x->watchers, (void *)(1 << add_mode), (void *)watcher);
 			break;
 		case ET_WDESC:
-			NSLog(@"Added write for %@ for %d", watcher, desc);
 			CFSocketEnableCallBacks( x->socket, kCFSocketWriteCallBack );
 			x->modes |= (1 << add_mode);
-			NSMapInsert(x->watchers, (1 << add_mode), watcher);
-			NSLog(@"%@", NSStringFromMapTable(x->watchers));
+			NSMapInsert(x->watchers, (void *)(1 << add_mode), (void *)watcher);
 			break;
 		default:
 			break;
@@ -212,16 +204,14 @@ static void handle_cf_events(CFSocketRef s, CFSocketCallBackType callbackType,
 	switch(remove_mode)
 	{
 		case ET_RDESC:
-			NSLog(@"Removing reading for %d", desc);
 			CFSocketDisableCallBacks( x->socket, kCFSocketReadCallBack );
 			x->modes &= ~(1 << remove_mode);
-			NSMapRemove(x->watchers, (1 << remove_mode));
+			NSMapRemove(x->watchers, (void *)(1 << remove_mode));
 			break;
 		case ET_WDESC:
-			NSLog(@"Removing writing for %d", desc);
 			CFSocketDisableCallBacks( x->socket, kCFSocketWriteCallBack );
 			x->modes &= ~(1 << remove_mode);
-			NSMapRemove(x->watchers, (1 << remove_mode));
+			NSMapRemove(x->watchers, (void *)(1 << remove_mode));
 			break;
 		default:
 			break;

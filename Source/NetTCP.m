@@ -14,15 +14,6 @@
  *   (at your option) any later version.                                   *
  *                                                                         *
  ***************************************************************************/
-#include <string.h>
-#include <errno.h>
-#include <unistd.h>
-#include <stdlib.h>
-#include <sys/socket.h>
-#include <arpa/inet.h>
-#include <sys/types.h>
-#include <netdb.h>
-#include <fcntl.h>
 
 #import "NetTCP.h"
 #import <Foundation/NSString.h>
@@ -31,6 +22,16 @@
 #import <Foundation/NSTimer.h>
 #import <Foundation/NSException.h>
 #import <Foundation/NSHost.h>
+
+#include <string.h>
+#include <errno.h>
+#include <unistd.h>
+#include <stdlib.h>
+#include <sys/socket.h>
+#include <sys/types.h>
+#include <netdb.h>
+#include <fcntl.h>
+#include <arpa/inet.h>
 
 #ifdef __APPLE__
 #ifndef socklen_t
@@ -300,7 +301,8 @@ static TCPSystem *default_system = nil;
 	}
 	else
 	{
-		if (inet_aton([[aHost address] cString], &(sin.sin_addr)) == 0)
+		if (inet_aton([[aHost address] cString], 
+		    (struct in_addr *)(&(sin.sin_addr))) == 0)
 		{
 			[self setErrorString: NetclassesErrorBadAddress withErrno: 0];
 			return -1;
@@ -372,7 +374,8 @@ static TCPSystem *default_system = nil;
 
 	destAddr.sin_family = AF_INET;
 	destAddr.sin_port = htons(portNumber);
-	if (!(inet_aton([[host address] cString], &destAddr.sin_addr)))
+	if (!(inet_aton([[host address] cString], 
+	    (struct in_addr *)(&destAddr.sin_addr))))
 	{
 		[self setErrorString: [NSString stringWithFormat: @"%s",
 		  strerror(errno)] withErrno: errno];
