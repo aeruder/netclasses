@@ -28,10 +28,14 @@
 }
 - connectionEstablished: aTransport
 {
-    NSString *greetingString = [NSString stringWithFormat: @"Welcome to EchoServ v0.0.001, %@\r\n", [(NSHost *)[aTransport remoteHost] name]];
-	NSData *greetingData = [NSData
-	       dataWithBytes: [greetingString cString]
-	              length: [greetingString cStringLength]];
+    NSString *greetingString = 
+	 [NSString stringWithFormat: @"Welcome to EchoServ v0.0.001 on %@, %@\r\n",  
+	 [(NSHost *)[aTransport localHost] name], 
+	 [(NSHost *)[aTransport remoteHost] name]];
+	NSData *greetingData = [greetingString dataUsingEncoding: 
+	  [NSString defaultCStringEncoding] 
+	  allowLossyConversion: YES];
+	
 	transport = RETAIN(aTransport);
 
 	[[NetApplication sharedInstance] connectObject: self];
