@@ -2279,6 +2279,8 @@ static void rec_error(IRCObject *client, NSString *command, NSString *prefix,
 		{
 			NSRange aRange;
 
+			[self setNick: [paramList objectAtIndex: 0]];
+
 			aRange.location = 1;
 			aRange.length = [paramList count] - 1;
 		
