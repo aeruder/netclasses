@@ -28,6 +28,8 @@ int main(int argc, char **argv, char **env)
 
 	x = AUTORELEASE([[[TCPPort alloc] initOnPort: 6666] 
 	                setNetObject: [EchoServ class]]);
+	NSLog(@"Ready to go on port 6666");
+
 	if (!x)
 	{
 		NSLog(@"%@", [[TCPSystem sharedInstance] errorString]);

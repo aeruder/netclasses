@@ -84,6 +84,9 @@ NSArray *SeparateIRCNickAndHost(NSString *prefix);
 
 - joinChannel: (NSString *)channel withPassword: (NSString *)aPassword;
 
+- sendCustomCTCP: (NSString *)aCTCP withArgument: (NSString *)anArgument
+    to: (NSString *)aPerson;
+	
 - sendVersionReplyTo: (NSString *)aPerson name:(NSString *)clientName
       version: (NSString *)clientVersion environment: (NSString *)clientEnv;
 
@@ -183,6 +186,12 @@ NSArray *SeparateIRCNickAndHost(NSString *prefix);
 - userInfoReplyReceived: (NSString *)userInfo from: (NSString *)aPerson;
 
 - userInfoRequestReceived: (NSString *)query from: (NSString *)aPerson;
+
+- customCTCPRequestReceived: (NSString *)aCTCP 
+   withArgument: (NSString *)argument from: (NSString *)aPerson;
+
+- customCTCPReplyReceived: (NSString *)aCTCP
+   withArgument: (NSString *)argument from: (NSString *)aPerson;
 
 - errorReceived: (NSString *)anError;
 

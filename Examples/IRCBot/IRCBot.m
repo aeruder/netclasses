@@ -78,7 +78,7 @@ static inline NSData *chomp_line(NSMutableData *data)
 - versionRequestReceived: (NSString *)query from: (NSString *)aPerson
 {
 	[self sendVersionReplyTo: ExtractIRCNick(aPerson) name: @"netclasses"
-	 version: @"0.96"  environment: @"GNUstep"];
+	 version: @"0.98"  environment: @"GNUstep"];
 	return self;
 }
 - pingRequestReceived: (NSString *)argument from: (NSString *)aPerson
