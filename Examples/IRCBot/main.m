@@ -40,7 +40,7 @@ int main(int argc, char **argv, char **env)
 	  withPassword: nil];
 	  
 	[[TCPSystem sharedInstance] connectNetObjectInBackground: connection 
-	  toHost: [NSHost hostWithName: @"irc.openprojects.net"] 
+	  toHost: [NSHost hostWithName: @"irc.freenode.net"] 
 	  onPort: 6667 withTimeout: 30];
 	
 	NSLog(@"Connection being established...");
