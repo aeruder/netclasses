@@ -377,7 +377,7 @@ static void rec_cdcc(IRCObject *client, NSString *prefix,
 		port = [NSNumber numberWithUnsignedShort: 
 		 strtoul([[list objectAtIndex: 3] cString], 0, 10)];
 
-		address = [[TCPSystem sharedInstance] ipFromInt:
+		address = [[TCPSystem sharedInstance] hostFromInt:
 		 ntohl(strtoul([[list objectAtIndex: 2] cString], 0, 10))];
 		
 		fileName = [list objectAtIndex: 1];
@@ -2166,7 +2166,7 @@ NSString *DCCInfoHost = @"DCCInfoHost";
 
 	connection = RETAIN([[TCPSystem sharedInstance] 
 	  connectNetObjectInBackground: self
-	  toIp: [aInfo objectForKey: DCCInfoHost]
+	  toHost: [aInfo objectForKey: DCCInfoHost]
 	  onPort: [[aInfo objectForKey: DCCInfoPort] unsignedShortValue]
 	  withTimeout: seconds]);
 	
@@ -2421,8 +2421,8 @@ static id connection_holder = nil;
 
 	dataToWrite = [[NSMutableData alloc] initWithCapacity: blockSize * 2];
 
-	address = [[TCPSystem sharedInstance] localIpForTransport: 
-	 [aDelegate transport]];
+	address = [[TCPSystem sharedInstance] hostForTransport: 
+	  [aDelegate transport]];
 	
 	portNum = [NSNumber numberWithUnsignedShort: 
 	  htons([port socketInfo]->sin_port)];

@@ -82,13 +82,11 @@
 					<ref id="readData:">readData:</ref> and
 					<ref id="writeData:">writeData</ref>.
 			</desc>
-			<method type="NSString *" factory="no">
+			<method type="id" factory="no">
 				<sel>address</sel>
 				<desc>
-					This method will return the connection's address.  What it
-					actually consists of is undefined.  Sometimes it may be an
-					IP number, other times it may be a host name.  The actual
-					value depends on the class implementing this protocol.
+					This method will return the connection's address in a 
+					format specific to the type of transport.
 				</desc>
 			</method>
 			<method type="id" factory="no" id="writeData:">

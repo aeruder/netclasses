@@ -21,6 +21,7 @@
 #import <Foundation/NSString.h>
 #import <Foundation/NSRunLoop.h>
 #import <Foundation/NSDate.h>
+#import <Foundation/NSHost.h>
 
 #include <time.h>
 
@@ -39,7 +40,8 @@ int main(int argc, char **argv, char **env)
 	  withPassword: nil];
 	  
 	[[TCPSystem sharedInstance] connectNetObjectInBackground: connection 
-	  toHost: @"irc.openprojects.net" onPort: 6667 withTimeout: 30];
+	  toHost: [NSHost hostWithName: @"irc.openprojects.net"] 
+	  onPort: 6667 withTimeout: 30];
 	
 	NSLog(@"Connection being established...");
 	
