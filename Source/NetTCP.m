@@ -639,6 +639,52 @@ static TCPSystem *default_system = nil;
 	return object;
 }
 /**
+ * Returns a host order 32-bit integer from a host
+ * Returns YES on success and NO on failure, the result is stored in the
+ * 32-bit integer pointed to by <var>aNumber</var>
+ */
+- (BOOL)hostOrderInteger: (uint32_t *)aNumber fromHost: (NSHost *)aHost
+{
+	struct in_addr addr;
+
+	if (!aHost) return NO;
+	if (![aHost address]) return NO;
+
+	if (inet_aton([[aHost address] cString], &addr) != 0)
+	{
+		if (aNumber)
+		{
+			*aNumber = ntohl(addr.s_addr);
+			return YES;
+		}
+	}
+
+	return NO;
+}
+/**
+ * Returns a network order 32-bit integer from a host
+ * Returns YES on success and NO on failure, the result is stored in the
+ * 32-bit integer pointed to by <var>aNumber</var>
+ */
+- (BOOL)networkOrderInteger: (uint32_t *)aNumber fromHost: (NSHost *)aHost
+{
+	struct in_addr addr;
+
+	if (!aHost) return NO;
+	if (![aHost address]) return NO;
+	
+	if (inet_aton([[aHost address] cString], &addr) != 0)
+	{
+		if (aNumber)
+		{
+			*aNumber = addr.s_addr;
+			return YES;
+		}
+	}
+	
+	return NO;
+}
+/**
  * Returns a host from a network order 32-bit integer ip address.
  */
 - (NSHost *)hostFromNetworkOrderInteger: (uint32_t)ip

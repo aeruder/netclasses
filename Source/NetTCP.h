@@ -49,6 +49,9 @@ extern NSString *NetclassesErrorAborted;
 - (TCPConnecting *)connectNetObjectInBackground: (id <NetObject>)netObject
     toHost: (NSHost *)aHost onPort: (uint16_t)aPort withTimeout: (int)aTimeout;
 
+- (BOOL)hostOrderInteger: (uint32_t *)aNumber fromHost: (NSHost *)aHost;
+- (BOOL)networkOrderInteger: (uint32_t *)aNumber fromHost: (NSHost *)aHost;
+
 - (NSHost *)hostFromHostOrderInteger: (uint32_t)ip;
 - (NSHost *)hostFromNetworkOrderInteger: (uint32_t)ip;
 @end
