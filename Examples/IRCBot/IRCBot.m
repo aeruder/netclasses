@@ -25,17 +25,26 @@
 {
 	[super registeredWithServer];
 	[self joinChannel: 
-	  @"#gnustep,#linpeople,#linuxhelp,#debian,#c,#c++,#kernelnewbies,#openprojects,#objc,#python" 
+	  @"#netclasses" 
 	  withPassword: nil];
 	return self;
 }
+- versionRequestReceived: (NSString *)query from: (NSString *)aPerson
+{
+	[self sendVersionReplyTo: ExtractIRCNick(aPerson) name: @"netclasses"
+	 version: @"0.94"  environment: @"GNUstep, silly!!!"];
+	return self;
+}
+- pingRequestReceived: (NSString *)argument from: (NSString *)aPerson
+{
+	[self sendPingReplyTo: ExtractIRCNick(aPerson) withArgument: argument];
+	return self;
+}
 - messageReceived: (NSString *)aMessage to: (NSString *)to
-               by: (NSString *)whom
+               from: (NSString *)whom
 {
 	NSString *sendTo;
 			
-	[super messageReceived: aMessage to: to by: whom];
-	
 	if ([nick caseInsensitiveCompare: to] == NSOrderedSame)
 	{
 		sendTo = ExtractIRCNick(whom);

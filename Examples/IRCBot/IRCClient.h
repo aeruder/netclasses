@@ -57,11 +57,20 @@ NSArray *SeparateIRCNickAndHost(NSString *prefix);
 
 - joinChannel: (NSString *)channel withPassword: (NSString *)aPassword;
 
+- sendVersionReplyTo: (NSString *)aPerson name:(NSString *)clientName
+      version: (NSString *)clientVersion environment: (NSString *)clientEnv;
+
+- sendPingReplyTo: (NSString *)aPerson withArgument: (NSString *)argument;
+
+- sendClientInfo: (NSString *)clientInfo to: (NSString *)aPerson;
+
+- sendUserInfo: (NSString *)userInfo to: (NSString *)aPerson;
+
 - sendMessage: (NSString *)message to: (NSString *)receiver;
 
 - sendNotice: (NSString *)message to: (NSString *)receiver;
 
-- sendAction: (NSString *)anAction to: (NSString *)whom;
+- sendAction: (NSString *)anAction to: (NSString *)receiver;
 
 - becomeOperatorWithName: (NSString *)aName withPassword: (NSString *)pass;
 
@@ -132,39 +141,55 @@ NSArray *SeparateIRCNickAndHost(NSString *prefix);
 
 - couldNotRegister: (NSString *)reason;
 
-- wallopsReceived: (NSString *)message by: (NSString *)whom;
+- versionReplyReceived: (NSString *)versionInfo from: (NSString *)aPerson;
 
-- userKicked: (NSString *)aPerson from: (NSString *)aChannel 
-         for: (NSString *)reason by: (NSString *)whom;
+- versionRequestReceived: (NSString *)query from: (NSString *)aPerson;
+
+- pingReplyReceived: (NSString *)argument from: (NSString *)aPerson;
+
+- pingRequestReceived: (NSString *)argument from: (NSString *)aPerson;
+
+- clientInfoReplyReceived: (NSString *)clientInfo from: (NSString *)aPerson;
+
+- clientInfoRequestReceived: (NSString *)query from: (NSString *)aPerson;
+
+- userInfoReplyReceived: (NSString *)userInfo from: (NSString *)aPerson;
+
+- userInfoRequestReceived: (NSString *)query from: (NSString *)aPerson;
+
+- wallopsReceived: (NSString *)message from: (NSString *)sender;
+
+- userKicked: (NSString *)aPerson outOf: (NSString *)aChannel 
+         for: (NSString *)reason from: (NSString *)kicker;
 		 
-- invitedTo: (NSString *)aChannel by: (NSString *)aPerson;
+- invitedTo: (NSString *)aChannel from: (NSString *)inviter;
 
 - modeChanged: (NSString *)mode on: (NSString *)anObject 
-   withParams: (NSArray *)paramList by: (NSString *)whom;
+   withParams: (NSArray *)paramList from: (NSString *)aPerson;
    
 - numericCommandReceived: (NSString *)command withParams: (NSArray *)paramList 
-                      by: (NSString *)whom;
+                      from: (NSString *)sender;
 
-- nickChangedTo: (NSString *)newName by: (NSString *)whom;
+- nickChangedTo: (NSString *)newName from: (NSString *)aPerson;
 
-- channelJoined: (NSString *)channel by: (NSString *)whom;
+- channelJoined: (NSString *)channel from: (NSString *)joiner;
 
 - channelParted: (NSString *)channel withMessage: (NSString *)aMessage
-             by: (NSString *)whom;
+             from: (NSString *)parter;
 
-- quitIRCWithMessage: (NSString *)aMessage by: (NSString *)whom;
+- quitIRCWithMessage: (NSString *)aMessage from: (NSString *)quitter;
 
 - topicChangedTo: (NSString *)aTopic in: (NSString *)channel
-              by: (NSString *)whom;
+              from: (NSString *)aPerson;
 
 - messageReceived: (NSString *)aMessage to: (NSString *)to
-               by: (NSString *)whom;
+               from: (NSString *)sender;
 
 - noticeReceived: (NSString *)aMessage to: (NSString *)to
-              by: (NSString *)whom;
+              from: (NSString *)sender;
 
 - actionReceived: (NSString *)anAction to: (NSString *)to
-              by: (NSString *)whom;
+              from: (NSString *)sender;
 
 // Low-Level   
 - lineReceived: (NSData *)aLine;

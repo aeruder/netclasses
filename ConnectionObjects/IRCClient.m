@@ -34,6 +34,7 @@
 NSString *IRCException = @"IRCException";
 
 static NSMapTable *command_to_function = 0;
+static NSMapTable *ctcp_to_function = 0;
 
 static NSData *IRC_new_line = nil;
 
@@ -207,6 +208,63 @@ inline NSArray *SeparateIRCNickAndHost(NSString *prefix)
 	 nil];
 }
 
+static void rec_caction(IRCClient *client, NSString *prefix,
+                        NSString *command, NSString *rest, NSString *to)
+{
+	if ([rest length] == 0)
+	{
+		return;
+	}
+	[client actionReceived: rest to: to from: prefix];
+}
+static void rec_cversion(IRCClient *client, NSString *prefix,
+                         NSString *command, NSString *rest, NSString *to)
+{
+	if ([command isEqualToString: @"NOTICE"])
+	{
+		[client versionReplyReceived: rest from: prefix];
+	}
+	else
+	{
+		[client versionRequestReceived: rest from: prefix];
+	}
+}
+static void rec_cping(IRCClient *client, NSString *prefix,
+                      NSString *command, NSString *rest, NSString *to)
+{
+	if ([command isEqualToString: @"NOTICE"])
+	{
+		[client pingReplyReceived: rest from: prefix];
+	}
+	else
+	{
+		[client pingRequestReceived: rest from: prefix];
+	}
+}
+static void rec_cclientinfo(IRCClient *client, NSString *prefix,
+                            NSString *command, NSString *rest, NSString *to)
+{
+	if ([command isEqualToString: @"NOTICE"])
+	{
+		[client clientInfoReplyReceived: rest from: prefix];
+	}
+	else
+	{
+		[client clientInfoRequestReceived: rest from: prefix];
+	}
+}
+static void rec_cuserinfo(IRCClient *client, NSString *prefix,
+                            NSString *command, NSString *rest, NSString *to)
+{
+	if ([command isEqualToString: @"NOTICE"])
+	{
+		[client userInfoReplyReceived: rest from: prefix];
+	}
+	else
+	{
+		[client userInfoRequestReceived: rest from: prefix];
+	}
+}
 static void rec_nick(IRCClient *client, NSString *command,
                      NSString *prefix, NSArray *paramList)
 {
@@ -220,7 +278,7 @@ static void rec_nick(IRCClient *client, NSString *command,
 		return;
 	}
 
-	[client nickChangedTo: [paramList objectAtIndex: 0] by: prefix];
+	[client nickChangedTo: [paramList objectAtIndex: 0] from: prefix];
 }
 
 static void rec_join(IRCClient *client, NSString *command, 
@@ -236,7 +294,7 @@ static void rec_join(IRCClient *client, NSString *command,
 		return;
 	}
 
-	[client channelJoined: [paramList objectAtIndex: 0] by: prefix];
+	[client channelJoined: [paramList objectAtIndex: 0] from: prefix];
 }
 
 static void rec_part(IRCClient *client, NSString *command,
@@ -256,7 +314,7 @@ static void rec_part(IRCClient *client, NSString *command,
 	}
 
 	[client channelParted: [paramList objectAtIndex: 0] withMessage:
-	  (x == 2) ? [paramList objectAtIndex: 1] : 0 by: prefix];
+	  (x == 2) ? [paramList objectAtIndex: 1] : 0 from: prefix];
 }
 
 static void rec_quit(IRCClient *client, NSString *command,
@@ -272,7 +330,7 @@ static void rec_quit(IRCClient *client, NSString *command,
 		return;
 	}
 
-	[client quitIRCWithMessage: [paramList objectAtIndex: 0] by: prefix];
+	[client quitIRCWithMessage: [paramList objectAtIndex: 0] from: prefix];
 }
 
 static void rec_topic(IRCClient *client, NSString *command,
@@ -289,14 +347,11 @@ static void rec_topic(IRCClient *client, NSString *command,
 	}
 
 	[client topicChangedTo: [paramList objectAtIndex: 1] 
-	  in: [paramList objectAtIndex: 0] by: prefix];
+	  in: [paramList objectAtIndex: 0] from: prefix];
 }
-
 static void rec_privmsg(IRCClient *client, NSString *command,
                         NSString *prefix, NSArray *paramList)
 {
-	NSRange aRange = {0, 7};
-	int x;
 	id message;
 	
 	if (!prefix)
@@ -310,37 +365,61 @@ static void rec_privmsg(IRCClient *client, NSString *command,
 	}
 
 	message = [paramList objectAtIndex: 1];
-	x = [message length];
-	if (x > 8)
+	if ([message hasPrefix: @"\001"])
 	{
-		if ([message compare: @"\001ACTION " options: NSCaseInsensitiveSearch
-		               range: aRange] == NSOrderedSame)
+		void (*func)(IRCClient *, NSString *, NSString *, NSString *, 
+		              NSString *);
+		id ctcp = string_to_character(message, ' ');
+		id rest;
+		
+		if ([ctcp isEqualToString: message])
 		{
-			aRange.location = 9;
-			aRange.length = x - 9;
-			[client actionReceived: [message substringWithRange: aRange]
-			  to: [paramList objectAtIndex: 0] by: prefix];
-			return;
+			if ([ctcp hasSuffix: @"\001"])
+			{
+				ctcp = [ctcp substringToIndex: [ctcp length] - 1];
+			}
+			rest = nil;
 		}
-	}	
-	[client messageReceived: message to: [paramList objectAtIndex: 0]
-	                     by: prefix];
-}
-static void rec_notice(IRCClient *client, NSString *command,
-                        NSString *prefix, NSArray *paramList)
-{
-	if (!prefix)
-	{
+		else
+		{
+			NSRange aRange;
+			aRange.location = [ctcp length] + 1;
+			aRange.length = [message length] - aRange.location;
+			
+			if ([message hasSuffix: @"\001"])
+			{
+				aRange.length--;
+			}
+			
+			if (aRange.length > 0)
+			{
+				rest = [message substringWithRange: aRange];
+			}
+			else
+			{
+				rest = nil;
+			}
+		}	
+		func = NSMapGet(ctcp_to_function, ctcp);
+		
+		if (func)
+		{
+			func(client, prefix, command, rest, [paramList objectAtIndex: 0]);
+		}
+		
 		return;
 	}
-
-	if ([paramList count] < 2)
+	
+	if ([command isEqualToString: @"PRIVMSG"])
 	{
-		return;
+		[client messageReceived: message
+		   to: [paramList objectAtIndex: 0] from: prefix];
 	}
-
-	[client noticeReceived: [paramList objectAtIndex: 1]
-	     to: [paramList objectAtIndex: 0] by: prefix];
+	else
+	{
+		[client noticeReceived: message
+		   to: [paramList objectAtIndex: 0] from: prefix];
+	}
 }
 static void rec_mode(IRCClient *client, NSString *command, NSString *prefix, 
                      NSArray *paramList)
@@ -373,7 +452,7 @@ static void rec_mode(IRCClient *client, NSString *command, NSString *prefix,
 	}
 	
 	[client modeChanged: [paramList objectAtIndex: 1] 
-	  on: [paramList objectAtIndex: 0] withParams: newParams by: prefix];
+	  on: [paramList objectAtIndex: 0] withParams: newParams from: prefix];
 }
 static void rec_invite(IRCClient *client, NSString *command, NSString *prefix, 
                      NSArray *paramList)
@@ -388,7 +467,7 @@ static void rec_invite(IRCClient *client, NSString *command, NSString *prefix,
 	}
 
 	NSLog(@"%@", [paramList objectAtIndex: 0]);
-	[client invitedTo: [paramList objectAtIndex: 1] by: prefix];
+	[client invitedTo: [paramList objectAtIndex: 1] from: prefix];
 }
 static void rec_kick(IRCClient *client, NSString *command, NSString *prefix,
                        NSArray *paramList)
@@ -407,7 +486,7 @@ static void rec_kick(IRCClient *client, NSString *command, NSString *prefix,
 	object = ([paramList count] > 2) ? [paramList objectAtIndex: 2] : nil;
 	
 	[client userKicked: [paramList objectAtIndex: 1]
-	   from: [paramList objectAtIndex: 0] for: object by: prefix];
+	   outOf: [paramList objectAtIndex: 0] for: object from: prefix];
 }
 static void rec_ping(IRCClient *client, NSString *command, NSString *prefix,
                        NSArray *paramList)
@@ -431,7 +510,7 @@ static void rec_wallops(IRCClient *client, NSString *command, NSString *prefix,
 		return;
 	}
 	
-	[client wallopsReceived: [paramList objectAtIndex: 0] by: prefix];
+	[client wallopsReceived: [paramList objectAtIndex: 0] from: prefix];
 }
 
 @interface IRCClient (InternalIRCClient)
@@ -470,7 +549,7 @@ static void rec_wallops(IRCClient *client, NSString *command, NSString *prefix,
 	IRC_new_line = [[NSData alloc] initWithBytes: "\r\n" length: 2];
 
 	command_to_function = NSCreateMapTable(NSObjectMapKeyCallBacks,
-	   NSIntMapValueCallBacks, 10);
+	   NSIntMapValueCallBacks, 12);
 	
 	NSMapInsert(command_to_function, @"NICK", rec_nick);
 	NSMapInsert(command_to_function, @"JOIN", rec_join);
@@ -478,12 +557,21 @@ static void rec_wallops(IRCClient *client, NSString *command, NSString *prefix,
 	NSMapInsert(command_to_function, @"QUIT", rec_quit);
 	NSMapInsert(command_to_function, @"TOPIC", rec_topic);
 	NSMapInsert(command_to_function, @"PRIVMSG", rec_privmsg);
-	NSMapInsert(command_to_function, @"NOTICE", rec_notice);
+	NSMapInsert(command_to_function, @"NOTICE", rec_privmsg);
 	NSMapInsert(command_to_function, @"MODE", rec_mode);
 	NSMapInsert(command_to_function, @"KICK", rec_kick);
 	NSMapInsert(command_to_function, @"INVITE", rec_invite);
 	NSMapInsert(command_to_function, @"PING", rec_ping);
 	NSMapInsert(command_to_function, @"WALLOPS", rec_wallops);
+
+	ctcp_to_function = NSCreateMapTable(NSObjectMapKeyCallBacks,
+	   NSIntMapValueCallBacks, 5);
+	
+	NSMapInsert(ctcp_to_function, @"\001ACTION", rec_caction);
+	NSMapInsert(ctcp_to_function, @"\001VERSION", rec_cversion);
+	NSMapInsert(ctcp_to_function, @"\001PING", rec_cping);
+	NSMapInsert(ctcp_to_function, @"\001USERINFO", rec_cuserinfo);
+	NSMapInsert(ctcp_to_function, @"\001CLIENTINFO", rec_cclientinfo);
 }
 + (IRCClient *)connectTo: (NSString *)host onPort: (int)aPort
    withTimeout: (int)timeout withNicknames: (NSArray *)nicknames
@@ -696,6 +784,100 @@ static void rec_wallops(IRCClient *client, NSString *command, NSString *prefix,
 
 	return self;
 }
+- sendVersionReplyTo: (NSString *)aPerson name:(NSString *)clientName
+    version: (NSString *)clientVersion environment: (NSString *)clientEnv
+{
+	if ([clientName length] == 0)
+	{	
+		return self;
+	}
+	if ([clientVersion length] == 0)
+	{
+		return self;
+	}
+	if ([clientEnv length] == 0)
+	{
+		return self;
+	}
+	if ([aPerson length] == 0)
+	{
+		return self;
+	}
+	if (contains_a_space(aPerson))
+	{
+		[NSException raise: IRCException format: 
+		 @"[IRCClient sendVersionReplyTo: '%@' name: '%@' version: '%@' environment: '%@'] Person contains a space",
+		  aPerson, clientName, clientVersion, clientEnv];
+	}
+	
+	[self writeString: @"NOTICE %@ :\001VERSION %@ %@ %@\001",
+	 aPerson, clientName, clientVersion, clientEnv];
+	return self;
+}
+- sendPingReplyTo: (NSString *)aPerson withArgument: (NSString *)argument
+{
+	if ([aPerson length] == 0)
+	{
+		return self;
+	}
+	if ([argument length] == 0)
+	{
+		return self;
+	}
+	if (contains_a_space(aPerson))
+	{
+		[NSException raise: IRCException format:
+		 @"[IRCClient sendPingReplyTo: '%@' withArgument: '%@'] Person contains a space",
+		  aPerson, argument];
+	}
+
+	[self writeString: @"NOTICE %@ :\001PING %@\001", aPerson, argument];
+	return self;
+}
+- sendClientInfo: (NSString *)clientInfo to: (NSString *)aPerson
+{
+	if ([clientInfo length] == 0)
+	{
+		return self;
+	}
+	if ([aPerson length] == 0)
+	{
+		return self;
+	}
+	if (contains_a_space(aPerson))
+	{
+		[NSException raise: IRCException format:
+		 @"[IRCClient sendClientInfo: '%@' to: '%@'] Person contains a space",
+		  clientInfo, aPerson];
+	}
+
+	[self writeString: @"NOTICE %@ :\001CLIENTINFO %@\001", 
+	  aPerson, clientInfo];
+
+	return self;
+}
+- sendUserInfo: (NSString *)userInfo to: (NSString *)aPerson
+{
+	if ([userInfo length] == 0)
+	{
+		return self;
+	}
+	if ([aPerson length] == 0)
+	{
+		 return self;
+	}
+	if (contains_a_space(aPerson))
+	{
+		[NSException raise: IRCException format:
+		 @"[IRCClient sendUserInfo: '%@' to: '%@'] Person contains a space",
+		  userInfo, aPerson];
+	}
+
+	[self writeString: @"NOTICE %@ :\001USERINFO %@\001",
+	 aPerson, userInfo];
+	
+	return self;
+}
 - sendMessage: (NSString *)message to: (NSString *)receiver
 {
 	if ([message length] == 0)
@@ -738,24 +920,24 @@ static void rec_wallops(IRCClient *client, NSString *command, NSString *prefix,
 	
 	return self;
 }
-- sendAction: (NSString *)anAction to: (NSString *)whom
+- sendAction: (NSString *)anAction to: (NSString *)receiver
 {
 	if ([anAction length] == 0)
 	{
 		return self;
 	}
-	if ([whom length] == 0)
+	if ([receiver length] == 0)
 	{
 		return self;
 	}
-	if (contains_a_space(whom))
+	if (contains_a_space(receiver))
 	{
 		[NSException raise: IRCException
 		 format: @"[IRCClient sendAction: '%@' to: '%@'] The receiver contsins a space.",
-		   anAction, whom];
+		   anAction, receiver];
 	}
 
-	[self writeString: @"PRIVMSG %@ :\001ACTION %@\001", whom, anAction];
+	[self writeString: @"PRIVMSG %@ :\001ACTION %@\001", receiver, anAction];
 	
 	return self;
 }
@@ -1426,33 +1608,65 @@ static void rec_wallops(IRCClient *client, NSString *command, NSString *prefix,
 - couldNotRegister: (NSString *)reason
 {
 	return self;
-}
-- wallopsReceived: (NSString *)message by: (NSString *)whom
+}	
+- versionReplyReceived: (NSString *)versionInfo from: (NSString *)aPerson
 {
 	return self;
 }
-- userKicked: (NSString *)aPerson from: (NSString *)aChannel 
-         for: (NSString *)reason by: (NSString *)whom
+- versionRequestReceived: (NSString *)query from: (NSString *)aPerson
 {
 	return self;
 }
-- invitedTo: (NSString *)aChannel by: (NSString *)aPerson
+- pingReplyReceived: (NSString *)argument from: (NSString *)aPerson
+{
+	return self;
+}
+- pingRequestReceived: (NSString *)argument from: (NSString *)aPerson
+{
+	return self;
+}
+- clientInfoReplyReceived: (NSString *)clientInfo from: (NSString *)aPerson
+{
+	return self;
+}
+- clientInfoRequestReceived: (NSString *)query from: (NSString *)aPerson
+{
+	return self;
+}
+- userInfoReplyReceived: (NSString *)userInfo from: (NSString *)aPerson
+{
+	return self;
+}
+- userInfoRequestReceived: (NSString *)query from: (NSString *)aPerson
+{
+	return self;
+}
+- wallopsReceived: (NSString *)message from: (NSString *)sender
+{
+	return self;
+}
+- userKicked: (NSString *)aPerson outOf: (NSString *)aChannel 
+         for: (NSString *)reason from: (NSString *)kicker
+{
+	return self;
+}
+- invitedTo: (NSString *)aChannel from: (NSString *)anInviter
 {
 	return self;
 }
 - modeChanged: (NSString *)mode on: (NSString *)anObject 
-    withParams: (NSArray *)paramList by: (NSString *)whom
+    withParams: (NSArray *)paramList from: (NSString *)aPerson
 {
 	return self;
 }
 - numericCommandReceived: (NSString *)command withParams: (NSArray *)paramList 
-    by: (NSString *)whom
+    from: (NSString *)sender
 {
 	return self;
 }
-- nickChangedTo: (NSString *)newName by: (NSString *)whom
+- nickChangedTo: (NSString *)newName from: (NSString *)aPerson
 {
-	if ([ExtractIRCNick(whom) caseInsensitiveCompare: nick] 
+	if ([ExtractIRCNick(aPerson) caseInsensitiveCompare: nick] 
 	      == NSOrderedSame)
 	{
 		RELEASE(nick);
@@ -1460,36 +1674,36 @@ static void rec_wallops(IRCClient *client, NSString *command, NSString *prefix,
 	}
 	return self;
 }
-- channelJoined: (NSString *)channel by: (NSString *)whom
+- channelJoined: (NSString *)channel from: (NSString *)joiner
 {
 	return self;
 }
 - channelParted: (NSString *)channel withMessage: (NSString *)aMessage
-             by: (NSString *)whom
+             from: (NSString *)parter
 {
 	return self;
 }
-- quitIRCWithMessage: (NSString *)aMessage by: (NSString *)whom
+- quitIRCWithMessage: (NSString *)aMessage from: (NSString *)quitter
 {
 	return self;
 }
 - topicChangedTo: (NSString *)aTopic in: (NSString *)channel
-              by: (NSString *)whom
+              from: (NSString *)aPerson
 {
 	return self;
 }
 - messageReceived: (NSString *)aMessage to: (NSString *)to
-               by: (NSString *)whom
+               from: (NSString *)sender
 {
 	return self;
 }
 - noticeReceived: (NSString *)aMessage to: (NSString *)to
-              by: (NSString *)whom
+              from: (NSString *)sender
 {
 	return self;
 }
 - actionReceived: (NSString *)anAction to: (NSString *)to
-              by: (NSString *)whom
+              from: (NSString *)sender
 {
 	return self;
 }
@@ -1578,8 +1792,18 @@ static void rec_wallops(IRCClient *client, NSString *command, NSString *prefix,
 	}
 	
 	if (is_numeric_command(command))
-	{
-		[self numericCommandReceived: command withParams: paramList by: prefix];
+	{		
+		if ([paramList count] >= 2)
+		{
+			NSRange aRange;
+
+			aRange.location = 1;
+			aRange.length = [paramList count] - 1;
+		
+			[self numericCommandReceived: command 
+			  withParams: [paramList subarrayWithRange: aRange]
+			  from: prefix];
+		}	
 	}
 	else
 	{

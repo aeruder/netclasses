@@ -24,5 +24,5 @@
 	}
 - registeredWithServer;
 - messageReceived: (NSString *)aMessage to: (NSString *)to
-               by: (NSString *)whom;
+               from: (NSString *)whom;
 @end
