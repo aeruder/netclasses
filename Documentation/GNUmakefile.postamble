@@ -1,0 +1,6 @@
+after-all::
+	@rm -f unknown.gsdocrefs
+after-clean::
+	@rm -f unknown.gsdocrefs
+after-distclean::
+	@rm -f unknown.gsdocrefs

@@ -1,0 +1,43 @@
+netclasses
+===============================================================================
+netclasses is a small distribution of Objective-C networking classes
+===============================================================================
+Copyright (C) 2002 Andy Ruder
+
+  netclasses is free software; you can redistribute it and/or modify
+  it under the terms of the GNU General Public License as published by
+  the Free Software Foundation; either version 2 of the License, or
+  (at your option) any later version.
+
+  This program is distributed in the hope that it will be useful,
+  but WITHOUT ANY WARRANTY; without even the implied warranty of
+  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  GNU General Public License for more details.
+
+  You should have received a copy of the GNU General Public License
+  along with this program; if not, write to the Free Software
+  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+
+Comments are welcome.
+===============================================================================
+
+Compiling:
+    Typing 'make' will compile a sample tool that uses the classes.
+ 
+Installing:
+    There is nothing to install.
+
+Documentation:
+    Documentation/netclasses.gsdoc is the documentation.  To make a html
+    file out of it, simply type 'make'
+
+Use:
+    Feel free to use the four files in Source/ in a GNUstep project.  They will
+    allow a server app to be easily set up.  Since the distribution is so small
+    I opted to do it this way instead of setting up an entire library.  Simply
+    add these files into any project, follow the example, read the
+    docs and have fun.
+
+===============================================================================
+Copyright (C) 2002 by Andy Ruder <aeruder@yahoo.com>
+	

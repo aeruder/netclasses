@@ -1,0 +1,349 @@
+<?xml version="1.0"?>
+<!DOCTYPE gsdoc PUBLIC "-//GNUstep//DTD gsdoc 0.6.5//EN" "http://www.gnustep.org/gsdoc-0_6_7.xml">
+<gsdoc base="netclasses">
+<head>
+	<title>Documentation for netclasses</title>
+	<author name="Andrew Ruder">
+		<email address="aeruder@yahoo.com"/>
+		<url url="http://andyruder.tripod.com/"/>
+		<desc>
+			Beregorn on <uref url="http://www.openprojects.net">
+			irc.openprojects.net</uref> in #gnustep and in #objc.
+		</desc>
+	</author>
+	<version>1.0</version>
+	<date>8 May, 2002</date>
+	<abstract>
+		This documents how to use the netclasses to easily create a server.
+	</abstract>
+	<copy>Andrew Ruder</copy>
+</head>
+<body>
+	<front>
+		<contents/>
+		<chapter>
+			<heading>Introduction</heading>
+			<p>
+				Netclasses is an easy to use API for creating a server in 
+				Objective-C.  While netclasses is not designed for one protocol
+				or another, this distribution comes with everything needed
+				for TCP/IP.
+			</p>
+			<section>
+				<heading>Why should I use netclasses?</heading>
+				<p>
+					For many reasons:
+				</p>
+				<list>
+					<item>
+						Seamless integration into GNUstep.  When you can have
+						an entire server running with a main() basically consisting
+						of [[NSRunLoop currentRunLoop] run], life is very, very
+						good.
+					</item>
+					<item>
+						Using NSFileHandle to implement an entire server is
+						tedious and dirty.
+					</item>
+					<item>
+						Netclasses has an easy to use API.  You simply create
+						an object that conforms to a protocol, attach it to a
+						port and start taking on connections.  Plus, with the
+						design, it would be easy to add other transport methods
+						besides TCP.  Everything is done using protocols to be
+						as scalable as possible.
+					</item>
+					<item>
+						Four words - Modern, Documented, Working Examples.
+						What else do I have to say?
+					</item>
+				</list>
+			</section>
+		</chapter>
+	</front>
+	<chapter>
+		<heading>Protocols</heading>
+		<p>
+			The inner-workings of netclasses is governed by protocols.  Protocols 
+			allow the developer to keep from hard-coding in any classes at all.  
+			In other words, replacing the classes that come with netclasses
+			creates no problems at all: Just conform to the protocol with the
+			new classes.
+		</p>
+		<section>
+			<heading>NetTransport</heading>
+			
+			<protocol name="NetTransport">
+			<declared>NetBase.h</declared>
+			<desc>
+					NetTransport is the protocol used for the actual 
+					transport class of a connection.  A transport handles the 
+					low-level network routines such as 
+					<ref id="readData:">readData:</ref> and
+					<ref id="writeData:">writeData</ref>.
+			</desc>
+			<method type="NSString *" factory="no">
+				<sel>address</sel>
+				<desc>
+					This method will return the connection's address.  What it
+					actually consists of is undefined.  Sometimes it may be an
+					IP number, other times it may be a host name.  The actual
+					value depends on the class implementing this protocol.
+				</desc>
+			</method>
+			<method type="id" factory="no" id="writeData:">
+				<sel>writeData:</sel>
+				<arg type="NSData *">data</arg>
+				<desc>
+					This method queues <em>data</em> to be written.  When <em>data</em>
+					is nil, then it actually sends <em>data</em> over the tranport.
+					If <em>data</em> is not nil, it appends <em>data</em> to a buffer to
+					send out later.  One important point, when the data buffer is
+					added to, it should call 
+					<ref id="transportNeedsToWrite:">[NetApplication transportNeedsToWrite:]</ref>
+					so that NetApplication knows this object is waiting to
+					write.
+				</desc>
+			</method>
+			<method type="BOOL" factory="no">
+				<sel>isDoneWriting</sel>
+				<desc>
+					This method returns the status of the write buffer.  It will
+					return YES if the buffer is empty and NO if data is still
+					awaiting transport.
+				</desc>
+			</method>
+			<method type="NSData *" factory="no" id="readData:">
+				<sel>readData:</sel>
+				<arg type="int">maxReadSize</arg>
+				<desc>
+					This method returns data with at maximum <em>maxReadSize</em> bytes
+					read from the connection.
+				</desc>
+			</method>
+			<method type="int" factory="no">
+				<sel>desc</sel>
+				<desc>
+					This method will return the file descriptor of the connection.
+				</desc>
+			</method>
+			<method type="void" factory="no" id="close">
+				<sel>close</sel>
+				<desc>
+					This method will close the connection.  Make sure that this
+					is not called from dealloc.  This point is very important, 
+					the close method must be called manually.  Also, be very certain
+					that the file descriptor remains unchanged, it may need to be
+					accessed after the transport has closed.
+				</desc>
+			</method>
+			</protocol>
+		</section>
+		<section>
+			<heading>NetPort</heading>
+			<protocol name="NetPort">
+			<declared>NetBase.h</declared>
+			<desc>
+				NetPort is the protocol implemented by a port.  Every port is attached
+				to an object that conforms to <ref id="NetObject">NetObject</ref>.
+				When a connection occurs, one of these objects is allocated and sent
+				a <ref id="connectionEstablished:">connectionEstablished:</ref> method
+				with the transport object for the connection.
+			</desc>
+			<method type="id" factory="no">
+				<sel>setNetObject:</sel>
+				<arg type="Class">aClass</arg>
+				<desc>
+					This method sets the object that will be created upon a new connection.
+					This object must conform to the <ref id="NetObject">NetObject</ref>
+					protocol.
+				</desc>
+			</method>
+			<method type="void" factory="no">
+				<sel>connectionLost</sel>
+				<desc>
+					When this method is called, it means the port has been closed.  Do
+					not call this directly, this must be called from 
+					<ref id="disconnectObject:">[NetApplication disconnectObject:]</ref>.
+				</desc>
+			</method>
+			<method type="id" factory="no" id="newConnection">
+				<sel>newConnection</sel>
+				<desc>
+					When this method is called, it means the port is ready to accept a
+					connection.  This is where the port needs to create a transport for
+					the new descripter, create the net object, and use the 
+					<ref id="connectionEstablished:">connectionEstablished:</ref> method
+					to attach the net object to the transport.  
+				</desc>
+			</method>
+			<method type="int" factory="no">
+				<sel>desc</sel>
+				<desc>
+					This method should return the file descriptor of the connection.
+				</desc>
+			</method>
+			</protocol>
+		</section>
+		<section id="NetObject">
+			<heading>NetObject</heading>
+			<protocol name="NetObject">
+			<declared>NetBase.h</declared>
+			<desc>
+				NetObject is the primary object needed for a connection.  When
+				a connection occurs on a port, the object attached to the
+				port is created and given the transport.
+			</desc>
+			<method type="void" factory="no">
+				<sel>connectionLost</sel>
+				<desc>
+					This is called when the connection is lost.  This should never be called
+					directly, all connections must be destroyed through
+					<ref id="disconnectObject:">[NetApplication disconnectObject:]</ref>.
+					This method should also <ref id="close">close</ref> the transport or
+					pass it on to some other object.
+				</desc>
+			</method>
+			<method type="id" factory="no" id="connectionEstablished:">
+				<sel>connectionEstablished:</sel>
+				<arg type="id">aTransport</arg>
+				<desc>
+					When a new connection is created, this is called to notify the object
+					that the connection has been established and also to the give the object
+					the transport to actually send/receive data.  This object should also call
+					<ref id="connectObject:">[NetApplication connectObject:]</ref>.  Know that
+					<ref id="connectObject:">[NetApplication connectObject:]</ref> will need
+					access to this object's transport, so that should be set before.
+				</desc>
+			</method>
+			<method type="id" factory="no" id="dataReceived:">
+				<sel>dataReceived:</sel>
+				<arg type="NSData *">data</arg>
+				<desc>
+					This method is notification that data has been received.
+				</desc>
+			</method>
+			<method type="id" factory="no">
+				<sel>transport</sel>
+				<desc>
+					This method should simply return the transport.
+				</desc>
+			</method>
+		</protocol>
+		</section>
+	</chapter>
+	<chapter>
+		<heading>NetApplication</heading>
+		<class name="NetApplication" super="NSObject">
+			<declared>NetBase.h</declared>
+			<conform>NSObject</conform>
+			<conform>RunLoopEvents</conform>
+			<desc>
+				NetApplication is what brings all the above protocols together.  It basically
+				manages all the connections and ports and allows everything to work together.
+			</desc>
+			<method type="id" factory="yes">
+				<sel>sharedInstance</sel>
+				<desc>
+					Returns the shared instance of NetApplication.  There shouldn't ever be a
+					reason for having more than one NetApplication in an application.
+				</desc>
+			</method>
+			<method type="NSDate *" factory="no">
+				<sel>timedOutEvent:</sel>
+				<arg type="void *">data</arg>
+				<sel>type:</sel>
+				<arg type="RunLoopEventType">type</arg>
+				<sel>forMode:</sel>
+				<arg type="NSString *">mode</arg>
+				<desc>
+					This method is to allow seamless NSRunLoop integration under GNUstep.
+				</desc>
+			</method>
+			<method type="void" factory="no">
+				<sel>receivedEvent:</sel>
+				<arg type="void *">data</arg>
+				<sel>type:</sel>
+				<arg type="RunLoopEventType">type</arg>
+				<sel>extra:</sel>
+				<arg type="void *">extra</arg>
+				<sel>forMode:</sel>
+				<arg type="NSString *">mode</arg>
+				<desc>
+					This method is to allow seamless NSRunLoop integration under GNUstep.
+				</desc>
+			</method>
+			<method type="id" factory="no" id="transportNeedsToWrite:">
+				<sel>transportNeedsToWrite:</sel>
+				<arg type="id">aTransport</arg>
+				<desc>
+					This method is used to tell NetApplication that <em>aTransport</em> has
+					data waiting to be written.
+				</desc>
+			</method>
+			<method type="id" factory="no" id="connectObject:">
+				<sel>connectObject:</sel>
+				<arg type="id">anObject</arg>
+				<desc>
+					This method will add another object for the NetApplication to poll for
+					events.  <em>anObject</em> must conform to either NetPort or NetObject.
+					NetPorts may be added through this method; however, NetObjects should
+					call this method themselves in the 
+					<ref id="connectionEstablished:">connectionEstablished:</ref> method.
+				</desc>
+			</method>
+			<method type="id" factory="no" id="disconnectObject:">
+				<sel>disconnectObject:</sel>
+				<arg type="id">anObject</arg>
+				<desc>
+					This method will remove the object from the polling list
+					call <em>connectionLost</em> on <em>anObject</em>. <strong>Do not directly call
+					<em>connectionLost</em> ever!</strong>
+				</desc>
+			</method>
+			<method type="id" factory="no">
+				<sel>closeEverything</sel>
+				<desc>
+					This method will call <ref id="disconnectObject:">disconnectObject</ref> 
+					on all objects in the polling list.
+				</desc>
+			</method>
+		</class>
+	</chapter>
+	<chapter>
+		<heading>Global Variables</heading>
+		<section id="NetException">
+			<heading>NetException</heading>
+			<p>
+				An exception that should be thrown when a more minor error occurs.
+			</p>
+		</section>
+		<section id="FatalNetException">
+			<heading>FatalNetException</heading>
+			<p>
+				An exception that should be thrown when a major error occurs.
+			</p>
+		</section>
+	</chapter>
+	<chapter>
+		<heading>Credits</heading>
+		<p>
+			While I, Andy Ruder, was the only developer on netclasses.  There
+			was a significant contribution of ideas from the design team of
+			<uref url="http://www.twistedmatrix.com">Twisted</uref> for Python.
+		</p>
+		<p>
+			Special thanks also go out to #gnustep and #objc on
+			<uref url="http://www.openprojects.net">irc.openprojects.net</uref>
+			for their continual support, guidance, and inspiration.
+		</p>
+		<p>
+			And lastly, thanks to the developers of 
+			<uref url="http://www.gnustep.org">GNUstep</uref>.  None of this
+			would have been possible without their dedication to one 
+			<strong>great</strong> project.
+		</p>
+	</chapter>	
+</body>
+</gsdoc>
+
