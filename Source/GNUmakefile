@@ -4,7 +4,7 @@ FRAMEWORK_NAME = netclasses
 
 netclasses_OBJC_FILES = NetBase.m NetTCP.m LineObject.m IRCObject.m 
 netclasses_HEADER_FILES = NetBase.h NetTCP.h IRCObject.h LineObject.h 
-netclasses_CURRENT_VERSION_NAME=1.0.2
+netclasses_CURRENT_VERSION_NAME=1.0.3
 netclasses_DEPLOY_WITH_CURRENT_VERSION=yes
 
 GUI_LIB =

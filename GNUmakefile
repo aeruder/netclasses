@@ -1,7 +1,7 @@
 include $(GNUSTEP_MAKEFILES)/common.make
 
 PACKAGE_NAME = netclasses
-VERSION = 1.03pre2
+VERSION = 1.03
 
 SUBPROJECTS = Source 
 

@@ -89,7 +89,7 @@ static inline NSData *chomp_line(NSMutableData *data)
 	}
 	if ([aCTCP compare: @"VERSION"] == NSOrderedSame)
 	{
-		[self sendCTCPReply: @"VERSION" withArgument: @"netclasses:1.03pre2:GNUstep"
+		[self sendCTCPReply: @"VERSION" withArgument: @"netclasses:1.03:GNUstep"
 		  to: ExtractIRCNick(aPerson)];
 	}
 
