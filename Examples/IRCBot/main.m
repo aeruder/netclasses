@@ -36,7 +36,7 @@ int main(int argc, char **argv, char **env)
 	NSLog(@"Connecting to irc.freenode.net 6667...");
 	
 	connection = [[IRCBot alloc] 
-	  initWithNickname: @"Niles"
+	  initWithNickname: @"NetNiles"
 	  withUserName: nil withRealName: @"Andy Ruder"
 	  withPassword: nil];
 	  
