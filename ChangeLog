@@ -1,5 +1,6 @@
 2003-12-29 Andy Ruder <aeruder at ksu dot edu>
  * Fixed up makefiles slightly and created a skeleton project in the examples
+ * Fixed kick arguments; they were backwards (Thanks Eric)
 
 2003-12-21 Andy Ruder <aeruder at ksu dot edu>
  * Eased compilation of netclasses on OSX by removing one messy step.
