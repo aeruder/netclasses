@@ -15,11 +15,11 @@
  *                                                                         *
  ***************************************************************************/
 
-#import "IRCClient.h"
+#import "IRCObject.h"
 
 @class NSString;
 
-@interface IRCBot : IRCClient
+@interface IRCBot : IRCObject
 	{
 	}
 - registeredWithServer;

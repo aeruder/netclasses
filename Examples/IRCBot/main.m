@@ -33,10 +33,10 @@ int main(int argc, char **argv, char **env)
 		
 	NSLog(@"Connecting to irc.openprojects.net 6667...");
 	
-	connection = [IRCClient connectTo: @"irc.openprojects.net" onPort: 6667
+	connection = [IRCBot connectTo: @"irc.openprojects.net" onPort: 6667
 	 withTimeout: 30 withNicknames: [NSArray arrayWithObject: @"Niles"]
 	 withUserName: nil withRealName: @"Andy Ruder"
-	 withPassword: nil withClass: [IRCBot class]];
+	 withPassword: nil];
 	 
 	NSLog(@"Connection established...");
 	

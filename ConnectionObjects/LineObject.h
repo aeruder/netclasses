@@ -20,8 +20,6 @@
 
 @class NSMutableData, NSData;
 
-NSData *ChompLine(NSMutableData *data);
-
 /* This is used for line-buffered connections (end in \r\n or just \n).
  * To use, simply override lineReceived:  By default, LineObject does 
  * absolutely nothing with lineRecieved except throw the line away.

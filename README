@@ -37,7 +37,7 @@ Use:
     I opted to do it this way instead of setting up an entire library.  Simply
     add these files into any project, follow the example, read the
     docs and have fun.  Some connection objects are in the 
-    ConnectionObjects/ directory that may be useful.
+    ConnectionObjects/ directory that may prove useful.
 
 ===============================================================================
 Copyright (C) 2002 by Andy Ruder <aeruder@yahoo.com>

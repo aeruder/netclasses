@@ -1,5 +1,5 @@
 /***************************************************************************
-                                IRCClient.m
+                                IRCObject.m
                           -------------------
     begin                : Thu May 30 22:06:25 UTC 2002
     copyright            : (C) 2002 by Andy Ruder
@@ -17,7 +17,7 @@
 
 #import "NetBase.h"
 #import "NetTCP.h"
-#import "IRCClient.h"
+#import "IRCObject.h"
 
 #import <Foundation/NSString.h>
 #import <Foundation/NSException.h>
@@ -37,6 +37,12 @@ static NSMapTable *command_to_function = 0;
 static NSMapTable *ctcp_to_function = 0;
 
 static NSData *IRC_new_line = nil;
+
+@interface IRCObject (InternalIRCObject)
+- setInitialNicknames: (NSArray *)names;
+- setNick: (NSString *)aNick;
+- setServer: (NSString *)aServer;
+@end
 
 #define REMOVE_SPACES(__buffer, __bufferEnd)\
 while (*__buffer == ' ') {\
@@ -208,7 +214,7 @@ inline NSArray *SeparateIRCNickAndHost(NSString *prefix)
 	 nil];
 }
 
-static void rec_caction(IRCClient *client, NSString *prefix,
+static void rec_caction(IRCObject *client, NSString *prefix,
                         NSString *command, NSString *rest, NSString *to)
 {
 	if ([rest length] == 0)
@@ -217,7 +223,7 @@ static void rec_caction(IRCClient *client, NSString *prefix,
 	}
 	[client actionReceived: rest to: to from: prefix];
 }
-static void rec_cversion(IRCClient *client, NSString *prefix,
+static void rec_cversion(IRCObject *client, NSString *prefix,
                          NSString *command, NSString *rest, NSString *to)
 {
 	if ([command isEqualToString: @"NOTICE"])
@@ -229,7 +235,7 @@ static void rec_cversion(IRCClient *client, NSString *prefix,
 		[client versionRequestReceived: rest from: prefix];
 	}
 }
-static void rec_cping(IRCClient *client, NSString *prefix,
+static void rec_cping(IRCObject *client, NSString *prefix,
                       NSString *command, NSString *rest, NSString *to)
 {
 	if ([command isEqualToString: @"NOTICE"])
@@ -241,7 +247,7 @@ static void rec_cping(IRCClient *client, NSString *prefix,
 		[client pingRequestReceived: rest from: prefix];
 	}
 }
-static void rec_cclientinfo(IRCClient *client, NSString *prefix,
+static void rec_cclientinfo(IRCObject *client, NSString *prefix,
                             NSString *command, NSString *rest, NSString *to)
 {
 	if ([command isEqualToString: @"NOTICE"])
@@ -253,7 +259,7 @@ static void rec_cclientinfo(IRCClient *client, NSString *prefix,
 		[client clientInfoRequestReceived: rest from: prefix];
 	}
 }
-static void rec_cuserinfo(IRCClient *client, NSString *prefix,
+static void rec_cuserinfo(IRCObject *client, NSString *prefix,
                             NSString *command, NSString *rest, NSString *to)
 {
 	if ([command isEqualToString: @"NOTICE"])
@@ -265,7 +271,7 @@ static void rec_cuserinfo(IRCClient *client, NSString *prefix,
 		[client userInfoRequestReceived: rest from: prefix];
 	}
 }
-static void rec_nick(IRCClient *client, NSString *command,
+static void rec_nick(IRCObject *client, NSString *command,
                      NSString *prefix, NSArray *paramList)
 {
 	if (!prefix)
@@ -273,15 +279,21 @@ static void rec_nick(IRCClient *client, NSString *command,
 		return;
 	}
 		
-	if ([paramList count] == 0)
+	if ([paramList count] < 1)
 	{
 		return;
+	}
+	
+	if ([ExtractIRCNick(prefix) caseInsensitiveCompare: [client nick]] 
+	      == NSOrderedSame)
+	{
+		[client setNick: [paramList objectAtIndex: 0]];
 	}
 
 	[client nickChangedTo: [paramList objectAtIndex: 0] from: prefix];
 }
 
-static void rec_join(IRCClient *client, NSString *command, 
+static void rec_join(IRCObject *client, NSString *command, 
                      NSString *prefix, NSArray *paramList)
 {
 	if (!prefix)
@@ -297,7 +309,7 @@ static void rec_join(IRCClient *client, NSString *command,
 	[client channelJoined: [paramList objectAtIndex: 0] from: prefix];
 }
 
-static void rec_part(IRCClient *client, NSString *command,
+static void rec_part(IRCObject *client, NSString *command,
                      NSString *prefix, NSArray *paramList)
 {
 	int x;
@@ -317,7 +329,7 @@ static void rec_part(IRCClient *client, NSString *command,
 	  (x == 2) ? [paramList objectAtIndex: 1] : 0 from: prefix];
 }
 
-static void rec_quit(IRCClient *client, NSString *command,
+static void rec_quit(IRCObject *client, NSString *command,
                      NSString *prefix, NSArray *paramList)
 {
 	if (!prefix)
@@ -333,7 +345,7 @@ static void rec_quit(IRCClient *client, NSString *command,
 	[client quitIRCWithMessage: [paramList objectAtIndex: 0] from: prefix];
 }
 
-static void rec_topic(IRCClient *client, NSString *command,
+static void rec_topic(IRCObject *client, NSString *command,
                       NSString *prefix, NSArray *paramList)
 {
 	if (!prefix)
@@ -349,7 +361,7 @@ static void rec_topic(IRCClient *client, NSString *command,
 	[client topicChangedTo: [paramList objectAtIndex: 1] 
 	  in: [paramList objectAtIndex: 0] from: prefix];
 }
-static void rec_privmsg(IRCClient *client, NSString *command,
+static void rec_privmsg(IRCObject *client, NSString *command,
                         NSString *prefix, NSArray *paramList)
 {
 	id message;
@@ -367,7 +379,7 @@ static void rec_privmsg(IRCClient *client, NSString *command,
 	message = [paramList objectAtIndex: 1];
 	if ([message hasPrefix: @"\001"])
 	{
-		void (*func)(IRCClient *, NSString *, NSString *, NSString *, 
+		void (*func)(IRCObject *, NSString *, NSString *, NSString *, 
 		              NSString *);
 		id ctcp = string_to_character(message, ' ');
 		id rest;
@@ -421,7 +433,7 @@ static void rec_privmsg(IRCClient *client, NSString *command,
 		   to: [paramList objectAtIndex: 0] from: prefix];
 	}
 }
-static void rec_mode(IRCClient *client, NSString *command, NSString *prefix, 
+static void rec_mode(IRCObject *client, NSString *command, NSString *prefix, 
                      NSArray *paramList)
 {
 	NSArray *newParams;
@@ -454,7 +466,7 @@ static void rec_mode(IRCClient *client, NSString *command, NSString *prefix,
 	[client modeChanged: [paramList objectAtIndex: 1] 
 	  on: [paramList objectAtIndex: 0] withParams: newParams from: prefix];
 }
-static void rec_invite(IRCClient *client, NSString *command, NSString *prefix, 
+static void rec_invite(IRCObject *client, NSString *command, NSString *prefix, 
                      NSArray *paramList)
 {
 	if (!prefix)
@@ -466,10 +478,9 @@ static void rec_invite(IRCClient *client, NSString *command, NSString *prefix,
 		return;
 	}
 
-	NSLog(@"%@", [paramList objectAtIndex: 0]);
 	[client invitedTo: [paramList objectAtIndex: 1] from: prefix];
 }
-static void rec_kick(IRCClient *client, NSString *command, NSString *prefix,
+static void rec_kick(IRCObject *client, NSString *command, NSString *prefix,
                        NSArray *paramList)
 {
 	id object;
@@ -488,7 +499,7 @@ static void rec_kick(IRCClient *client, NSString *command, NSString *prefix,
 	[client userKicked: [paramList objectAtIndex: 1]
 	   outOf: [paramList objectAtIndex: 0] for: object from: prefix];
 }
-static void rec_ping(IRCClient *client, NSString *command, NSString *prefix,
+static void rec_ping(IRCObject *client, NSString *command, NSString *prefix,
                        NSArray *paramList)
 {
 	if ([paramList count] < 1)
@@ -498,7 +509,7 @@ static void rec_ping(IRCClient *client, NSString *command, NSString *prefix,
 	
 	[client writeString: @"PONG %@", [paramList objectAtIndex: 0]];
 }
-static void rec_wallops(IRCClient *client, NSString *command, NSString *prefix,
+static void rec_wallops(IRCObject *client, NSString *command, NSString *prefix,
                           NSArray *paramList)
 {
 	if (!prefix)
@@ -512,14 +523,19 @@ static void rec_wallops(IRCClient *client, NSString *command, NSString *prefix,
 	
 	[client wallopsReceived: [paramList objectAtIndex: 0] from: prefix];
 }
+static void rec_error(IRCObject *client, NSString *command, NSString *prefix,
+                        NSArray *paramList)
+{
+	if ([paramList count] < 1)
+	{
+		return;
+	}
 
-@interface IRCClient (InternalIRCClient)
-- setInitialNicknames: (NSArray *)names;
-- setNick: (NSString *)aNick;
-- setServer: (NSString *)aServer;
-@end
+	[client errorReceived: [paramList objectAtIndex: 0]];
+}
 
-@implementation IRCClient (InternalIRCClient)
+
+@implementation IRCObject (InternalIRCObject)
 - setInitialNicknames: (NSArray *)names
 {
 	if (!connected)
@@ -543,13 +559,13 @@ static void rec_wallops(IRCClient *client, NSString *command, NSString *prefix,
 }
 @end
 
-@implementation IRCClient
+@implementation IRCObject
 + (void)initialize
 {
 	IRC_new_line = [[NSData alloc] initWithBytes: "\r\n" length: 2];
 
 	command_to_function = NSCreateMapTable(NSObjectMapKeyCallBacks,
-	   NSIntMapValueCallBacks, 12);
+	   NSIntMapValueCallBacks, 13);
 	
 	NSMapInsert(command_to_function, @"NICK", rec_nick);
 	NSMapInsert(command_to_function, @"JOIN", rec_join);
@@ -563,6 +579,7 @@ static void rec_wallops(IRCClient *client, NSString *command, NSString *prefix,
 	NSMapInsert(command_to_function, @"INVITE", rec_invite);
 	NSMapInsert(command_to_function, @"PING", rec_ping);
 	NSMapInsert(command_to_function, @"WALLOPS", rec_wallops);
+	NSMapInsert(command_to_function, @"ERROR", rec_error);
 
 	ctcp_to_function = NSCreateMapTable(NSObjectMapKeyCallBacks,
 	   NSIntMapValueCallBacks, 5);
@@ -573,12 +590,12 @@ static void rec_wallops(IRCClient *client, NSString *command, NSString *prefix,
 	NSMapInsert(ctcp_to_function, @"\001USERINFO", rec_cuserinfo);
 	NSMapInsert(ctcp_to_function, @"\001CLIENTINFO", rec_cclientinfo);
 }
-+ (IRCClient *)connectTo: (NSString *)host onPort: (int)aPort
++ (IRCObject *)connectTo: (NSString *)host onPort: (int)aPort
    withTimeout: (int)timeout withNicknames: (NSArray *)nicknames
    withUserName: (NSString *)user withRealName: (NSString *)realName
-   withPassword: (NSString *)password withClass: (Class)aClass
+   withPassword: (NSString *)password
 {
-	IRCClient *connection;
+	IRCObject *connection;
 	NSEnumerator *iter = [nicknames objectEnumerator];
 	NSMutableArray *array = AUTORELEASE([NSMutableArray new]);
 	id object;
@@ -586,7 +603,7 @@ static void rec_wallops(IRCClient *client, NSString *command, NSString *prefix,
 	if ([nicknames count] == 0)
 	{
 		[NSException raise: IRCException
-		 format: @"[IRCClient connectTo...] No nicknames provided"];
+		 format: @"[IRCObject connectTo...] No nicknames provided"];
 	}
 	
 	while ((object = [iter nextObject]))
@@ -602,13 +619,13 @@ static void rec_wallops(IRCClient *client, NSString *command, NSString *prefix,
 	if ([array count] == 0)
 	{
 		[NSException raise: IRCException
-		 format: @"[IRCClient connectTo...] No usable nicknames provided"];
+		 format: @"[IRCObject connectTo...] No usable nicknames provided"];
 	}
 	
 	if ([host length] == 0)
 	{
 		[NSException raise: IRCException
-		 format: @"[IRCClient connectTo...] No host provided"];
+		 format: @"[IRCObject connectTo...] No host provided"];
 	}
 
 	if (aPort <= 0)
@@ -621,7 +638,7 @@ static void rec_wallops(IRCClient *client, NSString *command, NSString *prefix,
 		if (contains_a_space(password))
 		{
 			[NSException raise: IRCException
-			 format: @"[IRCClient connectTo...] Password contains a space"];
+			 format: @"[IRCObject connectTo...] Password contains a space"];
 		}
 	}
 	else
@@ -651,13 +668,13 @@ static void rec_wallops(IRCClient *client, NSString *command, NSString *prefix,
 		realName = @"John Doe";
 	}
 	
-	connection = [[TCPSystem sharedInstance] connectNetObject: aClass
+	connection = [[TCPSystem sharedInstance] connectNetObject: self
 	 toHost: host onPort: aPort withTimeout: timeout];
 	
 	if (!connection)
 	{
 		[NSException raise: IRCException
-		 format: @"[IRCClient connectTo...] Couldn't connect: '%@'", 
+		 format: @"[IRCObject connectTo...] Couldn't connect: '%@'", 
 		 [[TCPSystem sharedInstance] errorString]];
 	}
 	
@@ -708,7 +725,7 @@ static void rec_wallops(IRCClient *client, NSString *command, NSString *prefix,
 		if (contains_a_space(aNick))
 		{
 			[NSException raise: IRCException
-			 format: @"[IRCClient changeNick: '%@'] Nickname contains a space",
+			 format: @"[IRCObject changeNick: '%@'] Nickname contains a space",
 			  aNick];
 		}
 					
@@ -738,7 +755,7 @@ static void rec_wallops(IRCClient *client, NSString *command, NSString *prefix,
 	if (contains_a_space(channel))
 	{
 		[NSException raise: IRCException
-		 format: @"[IRCClient partChannel: '%@' ...] Channel contains a space",
+		 format: @"[IRCObject partChannel: '%@' ...] Channel contains a space",
 		  channel];
 	}
 	
@@ -763,7 +780,7 @@ static void rec_wallops(IRCClient *client, NSString *command, NSString *prefix,
 	if (contains_a_space(channel))
 	{
 		[NSException raise: IRCException
-		 format: @"[IRCClient joinChannel: '%@' ...] Channel contains a space",
+		 format: @"[IRCObject joinChannel: '%@' ...] Channel contains a space",
 		  channel];
 	}
 
@@ -776,7 +793,7 @@ static void rec_wallops(IRCClient *client, NSString *command, NSString *prefix,
 	if (contains_a_space(aPassword))
 	{
 		[NSException raise: IRCException
-		 format: @"[IRCClient joinChannel: withPassword: '%@'] Password contains a space.",
+		 format: @"[IRCObject joinChannel: withPassword: '%@'] Password contains a space.",
 		  aPassword];
 	}
 
@@ -806,7 +823,7 @@ static void rec_wallops(IRCClient *client, NSString *command, NSString *prefix,
 	if (contains_a_space(aPerson))
 	{
 		[NSException raise: IRCException format: 
-		 @"[IRCClient sendVersionReplyTo: '%@' name: '%@' version: '%@' environment: '%@'] Person contains a space",
+		 @"[IRCObject sendVersionReplyTo: '%@' name: '%@' version: '%@' environment: '%@'] Person contains a space",
 		  aPerson, clientName, clientVersion, clientEnv];
 	}
 	
@@ -827,7 +844,7 @@ static void rec_wallops(IRCClient *client, NSString *command, NSString *prefix,
 	if (contains_a_space(aPerson))
 	{
 		[NSException raise: IRCException format:
-		 @"[IRCClient sendPingReplyTo: '%@' withArgument: '%@'] Person contains a space",
+		 @"[IRCObject sendPingReplyTo: '%@' withArgument: '%@'] Person contains a space",
 		  aPerson, argument];
 	}
 
@@ -847,7 +864,7 @@ static void rec_wallops(IRCClient *client, NSString *command, NSString *prefix,
 	if (contains_a_space(aPerson))
 	{
 		[NSException raise: IRCException format:
-		 @"[IRCClient sendClientInfo: '%@' to: '%@'] Person contains a space",
+		 @"[IRCObject sendClientInfo: '%@' to: '%@'] Person contains a space",
 		  clientInfo, aPerson];
 	}
 
@@ -869,7 +886,7 @@ static void rec_wallops(IRCClient *client, NSString *command, NSString *prefix,
 	if (contains_a_space(aPerson))
 	{
 		[NSException raise: IRCException format:
-		 @"[IRCClient sendUserInfo: '%@' to: '%@'] Person contains a space",
+		 @"[IRCObject sendUserInfo: '%@' to: '%@'] Person contains a space",
 		  userInfo, aPerson];
 	}
 
@@ -891,7 +908,7 @@ static void rec_wallops(IRCClient *client, NSString *command, NSString *prefix,
 	if (contains_a_space(receiver))
 	{
 		[NSException raise: IRCException
-		 format: @"[IRCClient sendMessage: '%@' to: '%@'] The receiver contains a space.",
+		 format: @"[IRCObject sendMessage: '%@' to: '%@'] The receiver contains a space.",
 		  message, receiver];
 	}
 	
@@ -912,7 +929,7 @@ static void rec_wallops(IRCClient *client, NSString *command, NSString *prefix,
 	if (contains_a_space(receiver))
 	{
 		[NSException raise: IRCException
-		 format: @"[IRCClient sendNotice: '%@' to: '%@'] The receiver contains a space.",
+		 format: @"[IRCObject sendNotice: '%@' to: '%@'] The receiver contains a space.",
 		  message, receiver];
 	}
 	
@@ -933,7 +950,7 @@ static void rec_wallops(IRCClient *client, NSString *command, NSString *prefix,
 	if (contains_a_space(receiver))
 	{
 		[NSException raise: IRCException
-		 format: @"[IRCClient sendAction: '%@' to: '%@'] The receiver contsins a space.",
+		 format: @"[IRCObject sendAction: '%@' to: '%@'] The receiver contsins a space.",
 		   anAction, receiver];
 	}
 
@@ -950,13 +967,13 @@ static void rec_wallops(IRCClient *client, NSString *command, NSString *prefix,
 	if (contains_a_space(pass))
 	{
 		[NSException raise: IRCException
-		 format: @"[IRCClient becomeOperatorWithName: %@ withPassword: %@] The password contains a space.",
+		 format: @"[IRCObject becomeOperatorWithName: %@ withPassword: %@] The password contains a space.",
 		  aName, pass];
 	}
 	if (contains_a_space(aName))
 	{
 		[NSException raise: IRCException
-		 format: @"[IRCClient becomeOperatorWithName: %@ withPassword: %@] The name contains a space.",
+		 format: @"[IRCObject becomeOperatorWithName: %@ withPassword: %@] The name contains a space.",
 		  aName, pass];
 	}
 	
@@ -976,7 +993,7 @@ static void rec_wallops(IRCClient *client, NSString *command, NSString *prefix,
 	{
 		[NSException raise: IRCException
 		 format: 
-		  @"[IRCClient requestNamesOnChannel: %@ fromServer: %@] The channel contains a space.",
+		  @"[IRCObject requestNamesOnChannel: %@ fromServer: %@] The channel contains a space.",
 		   aChannel, aServer];
 	}
 			
@@ -989,7 +1006,7 @@ static void rec_wallops(IRCClient *client, NSString *command, NSString *prefix,
 	if (contains_a_space(aServer))
 	{
 		[NSException raise: IRCException
-		 format: @"[IRCClient requestNamesOnChannel: %@ fromServer: %@] The server contains a space.",
+		 format: @"[IRCObject requestNamesOnChannel: %@ fromServer: %@] The server contains a space.",
 		   aChannel, aServer];
 	}
 		
@@ -1006,7 +1023,7 @@ static void rec_wallops(IRCClient *client, NSString *command, NSString *prefix,
 	if (contains_a_space(aServer))
 	{
 		[NSException raise: IRCException format: 
-		  @"[IRCClient requestMOTDOnServer:'%@'] Server contains a space",
+		  @"[IRCObject requestMOTDOnServer:'%@'] Server contains a space",
 		  aServer];
 	}
 
@@ -1024,7 +1041,7 @@ static void rec_wallops(IRCClient *client, NSString *command, NSString *prefix,
 	if (contains_a_space(aServer))
 	{
 		[NSException raise: IRCException format:
-		 @"[IRCClient requestSizeInformationFromServer: '%@' andForwardTo: '%@'] First argument contains a space", 
+		 @"[IRCObject requestSizeInformationFromServer: '%@' andForwardTo: '%@'] First argument contains a space", 
 		  aServer, anotherServer];
 	}
 	if ([anotherServer length] == 0)
@@ -1035,7 +1052,7 @@ static void rec_wallops(IRCClient *client, NSString *command, NSString *prefix,
 	if (contains_a_space(anotherServer))
 	{
 		[NSException raise: IRCException format:
-		 @"[IRCClient requestSizeInformationFromServer: '%@' andForwardTo: '%@'] Second argument contains a space",
+		 @"[IRCObject requestSizeInformationFromServer: '%@' andForwardTo: '%@'] Second argument contains a space",
 		 aServer, anotherServer];
 	}
 
@@ -1052,7 +1069,7 @@ static void rec_wallops(IRCClient *client, NSString *command, NSString *prefix,
 	if (contains_a_space(aServer))
 	{
 		[NSException raise: IRCException format:
-		 @"[IRCClient requestVersionOfServer: '%@'] Server contains a space",
+		 @"[IRCObject requestVersionOfServer: '%@'] Server contains a space",
 		  aServer];
 	}
 
@@ -1069,7 +1086,7 @@ static void rec_wallops(IRCClient *client, NSString *command, NSString *prefix,
 	if (contains_a_space(query))
 	{
 		[NSException raise: IRCException format:
-		 @"[IRCClient requestServerStats: '%@' for: '%@'] Query contains a space",
+		 @"[IRCObject requestServerStats: '%@' for: '%@'] Query contains a space",
 		  aServer, query];
 	}
 	if ([aServer length] == 0)
@@ -1080,7 +1097,7 @@ static void rec_wallops(IRCClient *client, NSString *command, NSString *prefix,
 	if (contains_a_space(aServer))
 	{
 		[NSException raise: IRCException format:
-		 @"[IRCClient requestServerStats: '%@' for: '%@'] Server contains a space",
+		 @"[IRCObject requestServerStats: '%@' for: '%@'] Server contains a space",
 		  aServer, query];
 	}
 	
@@ -1097,7 +1114,7 @@ static void rec_wallops(IRCClient *client, NSString *command, NSString *prefix,
 	if (contains_a_space(aLink))
 	{
 		[NSException raise: IRCException format:
-		 @"[IRCClient requestServerLink: '%@' from: '%@'] Link contains a space",
+		 @"[IRCObject requestServerLink: '%@' from: '%@'] Link contains a space",
 		  aLink, aServer];
 	}
 	if ([aServer length] == 0)
@@ -1108,7 +1125,7 @@ static void rec_wallops(IRCClient *client, NSString *command, NSString *prefix,
 	if (contains_a_space(aServer))
 	{
 		[NSException raise: IRCException format:
-		 @"[IRCClient requestServerLink: '%@' from: '%@'] Server contains a space", 
+		 @"[IRCObject requestServerLink: '%@' from: '%@'] Server contains a space", 
 		  aLink, aServer];
 	}
 
@@ -1125,7 +1142,7 @@ static void rec_wallops(IRCClient *client, NSString *command, NSString *prefix,
 	if (contains_a_space(aServer))
 	{
 		[NSException raise: IRCException format:
-		 @"[IRCClient requestTimeOnServer: '%@'] Server contains a space",
+		 @"[IRCObject requestTimeOnServer: '%@'] Server contains a space",
 		  aServer];
 	}
 
@@ -1142,7 +1159,7 @@ static void rec_wallops(IRCClient *client, NSString *command, NSString *prefix,
 	if (contains_a_space(connectServer))
 	{
 		[NSException raise: IRCException format:
-		 @"[IRCClient requestServerToConnect: '%@' to: '%@' onPort: '%@'] Server to connect to contains a space",
+		 @"[IRCObject requestServerToConnect: '%@' to: '%@' onPort: '%@'] Server to connect to contains a space",
 		  aServer, connectServer, aPort];
 	}
 	if ([aPort length] == 0)
@@ -1152,7 +1169,7 @@ static void rec_wallops(IRCClient *client, NSString *command, NSString *prefix,
 	if (contains_a_space(aPort))
 	{
 		[NSException raise: IRCException format:
-		 @"[IRCClient requestServerToConnect: '%@' to: '%@' onPort: '%@'] Port contains a space",
+		 @"[IRCObject requestServerToConnect: '%@' to: '%@' onPort: '%@'] Port contains a space",
 		  aServer, connectServer, aPort];
 	}
 	if ([aServer length] == 0)
@@ -1163,7 +1180,7 @@ static void rec_wallops(IRCClient *client, NSString *command, NSString *prefix,
 	if (contains_a_space(aServer))
 	{
 		[NSException raise: IRCException format: 
-		 @"[IRCClient requestServerToConnect: '%@' to: '%@' onPort: '%@'] Server contains a space",
+		 @"[IRCObject requestServerToConnect: '%@' to: '%@' onPort: '%@'] Server contains a space",
 		  aServer, connectServer, aPort];
 	}
 	
@@ -1180,7 +1197,7 @@ static void rec_wallops(IRCClient *client, NSString *command, NSString *prefix,
 	if (contains_a_space(aServer))
 	{
 		[NSException raise: IRCException format: 
-		 @"[IRCClient requestTraceOnServer: '%@'] Server contains a space",
+		 @"[IRCObject requestTraceOnServer: '%@'] Server contains a space",
 		  aServer];
 	}
 	
@@ -1197,7 +1214,7 @@ static void rec_wallops(IRCClient *client, NSString *command, NSString *prefix,
 	if (contains_a_space(aServer))
 	{
 		[NSException raise: IRCException format:
-		 @"[IRCClient requestAdministratorOnServer: '%@'] Server contains a space", 
+		 @"[IRCObject requestAdministratorOnServer: '%@'] Server contains a space", 
 		  aServer];
 	}
 
@@ -1214,7 +1231,7 @@ static void rec_wallops(IRCClient *client, NSString *command, NSString *prefix,
 	if (contains_a_space(aServer))
 	{
 		[NSException raise: IRCException format:
-		 @"[IRCClient requestInfoOnServer: '%@'] Server contains a space",
+		 @"[IRCObject requestInfoOnServer: '%@'] Server contains a space",
 		  aServer];
 	}
 
@@ -1231,7 +1248,7 @@ static void rec_wallops(IRCClient *client, NSString *command, NSString *prefix,
 	if (contains_a_space(aMask))
 	{
 		[NSException raise: IRCException format:
-		 @"[IRCClient requestServiceListWithMask: '%@' ofType: '%@'] Mask contains a space",
+		 @"[IRCObject requestServiceListWithMask: '%@' ofType: '%@'] Mask contains a space",
 		  aMask, type];
 	}
 	if ([type length] == 0)
@@ -1242,7 +1259,7 @@ static void rec_wallops(IRCClient *client, NSString *command, NSString *prefix,
 	if (contains_a_space(type))
 	{
 		[NSException raise: IRCException format:
-		 @"[IRCClient requestServiceListWithMask: '%@' ofType: '%@'] Type contains a space",
+		 @"[IRCObject requestServiceListWithMask: '%@' ofType: '%@'] Type contains a space",
 		  aMask, type];
 	}
 
@@ -1274,7 +1291,7 @@ static void rec_wallops(IRCClient *client, NSString *command, NSString *prefix,
 	if (contains_a_space(aServer))
 	{
 		[NSException raise: IRCException format:
-		 @"[IRCClient requestUserInfoOnServer: '%@'] Server contains a space",
+		 @"[IRCObject requestUserInfoOnServer: '%@'] Server contains a space",
 		  aServer];
 	}
 
@@ -1310,7 +1327,7 @@ static void rec_wallops(IRCClient *client, NSString *command, NSString *prefix,
 	if (contains_a_space(aService))
 	{
 		[NSException raise: IRCException format:
-		 @"[IRCClient queryService: '%@' withMessage: '%@'] Service contains a space",
+		 @"[IRCObject queryService: '%@' withMessage: '%@'] Service contains a space",
 		  aService, aMessage];
 	}
 	if ([aMessage length] == 0)
@@ -1331,7 +1348,7 @@ static void rec_wallops(IRCClient *client, NSString *command, NSString *prefix,
 	if (contains_a_space(aMask))
 	{
 		[NSException raise: IRCException format:
-		 @"[IRCClient listWho: '%@' onlyOperators: %d] Mask contains a space",
+		 @"[IRCObject listWho: '%@' onlyOperators: %d] Mask contains a space",
 		 aMask, operators];
 	}
 	
@@ -1355,7 +1372,7 @@ static void rec_wallops(IRCClient *client, NSString *command, NSString *prefix,
 	if (contains_a_space(aPerson))
 	{
 		[NSException raise: IRCException format:
-		 @"[IRCClient whois: '%@' onServer: '%@'] Person contains a space",
+		 @"[IRCObject whois: '%@' onServer: '%@'] Person contains a space",
 		 aPerson, aServer];
 	}
 	if ([aServer length] == 0)
@@ -1366,7 +1383,7 @@ static void rec_wallops(IRCClient *client, NSString *command, NSString *prefix,
 	if (contains_a_space(aServer))
 	{
 		[NSException raise: IRCException format:
-		 @"[IRCClient whois: '%@' onServer: '%@'] Server contains a space",
+		 @"[IRCObject whois: '%@' onServer: '%@'] Server contains a space",
 		  aPerson, aServer];
 	}
 
@@ -1383,7 +1400,7 @@ static void rec_wallops(IRCClient *client, NSString *command, NSString *prefix,
 	if (contains_a_space(aPerson))
 	{
 		[NSException raise: IRCException format:
-		 @"[IRCClient whowas: '%@' onServer: '%@' withNumberEntries: '%@'] Person contains a space",
+		 @"[IRCObject whowas: '%@' onServer: '%@' withNumberEntries: '%@'] Person contains a space",
 		  aPerson, aServer, aNumber];
 	}
 	if ([aNumber length] == 0)
@@ -1394,7 +1411,7 @@ static void rec_wallops(IRCClient *client, NSString *command, NSString *prefix,
 	if (contains_a_space(aNumber))
 	{
 		[NSException raise: IRCException format:
-		 @"[IRCClient whowas: '%@' onServer: '%@' withNumberEntries: '%@'] Number of entries contains a space", 
+		 @"[IRCObject whowas: '%@' onServer: '%@' withNumberEntries: '%@'] Number of entries contains a space", 
 		  aPerson, aServer, aNumber];
 	}
 	if ([aServer length] == 0)
@@ -1405,7 +1422,7 @@ static void rec_wallops(IRCClient *client, NSString *command, NSString *prefix,
 	if (contains_a_space(aServer))
 	{
 		[NSException raise: IRCException format:
-		 @"[IRCClient whowas: '%@' onServer: '%@' withNumberEntries: '%@'] Server contains a space",
+		 @"[IRCObject whowas: '%@' onServer: '%@' withNumberEntries: '%@'] Server contains a space",
 		  aPerson, aServer, aNumber];
 	}
 
@@ -1421,7 +1438,7 @@ static void rec_wallops(IRCClient *client, NSString *command, NSString *prefix,
 	if (contains_a_space(aPerson))
 	{
 		[NSException raise: IRCException format:
-		 @"[IRCClient kill: '%@' withComment: '%@'] Person contains a space",
+		 @"[IRCObject kill: '%@' withComment: '%@'] Person contains a space",
 		 aPerson, aComment];
 	}
 	if ([aComment length] == 0)
@@ -1441,7 +1458,7 @@ static void rec_wallops(IRCClient *client, NSString *command, NSString *prefix,
 	if (contains_a_space(aChannel))
 	{
 		[NSException raise: IRCException
-		 format: @"[IRCClient setTopicForChannel: %@ to: %@] The channel contains a space.",
+		 format: @"[IRCObject setTopicForChannel: %@ to: %@] The channel contains a space.",
 		   aChannel, aTopic];
 	}
 
@@ -1470,7 +1487,7 @@ static void rec_wallops(IRCClient *client, NSString *command, NSString *prefix,
 	if (contains_a_space(anObject))
 	{
 		[NSException raise: IRCException format:
-		  @"[IRCClient setMode:'%@' on:'%@' withParams:'%@'] Object contains a space", 
+		  @"[IRCObject setMode:'%@' on:'%@' withParams:'%@'] Object contains a space", 
 		    aMode, anObject, list];
 	}
 	if ([aMode length] == 0)
@@ -1481,7 +1498,7 @@ static void rec_wallops(IRCClient *client, NSString *command, NSString *prefix,
 	if (contains_a_space(aMode))
 	{		
 		[NSException raise: IRCException format:
-		  @"[IRCClient setMode:'%@' on:'%@' withParams:'%@'] Mode contains a space", 
+		  @"[IRCObject setMode:'%@' on:'%@' withParams:'%@'] Mode contains a space", 
 		    aMode, anObject, list];
 	}
 	if (!list)
@@ -1515,7 +1532,7 @@ static void rec_wallops(IRCClient *client, NSString *command, NSString *prefix,
 	if (contains_a_space(aChannel))
 	{
 		[NSException raise: IRCException format:
-		 @"[IRCClient listChannel:'%@' onServer:'%@'] Channel contains a space",
+		 @"[IRCObject listChannel:'%@' onServer:'%@'] Channel contains a space",
 		  aChannel, aServer];
 	}
 	if ([aServer length] == 0)
@@ -1526,7 +1543,7 @@ static void rec_wallops(IRCClient *client, NSString *command, NSString *prefix,
 	if (contains_a_space(aChannel))
 	{
 		[NSException raise: IRCException format:
-		 @"[IRCClient listChannel:'%@' onServer:'%@'] Server contains a space",
+		 @"[IRCObject listChannel:'%@' onServer:'%@'] Server contains a space",
 		  aChannel, aServer];
 	}
 	
@@ -1546,13 +1563,13 @@ static void rec_wallops(IRCClient *client, NSString *command, NSString *prefix,
 	if (contains_a_space(aPerson))
 	{
 		[NSException raise: IRCException format:
-		 @"[IRCClient invite:'%@' to:'%@'] Person contains a space",
+		 @"[IRCObject invite:'%@' to:'%@'] Person contains a space",
 		  aPerson, aChannel];
 	}
 	if (contains_a_space(aChannel))
 	{
 		[NSException raise: IRCException format:
-		 @"[IRCClient invite:'%@' to:'%@'] Channel contains a space",
+		 @"[IRCObject invite:'%@' to:'%@'] Channel contains a space",
 		  aPerson, aChannel];
 	}
 	
@@ -1572,13 +1589,13 @@ static void rec_wallops(IRCClient *client, NSString *command, NSString *prefix,
 	if (contains_a_space(aPerson))
 	{
 		[NSException raise: IRCException format:
-		 @"[IRCClient kick:'%@' offOf:'%@' for:'%@'] Person contains a space",
+		 @"[IRCObject kick:'%@' offOf:'%@' for:'%@'] Person contains a space",
 		  aPerson, aChannel, reason];
 	}
 	if (contains_a_space(aChannel))
 	{
 		[NSException raise: IRCException format:
-		 @"[IRCClient kick:'%@' offOf:'%@' for:'%@'] Channel contains a space",
+		 @"[IRCObject kick:'%@' offOf:'%@' for:'%@'] Channel contains a space",
 		  aPerson, aChannel, reason];
 	}
 	if ([reason length] == 0)
@@ -1641,6 +1658,10 @@ static void rec_wallops(IRCClient *client, NSString *command, NSString *prefix,
 {
 	return self;
 }
+- errorReceived: (NSString *)anError
+{
+	return self;
+}
 - wallopsReceived: (NSString *)message from: (NSString *)sender
 {
 	return self;
@@ -1666,12 +1687,6 @@ static void rec_wallops(IRCClient *client, NSString *command, NSString *prefix,
 }
 - nickChangedTo: (NSString *)newName from: (NSString *)aPerson
 {
-	if ([ExtractIRCNick(aPerson) caseInsensitiveCompare: nick] 
-	      == NSOrderedSame)
-	{
-		RELEASE(nick);
-		nick = RETAIN(newName);
-	}
 	return self;
 }
 - channelJoined: (NSString *)channel from: (NSString *)joiner
@@ -1714,7 +1729,7 @@ static void rec_wallops(IRCClient *client, NSString *command, NSString *prefix,
 	NSMutableArray *paramList = nil;
 	int offset = 0;
 	id object;
-	void (*function)(IRCClient *, NSString *, NSString *, NSArray *);
+	void (*function)(IRCObject *, NSString *, NSString *, NSArray *);
 
 	if ([aLine length] == 0)
 	{
@@ -1726,7 +1741,7 @@ static void rec_wallops(IRCClient *client, NSString *command, NSString *prefix,
 	if (offset == -1)
 	{
 		[NSException raise: IRCException
-		 format: @"[IRCClient lineReceived: '@'] Line ended prematurely.",
+		 format: @"[IRCObject lineReceived: '@'] Line ended prematurely.",
 		 [NSString stringWithCString: [aLine bytes] length: [aLine length]]];
 	}
 
@@ -1734,7 +1749,7 @@ static void rec_wallops(IRCClient *client, NSString *command, NSString *prefix,
 	if (command == nil)
 	{
 		[NSException raise: IRCException
-		 format: @"[IRCClient lineReceived: '@'] Line ended prematurely.",
+		 format: @"[IRCObject lineReceived: '@'] Line ended prematurely.",
 		 [NSString stringWithCString: [aLine bytes] length: [aLine length]]];
 	}
 

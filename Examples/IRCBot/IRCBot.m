@@ -20,6 +20,42 @@
 #import <Foundation/NSString.h>
 #import <Foundation/NSData.h>
 
+static inline NSData *chomp_line(NSMutableData *data)
+{
+	char *memory = [data mutableBytes];
+	char *memoryEnd = memory + [data length];
+	char *lineEndWithControls;
+	char *lineEnd;
+	int tempLength;
+	
+	id lineData;
+	
+	lineEndWithControls = lineEnd = 
+	  memchr(memory, '\n', memoryEnd - memory);
+	
+	if (!lineEnd)
+	{
+		return nil;
+	}
+	
+	while (((*lineEnd == '\n') || (*lineEnd == '\r'))
+	       && (lineEnd >= memory))
+	{
+		lineEnd--;
+	}
+
+	lineData = [NSData dataWithBytes: memory length: lineEnd - memory + 1];
+	
+	tempLength = memoryEnd - lineEndWithControls - 1;
+	
+	memmove(memory, lineEndWithControls + 1, 
+	        tempLength);
+	
+	[data setLength: tempLength];
+	
+	return lineData;
+}
+
 @implementation IRCBot
 - registeredWithServer
 {
@@ -31,7 +67,7 @@
 - versionRequestReceived: (NSString *)query from: (NSString *)aPerson
 {
 	[self sendVersionReplyTo: ExtractIRCNick(aPerson) name: @"netclasses"
-	 version: @"0.93c"  environment: @"GNUstep, silly!!!"];
+	 version: @"0.94"  environment: @"GNUstep, silly!!!"];
 	return self;
 }
 - pingRequestReceived: (NSString *)argument from: (NSString *)aPerson
@@ -56,6 +92,7 @@
 		[self sendMessage: @"Quitting..." to: sendTo];
 		[self quitWithMessage: 
 		  [NSString stringWithFormat: @"Quit requested by %@", sendTo]];
+		return self;
 	}
 	else if ([aMessage caseInsensitiveCompare: @"fortune"] == NSOrderedSame)
 	{
@@ -68,12 +105,12 @@
 		NSMutableData *input = [NSMutableData dataWithLength: 4000];
 		id line;
 		
-		fortune = popen("fortune -o", "r");
+		fortune = popen("fortune", "r");
 		
 		do
 		{
 			read = fread([input mutableBytes], sizeof(char), 4000, fortune);
-			while ((line = ChompLine(input))) 
+			while ((line = chomp_line(input))) 
 			{
 				[self sendMessage: [NSString stringWithCString: [line bytes]
 				  length: [line length]] to: sendTo];
@@ -85,9 +122,8 @@
 		  length: [line length]] to: sendTo];
 		
 		pclose(fortune);
+		return self;
 	}
-	
-	
 	
 	return self;
 }

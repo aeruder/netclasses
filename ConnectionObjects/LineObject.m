@@ -18,7 +18,7 @@
 #import "LineObject.h"
 #import <Foundation/NSData.h>
 
-inline NSData *ChompLine(NSMutableData *data)
+static inline NSData *chomp_line(NSMutableData *data)
 {
 	char *memory = [data mutableBytes];
 	char *memoryEnd = memory + [data length];
@@ -76,7 +76,7 @@ inline NSData *ChompLine(NSMutableData *data)
 	
 	[data appendData: newData];
 	
-	while ((newLine = ChompLine(data))) [self lineReceived: newLine];
+	while ((newLine = chomp_line(data))) [self lineReceived: newLine];
 	
 	return self;
 }

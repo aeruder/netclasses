@@ -1,5 +1,5 @@
 /***************************************************************************
-                                IRCClient.h
+                                IRCObjecct.h
                           -------------------
     begin                : Thu May 30 22:06:25 UTC 2002
     copyright            : (C) 2002 by Andy Ruder
@@ -20,12 +20,28 @@
 
 extern NSString *IRCException;
 
+/* When one of the callbacks ends with from: (NSString *), that last 
+ * argument is where the callback originated from.  It is usually in a slightly
+ * different format: nick!host.  So if you want the nick you use
+ * ExtractIRCNick, if you want the host you use ExtractIRCHost, and if you
+ * want both, you can use SeparateIRCNickAndHost(which stores nick then host
+ * in that order)
+ * 
+ * If, for example, the message originates from a server, it will not be in
+ * this format, in this case, ExtractIRCNick will return the original string
+ * and ExtractIRCHost will return nil, and SeparateIRCNickAndHost will return
+ * an array with just one object.
+ * 
+ * So, if you are using a callback, and the last argument has a from: before
+ * it, odds are you may want to look into using these functions.
+ */
+
 NSString *ExtractIRCNick(NSString *prefix);
 NSString *ExtractIRCHost(NSString *prefix);
 
 NSArray *SeparateIRCNickAndHost(NSString *prefix);
 
-@interface IRCClient : LineObject
+@interface IRCObject : LineObject
 	{
 		NSString *server;
 		NSString *nick;
@@ -34,10 +50,10 @@ NSArray *SeparateIRCNickAndHost(NSString *prefix);
 		
 		NSMutableArray *initialNicknames;
 	}
-+ (IRCClient *)connectTo: (NSString *)host onPort: (int)aPort 
++ (IRCObject *)connectTo: (NSString *)host onPort: (int)aPort 
    withTimeout: (int)timeout withNicknames: (NSArray *)nicknames 
    withUserName: (NSString *)user withRealName: (NSString *)realName 
-   withPassword: (NSString *)password withClass: (Class)aObject;
+   withPassword: (NSString *)password;
    
 - (BOOL)connected;
 
@@ -154,6 +170,8 @@ NSArray *SeparateIRCNickAndHost(NSString *prefix);
 
 - userInfoRequestReceived: (NSString *)query from: (NSString *)aPerson;
 
+- errorReceived: (NSString *)anError;
+
 - wallopsReceived: (NSString *)message from: (NSString *)sender;
 
 - userKicked: (NSString *)aPerson outOf: (NSString *)aChannel 
@@ -193,6 +211,10 @@ NSArray *SeparateIRCNickAndHost(NSString *prefix);
 
 - writeString: (NSString *)format, ...;
 @end
+
+/* Below is all the numeric commands that you can receive as listed
+ * in the RFC
+ */
 
 extern NSString *RPL_WELCOME;
 extern NSString *RPL_YOURHOST;
