@@ -4,8 +4,8 @@ after-clean::
 	$(MAKE) -C Documentation -f GNUmakefile clean
 
 after-distclean::
-	$(MAKE) -C Tests -f GNUmakefile clean
-	$(MAKE) -C Examples -f GNUmakefile clean
-	$(MAKE) -C Documentation -f GNUmakefile clean
+	$(MAKE) -C Tests -f GNUmakefile distclean
+	$(MAKE) -C Examples -f GNUmakefile distclean
+	$(MAKE) -C Documentation -f GNUmakefile distclean
 	rm -fr configure config.* Source/config.h* autom4te.cache
 	
