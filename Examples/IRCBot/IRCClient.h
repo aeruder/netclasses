@@ -18,9 +18,6 @@
 #import "LineObject.h"
 #import <Foundation/NSObject.h>
 
-@class NSString, NSMutableArray, NSArray, NSMutableDictionary;
-@class NSMutableSet;
-
 extern NSString *IRCException;
 
 NSString *ExtractIRCNick(NSString *prefix);
@@ -358,3 +355,4 @@ extern NSString *RPL_STATSPING;
 extern NSString *RPL_STATSBLINE;
 extern NSString *RPL_STATSDLINE;
 extern NSString *ERR_NOSERVICEHOST;
+

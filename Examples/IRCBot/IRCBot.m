@@ -23,16 +23,15 @@
 @implementation IRCBot
 - registeredWithServer
 {
-	[super registeredWithServer];
 	[self joinChannel: 
-	  @"#netclasses" 
+	  @"#gnustep,#netclasses" 
 	  withPassword: nil];
 	return self;
 }
 - versionRequestReceived: (NSString *)query from: (NSString *)aPerson
 {
 	[self sendVersionReplyTo: ExtractIRCNick(aPerson) name: @"netclasses"
-	 version: @"0.94"  environment: @"GNUstep, silly!!!"];
+	 version: @"0.93c"  environment: @"GNUstep, silly!!!"];
 	return self;
 }
 - pingRequestReceived: (NSString *)argument from: (NSString *)aPerson
@@ -43,23 +42,22 @@
 - messageReceived: (NSString *)aMessage to: (NSString *)to
                from: (NSString *)whom
 {
-	NSString *sendTo;
-			
-	if ([nick caseInsensitiveCompare: to] == NSOrderedSame)
-	{
-		sendTo = ExtractIRCNick(whom);
-	}
-	else
-	{
-		sendTo = to;
-	}
+	NSString *sendTo = ExtractIRCNick(whom);
 	
-	if ([aMessage caseInsensitiveCompare: @"quit now"] == NSOrderedSame)
+	NSLog(@"%@/%@> %@", sendTo, to, aMessage);
+	
+	if ([nick caseInsensitiveCompare: to] != NSOrderedSame)
 	{
-		[self sendAction: @"cries" to: sendTo];
-		[self quitWithMessage: @"Fine!!!"];
+		return self;  // Only accepts private messages
 	}
-	if ([aMessage caseInsensitiveCompare: @"fortune"] == NSOrderedSame)
+		
+	if ([aMessage caseInsensitiveCompare: @"quit"] == NSOrderedSame)
+	{
+		[self sendMessage: @"Quitting..." to: sendTo];
+		[self quitWithMessage: 
+		  [NSString stringWithFormat: @"Quit requested by %@", sendTo]];
+	}
+	else if ([aMessage caseInsensitiveCompare: @"fortune"] == NSOrderedSame)
 	{
 		if (sendTo == to)
 		{
@@ -88,6 +86,9 @@
 		
 		pclose(fortune);
 	}
+	
+	
+	
 	return self;
 }
 @end

@@ -41,4 +41,3 @@ NSData *ChompLine(NSMutableData *data);
 
 - lineReceived: (NSData *)line;
 @end
-
