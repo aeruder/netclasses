@@ -31,6 +31,7 @@
 
 extern NSString *NetclassesErrorTimeout;
 extern NSString *NetclassesErrorBadAddress;
+extern NSString *NetclassesErrorAborted;
  
 @interface TCPSystem : NSObject
 	{
@@ -42,18 +43,34 @@ extern NSString *NetclassesErrorBadAddress;
 - (NSString *)errorString;
 - (int)errorNumber;
 
-- (id)connectNetObject: (id)netObject toHost: (NSHost *)host 
-                onPort: (uint16_t)aPort withTimeout: (int)timeout;
+- (id <NetObject>)connectNetObject: (id <NetObject>)netObject toHost: (NSHost *)aHost 
+                onPort: (uint16_t)aPort withTimeout: (int)aTimeout;
 
-- (TCPConnecting *)connectNetObjectInBackground: (id)netObject
-    toHost: (NSHost *)host onPort: (uint16_t)aPort withTimeout: (int)timeout;
+- (TCPConnecting *)connectNetObjectInBackground: (id <NetObject>)netObject
+    toHost: (NSHost *)aHost onPort: (uint16_t)aPort withTimeout: (int)aTimeout;
 
 - (NSHost *)hostFromHostOrderInteger: (uint32_t)ip;
 - (NSHost *)hostFromNetworkOrderInteger: (uint32_t)ip;
 @end
 
+/**
+ * A class can implement this protocol, and when it is connected in the 
+ * background using -connectNetObjectInBackground:toHost:onPort:withTimeout:
+ * it will receive the messages in this protocol which notify the object of
+ * certain events while being connected in the background.
+ */
 @protocol TCPConnecting
-- connectingFailed: (NSString *)error;
+/** 
+ * Tells the class implementing this protocol that the error in 
+ * <var>aError</var> has occurred and the connection will not 
+ * be established
+ */
+- connectingFailed: (NSString *)aError;
+/**
+ * Tells the class implementing this protocol that the connection
+ * has begun and will be using the connection place holder 
+ * <var>aConnection</var>
+ */
 - connectingStarted: (TCPConnecting *)aConnection;
 @end
 
@@ -63,13 +80,13 @@ extern NSString *NetclassesErrorBadAddress;
 		id netObject;
 		NSTimer *timeout;
 	}
-- (id)netObject;
+- (id <NetObject>)netObject;
 - (void)abortConnection;
 
 - (void)connectionLost;
-- connectionEstablished: aTransport;
+- connectionEstablished: (id <NetTransport>)aTransport;
 - dataReceived: (NSData *)data;
-- (id)transport;
+- (id <NetTransport>)transport;
 @end
 
 @interface TCPPort : NSObject < NetPort >
@@ -84,6 +101,7 @@ extern NSString *NetclassesErrorBadAddress;
 - (uint16_t)port;
 - setNetObject: (Class)aClass;
 - (int)desc;
+- (void)close;
 - (void)connectionLost;
 - newConnection;
 @end
@@ -99,7 +117,7 @@ extern NSString *NetclassesErrorBadAddress;
 - initWithDesc: (int)aDesc withRemoteHost: (NSHost *)theAddress;
 - (NSData *)readData: (int)maxDataSize;
 - (BOOL)isDoneWriting;
-- writeData: (NSData *)data;
+- writeData: (NSData *)aData;
 - (NSHost *)localHost;
 - (NSHost *)remoteHost;
 - (int)desc;

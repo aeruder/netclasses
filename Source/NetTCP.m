@@ -14,6 +14,16 @@
  *   (at your option) any later version.                                   *
  *                                                                         *
  ***************************************************************************/
+/**
+ * <title>NetTCP reference</title>
+ * <author name="Andrew Ruder">
+ * 	<email address="aeruder@ksu.edu" />
+ * 	<url url="http://aeruder.gnustep.us/index.html" />
+ * </author>
+ * <version>Revision 1</version>
+ * <date>November 8, 2003</date>
+ * <copy>Andrew Ruder</copy>
+ */
 
 #import "NetTCP.h"
 #import <Foundation/NSString.h>
@@ -39,8 +49,21 @@ typedef int socklen_t;
 #endif
 #endif
 
+/**
+ * If an error occurs and error number is zero, this could be the error string.
+ * This error occurs when some operation times out.
+ */
 NSString *NetclassesErrorTimeout = @"Connection timed out";
+/**
+ * Could be the current error string if the error number is zero and some
+ * error has occurred.  Indicates
+ * that a NSHost returned an address that was invalid.
+ */
 NSString *NetclassesErrorBadAddress = @"Bad address";
+/**
+ * The error message used when a connection is aborted.
+ */
+NSString *NetclassesErrorAborted = @"Connection aborted";
 
 static TCPSystem *default_system = nil;
 
@@ -55,7 +78,7 @@ static TCPSystem *default_system = nil;
 @end
 
 @interface TCPConnecting (InternalTCPConnecting)
-- initWithNetObject: (id)netObject withTimeout: (int)aTimeout;
+- initWithNetObject: (id <NetObject>)netObject withTimeout: (int)aTimeout;
 - connectingFailed: (NSString *)error;
 - connectingSucceeded;
 - timeoutReceived: (NSTimer *)aTimer;
@@ -186,7 +209,7 @@ static TCPSystem *default_system = nil;
 @end
 
 @implementation TCPConnecting (InternalTCPConnecting)
-- initWithNetObject: (id)aNetObject withTimeout: (int)aTimeout
+- initWithNetObject: (id <NetObject>)aNetObject withTimeout: (int)aTimeout
 {
 	if (!(self = [super init])) return nil;
 	
@@ -242,6 +265,13 @@ static TCPSystem *default_system = nil;
 }
 @end
 
+/**
+ * If an object was attempted to have been connected in the background, this 
+ * is a placeholder for that ongoing connection.  
+ * -connectNetObjectInBackground:toHost:onPort:withTimeout: will return an 
+ * instance of this object.  This placeholder object can be used to cancel
+ * an ongoing connection with the -abortConnection method.
+ */
 @implementation TCPConnecting
 - (void)dealloc
 {
@@ -250,19 +280,37 @@ static TCPSystem *default_system = nil;
 	
 	[super dealloc];
 }
-- (id)netObject
+/**
+ * Returns the object that will be connected by this placeholder object.
+ */
+- (id <NetObject>)netObject
 {
 	return netObject;
 }
+/**
+ * Aborts the ongoing connection.  If the net object conforms to the 
+ * [(TCPConnecting)] protocol, it will receive a 
+ * [(TCPConnecting)-connectingFailed:] message with a argument of
+ * <code>NetclassesErrorAborted</code>
+ */
 - (void)abortConnection
 {
-	[self connectingFailed: @"Aborted Connection"];
+	[self connectingFailed: NetclassesErrorAborted];
 }
+/**
+ * Cleans up the connection placeholder.
+ */
 - (void)connectionLost
 {
 	DESTROY(transport);
 }
-- connectionEstablished: aTransport
+/**
+ * Sets up the connection placeolder.  If the net object conforms to 
+ * [(TCPConnecting)], it will receive a 
+ * [(TCPConnecting)-connectingStarted:] with the instance of TCPConnecting
+ * as an argument.
+ */
+- connectionEstablished: (id <NetTransport>)aTransport
 {
 	transport = RETAIN(aTransport);	
 	[[NetApplication sharedInstance] connectObject: self];
@@ -272,11 +320,19 @@ static TCPSystem *default_system = nil;
 	}
 	return self;
 }
+/**
+ * This shouldn't happen while a class is connecting, but included to 
+ * conform to the [(NetObject)] protocol.
+ */
 - dataReceived: (NSData *)data
 {
 	return self;
 }
-- (id)transport
+/**
+ * Returns the transport used by this object.  Will not be the same transport
+ * given to the net object when the connection is made.
+ */
+- (id <NetTransport>)transport
 {
 	return transport;
 }
@@ -467,7 +523,15 @@ static TCPSystem *default_system = nil;
 }
 @end		
 	
+/** 
+ * Used for certain operations in the TCP/IP system.  There is only one
+ * instance of this class at a time, used +sharedInstance to get this
+ * instance.
+ */
 @implementation TCPSystem
+/**
+ * Returns the one instance of TCPSystem currently in existence.
+ */
 + sharedInstance
 {
 	return (default_system) ? default_system : [[self alloc] init];
@@ -485,30 +549,45 @@ static TCPSystem *default_system = nil;
 	
 	return self;
 }
+/** 
+ * Returns the error string of the last error that occurred.
+ */
 - (NSString *)errorString
 {
 	return errorString;
 }
+/**
+ * Returns the errno of the last error that occurred.  If it is some other
+ * non-system error, this will be zero, but the error string shall be set
+ * accordingly.
+ */
 - (int)errorNumber
 {
 	return errorNumber;
 }
-- (id)connectNetObject: (id)netObject toHost: (NSHost *)host
-                onPort: (uint16_t)aPort withTimeout: (int)timeout
+/** 
+ * Will connect the object <var>netObject</var> to host <var>aHost</var>
+ * on port <var>aPort</var>.  If this connection doesn't happen in 
+ * <var>aTimeout</var> seconds or some other error occurs, it will return
+ * nil and the error string and error number shall be set accordingly.
+ * Otherwise this will return <var>netObject</var>
+ */
+- (id <NetObject>)connectNetObject: (id <NetObject>)netObject toHost: (NSHost *)aHost
+                onPort: (uint16_t)aPort withTimeout: (int)aTimeout
 {
 	int desc;
 	id transport;
 
-	host = [NSHost hostWithAddress: [host address]];
+	aHost = [NSHost hostWithAddress: [aHost address]];
 	
-	desc = [self connectToHost: host onPort: aPort withTimeout: timeout 
+	desc = [self connectToHost: aHost onPort: aPort withTimeout: aTimeout 
 	  inBackground: NO];
 	if (desc < 0)
 	{
 		return nil;
 	}
 	transport = AUTORELEASE([[TCPTransport alloc] initWithDesc: desc 
-	 withRemoteHost: host]);
+	 withRemoteHost: aHost]);
 	
 	if (!(transport))
 	{
@@ -520,16 +599,23 @@ static TCPSystem *default_system = nil;
 	
 	return netObject;
 }
-- (TCPConnecting *)connectNetObjectInBackground: (id)netObject 
-    toHost: (NSHost *)host onPort: (uint16_t)aPort withTimeout: (int)timeout
+/**
+ * Connects <var>netObject</var> to host <var>aHost</var> on the port 
+ * <var>aPort</var>.  Returns a place holder object that finishes the
+ * connection in the background.  The placeholder will fail if the connection
+ * does not occur in <var>aTimeout</var> seconds.  Returns nil if an error 
+ * occurs and sets the error string and error number accordingly.
+ */
+- (TCPConnecting *)connectNetObjectInBackground: (id <NetObject>)netObject 
+    toHost: (NSHost *)aHost onPort: (uint16_t)aPort withTimeout: (int)aTimeout
 {
 	int desc;
 	id transport;
 	id object;
 
-	host = [NSHost hostWithAddress: [host address]];
+	aHost = [NSHost hostWithAddress: [aHost address]];
 
-	desc = [self connectToHost: host onPort: aPort
+	desc = [self connectToHost: aHost onPort: aPort
 	  withTimeout: 0 inBackground: YES];
 	  
 	if (desc < 0)
@@ -538,9 +624,9 @@ static TCPSystem *default_system = nil;
 	}
 	
 	object = AUTORELEASE([[TCPConnecting alloc] initWithNetObject: netObject
-	   withTimeout: timeout]);
+	   withTimeout: aTimeout]);
 	transport = AUTORELEASE([[TCPConnectingTransport alloc] initWithDesc: desc 
-	  withRemoteHost: host withOwner: object]);
+	  withRemoteHost: aHost withOwner: object]);
 	
 	if (!transport)
 	{
@@ -552,6 +638,9 @@ static TCPSystem *default_system = nil;
 	
 	return object;
 }
+/**
+ * Returns a host from a network order 32-bit integer ip address.
+ */
 - (NSHost *)hostFromNetworkOrderInteger: (uint32_t)ip
 {
 	struct in_addr addr;
@@ -567,6 +656,9 @@ static TCPSystem *default_system = nil;
 
 	return nil;
 }
+/**
+ * Returns a host from a host order 32-bit integer ip address.
+ */
 - (NSHost *)hostFromHostOrderInteger: (uint32_t)ip
 {
 	struct in_addr addr;
@@ -584,8 +676,20 @@ static TCPSystem *default_system = nil;
 }	
 @end
 
-
+/**
+ * TCPPort is a class that is used to bind a descriptor to a certain
+ * TCP/IP port and listen for connections.  When a connection is received,
+ * it will create a class set with -setNetObject: and set it up with the new
+ * connection.
+ */
 @implementation TCPPort
+/** 
+ * Initializes a port on <var>aHost</var> and binds it to port <var>aPort</var>.
+ * If <var>aHost</var> is nil, it will set it up on all addresses on the local
+ * machine.  Using zero for <var>aPort</var> will use a random currently 
+ * available port number.  Use -port to find out where it is actually
+ * bound to.
+ */
 - initOnHost: (NSHost *)aHost onPort: (uint16_t)aPort
 {
 	struct sockaddr_in x;
@@ -614,10 +718,18 @@ static TCPSystem *default_system = nil;
 	[[NetApplication sharedInstance] connectObject: self];
 	return self;
 }
+/**
+ * Calls -initOnHost:onPort: with a nil argument for the host.
+ */
 - initOnPort: (uint16_t)aPort
 {
 	return [self initOnHost: nil onPort: aPort];
 }
+/**
+ * Sets the class that will be initialized if a connection occurs on this
+ * port.  If <var>aClass</var> does not implement the [(NetObject)]
+ * protocol, will throw a FatalNetException.
+ */
 - setNetObject: (Class)aClass
 {
 	if (![aClass conformsToProtocol: @protocol(NetObject)])
@@ -630,15 +742,32 @@ static TCPSystem *default_system = nil;
 	netObjectClass = aClass;
 	return self;
 }
+/**
+ * Returns the low-level file descriptor for the port.
+ */
 - (int)desc
 {
 	return desc;
 }
-- (void)connectionLost
+/**
+ * Closes the descriptor.
+ */
+- (void)close
 {
 	close(desc);
 }
-- newConnection
+/**
+ * Called when the connection is closed.  This will call -close
+ */
+- (void)connectionLost
+{
+	[self close];
+}
+/**
+ * Called when a new connection occurs.  Will initialize a new object
+ * of the class set with -setNetObject: with the new connection.
+ */
+- (id <NetObject>)newConnection
 {
 	int newDesc;
 	struct sockaddr_in sin;
@@ -672,6 +801,9 @@ static TCPSystem *default_system = nil;
 	
 	return self;
 }
+/**
+ * Returns the port that this TCPPort is currently bound to.
+ */
 - (uint16_t)port
 {
 	return port;
@@ -680,11 +812,19 @@ static TCPSystem *default_system = nil;
 
 static NetApplication *net_app = nil; 
 
+/**
+ * Handles the actual TCP/IP transfer of data.
+ */
 @implementation TCPTransport
 + (void)initialize
 {
 	net_app = RETAIN([NetApplication sharedInstance]);
 }
+/** 
+ * Initializes the transport with the file descriptor <var>aDesc</var>.
+ * <var>theAddress</var> is the host that the flie descriptor is connected
+ * to.
+ */
 - initWithDesc: (int)aDesc withRemoteHost: (NSHost *)theAddress
 {
 	struct sockaddr_in x;
@@ -722,6 +862,10 @@ static NetApplication *net_app = nil;
 
 	[super dealloc];
 }
+/**
+ * Handles the actual reading of data from the connection.
+ * Throws an exception if an error occurs while reading data.
+ */
 - (NSData *)readData: (int)maxDataSize
 {
 	char *buffer;
@@ -767,6 +911,10 @@ static NetApplication *net_app = nil;
 	
 	return data;
 }
+/**
+ * Returns YES if there is no more data to write in the buffer and NO if 
+ * there is.
+ */
 - (BOOL)isDoneWriting
 {
 	if (!connected)
@@ -776,19 +924,24 @@ static NetApplication *net_app = nil;
 	}
 	return ([writeBuffer length]) ? NO : YES;
 }
-- writeData: (NSData *)data
+/**
+ * If <var>aData</var> is nil, this will physically transport the data
+ * to the connected end.  Otherwise this will put the data in the buffer of 
+ * data that needs to be written to the connection when next possible.
+ */
+- writeData: (NSData *)aData
 {
 	int writeReturn;
 	char *bytes;
 	int length;
 	
-	if (data)
+	if (aData)
 	{
 		if ([writeBuffer length] == 0)
 		{
 			[net_app transportNeedsToWrite: self];
 		}
-		[writeBuffer appendData: data];
+		[writeBuffer appendData: aData];
 		return self;
 	}
 	if (!connected)
@@ -823,18 +976,31 @@ static NetApplication *net_app = nil;
 	
 	return self;
 }
+/**
+ * Returns a NSHost of the local side of a connection.
+ */
 - (NSHost *)localHost
 {
 	return localHost;	
 }
+/** 
+ * Returns a NSHost of the remote side of a connection.
+ */
 - (NSHost *)remoteHost
 {
 	return remoteHost;
 }
+/**
+ * Returns the low level file descriptor that is used internally.
+ */
 - (int)desc
 {
 	return desc;
 }
+/**
+ * Closes the transport nd makes sure there is no more incoming or outgoing
+ * data on the connection.
+ */
 - (void)close
 {
 	if (!connected)

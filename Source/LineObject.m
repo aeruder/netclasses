@@ -14,6 +14,16 @@
  *   (at your option) any later version.                                   *
  *                                                                         *
  ***************************************************************************/
+/**
+ * <title>LineObject class reference</title>
+ * <author name="Andrew Ruder">
+ * 	<email address="aeruder@ksu.edu" />
+ * 	<url url="http://aeruder.gnustep.us/index.html" />
+ * </author>
+ * <version>Revision 1</version>
+ * <date>November 8, 2003</date>
+ * <copy>Andrew Ruder</copy>
+ */
 
 #import "LineObject.h"
 #import <Foundation/NSData.h>
@@ -56,15 +66,31 @@ static inline NSData *chomp_line(NSMutableData *data)
 	
 	return lineData;
 }
-	
+
+/**
+ * LineObject is used for line-buffered connections (end in \r\n or just \n).
+ * To use, simply override lineReceived: in a subclass of LineObject.  By
+ * default, LineObject does absolutely nothing with lineReceived except throw
+ * the line away.  Use line object if you simply want line-buffered input.
+ * This can be used on IRC, telnet, etc.
+ */
+
 @implementation LineObject
+/**
+ * Cleans up the instance variables and closes/releases the transport.
+ */
 - (void)connectionLost
 {
 	[transport close];
 	DESTROY(transport);
 	RELEASE(_readData);
 }
-- connectionEstablished: aTransport
+/**
+ * Initializes data and retains <var>aTransport</var>
+ * <var>aTransport</var> should conform to the [(NetTransport)]
+ * protocol.
+ */
+- connectionEstablished: (id <NetTransport>)aTransport
 {
 	transport = RETAIN(aTransport);
 	[[NetApplication sharedInstance] connectObject: self];
@@ -73,6 +99,11 @@ static inline NSData *chomp_line(NSMutableData *data)
 
 	return self;
 }
+/**
+ * Adds the data to a buffer.  Then calls -lineReceived: for all
+ * full lines currently in the buffer.  Don't override this, override
+ * -lineReceived:.
+ */
 - dataReceived: (NSData *)newData
 {
 	id newLine;
@@ -83,11 +114,18 @@ static inline NSData *chomp_line(NSMutableData *data)
 	
 	return self;
 }
-- transport
+/**
+ * Returns the transport
+ */
+- (id <NetTransport>)transport
 {
 	return transport;
 }
-- lineReceived: (NSData *)line
+/**
+ * <override-subclass />
+ * <var>aLine</var> contains a full line of text (without the ending newline)
+ */
+- lineReceived: (NSData *)aLine
 {
 	return self;
 }

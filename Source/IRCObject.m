@@ -14,6 +14,16 @@
  *   (at your option) any later version.                                   *
  *                                                                         *
  ***************************************************************************/
+/**
+ * <title>IRCObject reference</title>
+ * <author name="Andrew Ruder">
+ * 	<email address="aeruder@ksu.edu" />
+ * 	<url url="http://aeruder.gnustep.us/index.html" />
+ * </author>
+ * <version>Revision 1</version>
+ * <date>November 8, 2003</date>
+ * <copy>Andrew Ruder</copy>
+ */
 
 #import "NetBase.h"
 #import "NetTCP.h"
@@ -44,8 +54,17 @@ static NSMapTable *ctcp_to_function = 0;
 
 static NSData *IRC_new_line = nil;
 
+/**
+ * Additions of NSString that are used to upper/lower case strings taking
+ * into account that on many servers {}|^ are lowercase forms of []\~.
+ * Try not to depend on this fact, some servers nowadays are drifting away
+ * from this idea and will treat them as different characters entirely.
+ */
 @implementation NSString (IRCAddition)
-// Because in IRC {}|^ are lowercase of []\~
+/**
+ * Returns an uppercased string (and converts any of {}|^ characters found
+ * to []\~ respectively).
+ */
 - (NSString *)uppercaseIRCString
 {
 	NSMutableString *aString = [NSString stringWithString: [self uppercaseString]];
@@ -62,6 +81,10 @@ static NSData *IRC_new_line = nil;
 	
 	return [aString uppercaseString];
 }
+/**
+ * Returns a lowercased string (and converts any of []\~ characters found 
+ * to {}|^ respectively).
+ */
 - (NSString *)lowercaseIRCString
 {
 	NSMutableString *aString = [NSMutableString 
@@ -79,6 +102,10 @@ static NSData *IRC_new_line = nil;
 	
 	return [aString lowercaseString];
 }
+/** 
+ * Compares this string to <var>aString</var> while taking into account that
+ * {}|^ are the lowercase versions of []\~.
+ */
 - (NSComparisonResult)caseInsensitiveIRCCompare: (NSString *)aString
 {
 	return [[self uppercaseIRCString] compare:
@@ -266,18 +293,38 @@ static inline NSString *string_from_string(NSString *aString, NSString *delim)
 	return [aString substringFromIndex: a.location];
 }
 
+/**
+ * Returns the nickname portion of a prefix.  On any argument after
+ * from: in the class reference, the name could be in the format of
+ * nickname!host.  Will always return a valid string.
+ */
 inline NSString *ExtractIRCNick(NSString *prefix)
 {	
+	if (!prefix) return @"";
 	return string_to_string(prefix, @"!");
 }
 
+/**
+ * Returns the host portion of a prefix.  On any argument after
+ * from: in the class reference, the name could be in the format
+ * nickname!host.  Returns nil if the prefix is not in the correct
+ * format.
+ */
 inline NSString *ExtractIRCHost(NSString *prefix)
 {
+	if (!prefix) return @"";
 	return string_from_string(prefix, @"!");
 }
 
+/**
+ * Returns an array of the nickname/host of a prefix.  In the case that
+ * the array has only one object, it will be the nickname.  In the case that
+ * it has two, it will be [nickname, host].  The object will always be at
+ * least one object long and never more than two.
+ */
 inline NSArray *SeparateIRCNickAndHost(NSString *prefix)
 {
+	if (!prefix) return [NSArray arrayWithObject: @""];
 	return [NSArray arrayWithObjects: string_to_string(prefix, @"!"),
 	  string_from_string(prefix, @"!"), nil];
 }
@@ -399,7 +446,7 @@ static void rec_topic(IRCObject *client, NSString *command,
 static void rec_privmsg(IRCObject *client, NSString *command,
                         NSString *prefix, NSArray *paramList)
 {
-	id message;
+	NSString *message;
 	
 	if ([paramList count] < 2)
 	{
@@ -587,6 +634,27 @@ static void rec_error(IRCObject *client, NSString *command, NSString *prefix,
 }
 @end
 
+/**
+ * <p>
+ * IRCObject handles all aspects of an IRC connection.  In almost all
+ * cases, you will want to override this class and implement just the
+ * callback methods to handle everything.
+ * </p>
+ * <p>
+ * On any class ending with an argument like 'from: (NSString *)aString',
+ * <var>aString</var> could be in the format of nickname!host.  Please see
+ * the documentation for ExtractIRCNick(), ExtractIRCHost(), and 
+ * SeparateIRCNickAndHost() for more information.
+ * </p>
+ * <p>
+ * A lot of arguments may not contain spaces.  The general procedure on 
+ * processing these arguments is that the method will cut the string
+ * off at the first space and use the part of the string before the space
+ * and fail only if that string is still invalid.  Try to avoid
+ * passing strings with spaces as the arguments to the methods 
+ * that warn not to.
+ * </p>
+ */
 @implementation IRCObject
 + (void)initialize
 {
@@ -615,6 +683,12 @@ static void rec_error(IRCObject *client, NSString *command, NSString *prefix,
 	
 	NSMapInsert(ctcp_to_function, @"\001ACTION", rec_caction);
 }
+/**
+ * <init />
+ * Initializes the IRCObject and retains the arguments for the next connection.
+ * Uses -setNick:, -setUserName:, -setRealName:, and -setPassword: to save the
+ * arguments.
+ */
 - initWithNickname: (NSString *)aNickname withUserName: (NSString *)aUser
    withRealName: (NSString *)aRealName
    withPassword: (NSString *)aPassword
@@ -625,21 +699,25 @@ static void rec_error(IRCObject *client, NSString *command, NSString *prefix,
 	
 	if (![self setNick: aNickname])
 	{
+		[self dealloc];
 		return nil;
 	}
 
 	if (![self setUserName: aUser])
 	{
+		[self dealloc];
 		return nil;
 	}
 
 	if (![self setRealName: aRealName])
 	{
+		[self dealloc];
 		return nil;
 	}
 
 	if (![self setPassword: aPassword])
 	{
+		[self dealloc];
 		return nil;
 	}
 
@@ -660,6 +738,13 @@ static void rec_error(IRCObject *client, NSString *command, NSString *prefix,
 	connected = NO;
 	[super connectionLost];
 }
+/**
+ * Sets the nickname that this object will attempt to use upon a connection.
+ * Do not use this to change the nickname once the object is connected, this
+ * is only used when it is actually connecting.  This method returns nil if
+ * <var>aNickname</var> is invalid and will set the error string accordingly.
+ * <var>aNickname</var> is invalid if it contains a space or is zero-length.
+ */
 - setNick: (NSString *)aNickname
 {
 	if (aNickname == nick) return self;
@@ -676,39 +761,56 @@ static void rec_error(IRCObject *client, NSString *command, NSString *prefix,
 
 	return self;
 }
+/**
+ * Returns the nickname that this object will use on connecting next time.
+ */
 - (NSString *)nick
 {
 	return nick;
 }
-- setUserName: (NSString *)user
+/**
+ * Sets the user name that this object will give to the server upon the
+ * next connection.  If <var>aUser</var> is invalid, it will use the user name
+ * of "netclasses".  <var>aUser</var> should not contain spaces.
+ * This method will always succeed.
+ */
+- setUserName: (NSString *)aUser
 {
 	id enviro;
 	
-	if ([user length] == 0)
+	if ([aUser length] == 0)
 	{
 		enviro = [[NSProcessInfo processInfo] environment];
 		
-		user = [enviro objectForKey: @"LOGNAME"];
+		aUser = [enviro objectForKey: @"LOGNAME"];
 
-		if ([user length] == 0)
+		if ([aUser length] == 0)
 		{
-			user = @"netclasses";
+			aUser = @"netclasses";
 		}
 	}
-	if ([(user = string_to_string(user, @" ")) length] == 0)
+	if ([(aUser = string_to_string(aUser, @" ")) length] == 0)
 	{
-		user = @"netclasses";
+		aUser = @"netclasses";
 	}
 
 	RELEASE(userName);
-	userName = RETAIN(user);
+	userName = RETAIN(aUser);
 	
 	return self;
 }
+/**
+ * Returns the user name that will be used upon the next connection.
+ */
 - (NSString *)userName
 {
 	return userName;
 }
+/**
+ * Sets the real name that will be passed to the IRC server on the next
+ * connection.  If <var>aRealName</var> is nil or zero-length, the name
+ * "John Doe" shall be used.  This method will always succeed.
+ */
 - setRealName: (NSString *)aRealName
 {
 	if ([aRealName length] == 0)
@@ -721,10 +823,19 @@ static void rec_error(IRCObject *client, NSString *command, NSString *prefix,
 
 	return self;
 }
+/**
+ * Returns the real name that will be used upon the next connection.
+ */
 - (NSString *)realName
 {
 	return realName;
 }
+/**
+ * Sets the password that will be used upon connecting to the IRC server.
+ * <var>aPass</var> can be nil or zero-length, in which case no password
+ * shall be used. <var>aPass</var> may not contain a space.  Will return 
+ * nil and set the error string if this fails. 
+ */
 - setPassword: (NSString *)aPass
 {
 	if ([aPass length])
@@ -745,10 +856,17 @@ static void rec_error(IRCObject *client, NSString *command, NSString *prefix,
 	
 	return self;
 }
+/** 
+ * Returns the password that will be used upon the next connection to a 
+ * IRC server.
+ */
 - (NSString *)password
 {
 	return password;
 }
+/**
+ * Returns a string that describes the last error that happened.
+ */
 - (NSString *)errorString
 {
 	return errorString;
@@ -1670,6 +1788,9 @@ static void rec_error(IRCObject *client, NSString *command, NSString *prefix,
 	
 	return self;
 }
+@end
+
+@implementation IRCObject (Callbacks)
 - registeredWithServer
 {
 	return self;
@@ -1768,6 +1889,15 @@ static void rec_error(IRCObject *client, NSString *command, NSString *prefix,
 	
 	return self;
 }
+@end
+
+@implementation IRCObject (LowLevel)
+/**
+ * Handles an incoming line of text from the IRC server by 
+ * parsing it and doing the appropriate actions as well as 
+ * calling any needed callbacks.
+ * See [LineObject-lineReceived:] for more information.
+ */
 - lineReceived: (NSData *)aLine
 {
 	NSString *prefix = nil;
@@ -1876,11 +2006,11 @@ static void rec_error(IRCObject *client, NSString *command, NSString *prefix,
 	temp = AUTORELEASE([[NSString alloc] initWithFormat: format 
 	  arguments: ap]);
 
-	[transport writeData: [temp dataUsingEncoding: defaultEncoding]];
+	[(id <NetTransport>)transport writeData: [temp dataUsingEncoding: defaultEncoding]];
 	
 	if (![temp hasSuffix: @"\r\n"])
 	{
-		[transport writeData: IRC_new_line];
+		[(id <NetTransport>)transport writeData: IRC_new_line];
 	}
 	return self;
 }

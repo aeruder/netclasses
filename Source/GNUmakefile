@@ -13,6 +13,8 @@ ifeq ($(OBJC_RUNTIME_LIB), apple)
 ADDITIONAL_OBJCFLAGS += -include GNUstep.h
 endif
 
+GUI_LIB =
+
 -include GNUmakefile.preamble
 include $(GNUSTEP_MAKEFILES)/framework.make
 -include GNUmakefile.postamble

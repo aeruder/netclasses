@@ -25,24 +25,17 @@
 
 @class NSMutableData, NSData;
 
-/* This is used for line-buffered connections (end in \r\n or just \n).
- * To use, simply override lineReceived:  By default, LineObject does 
- * absolutely nothing with lineRecieved except throw the line away.
- * Use line object if you simply want line-buffered input.  This can be used
- * on IRC, telnet, etc.
- */
-
 @interface LineObject : NSObject < NetObject >
 	{
 		id transport;
 		NSMutableData *_readData;
 	}
 - (void)connectionLost;
-- connectionEstablished: aTransport;
+- connectionEstablished: (id <NetTransport>)aTransport;
 - dataReceived: (NSData *)newData;
-- transport;
+- (id <NetTransport>)transport;
 
-- lineReceived: (NSData *)line;
+- lineReceived: (NSData *)aLine;
 @end
 
 #endif

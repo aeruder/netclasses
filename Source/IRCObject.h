@@ -44,7 +44,6 @@ extern NSString *IRCException;
 
 
 @interface NSString (IRCAddition)
-// Because in IRC {}|^ are lowercase of []\~
 - (NSString *)uppercaseIRCString;
 - (NSString *)lowercaseIRCString;
 - (NSComparisonResult)caseInsensitiveIRCCompare: (NSString *)aString;
@@ -68,20 +67,20 @@ NSArray *SeparateIRCNickAndHost(NSString *prefix);
 		
 		NSStringEncoding defaultEncoding;
 	}
-- initWithNickname: (NSString *)nickname
-   withUserName: (NSString *)user withRealName: (NSString *)realName
-   withPassword: (NSString *)password;
+- initWithNickname: (NSString *)aNickname
+   withUserName: (NSString *)aUser withRealName: (NSString *)aRealName
+   withPassword: (NSString *)aPassword;
 
-- setNick: (NSString *)nickname;
+- setNick: (NSString *)aNickname;
 - (NSString *)nick;
 
-- setUserName: (NSString *)user;
+- setUserName: (NSString *)aUser;
 - (NSString *)userName;
 
-- setRealName: (NSString *)realName;
+- setRealName: (NSString *)aRealName;
 - (NSString *)realName;
 
-- setPassword: (NSString *)password;
+- setPassword: (NSString *)aPass;
 - (NSString *)password;
 
 - (NSString *)errorString;
@@ -179,8 +178,9 @@ NSArray *SeparateIRCNickAndHost(NSString *prefix);
 - sendPingWithArgument: (NSString *)aString;
 
 - sendPongWithArgument: (NSString *)aString;
+@end
 
-// Callbacks
+@interface IRCObject (Callbacks)
 - registeredWithServer;
 
 - couldNotRegister: (NSString *)reason;
@@ -200,7 +200,7 @@ NSArray *SeparateIRCNickAndHost(NSString *prefix);
 - userKicked: (NSString *)aPerson outOf: (NSString *)aChannel 
          for: (NSString *)reason from: (NSString *)kicker;
 		 
-- invitedTo: (NSString *)aChannel from: (NSString *)inviter;
+- invitedTo: (NSString *)aChannel from: (NSString *)anInviter;
 
 - modeChanged: (NSString *)mode on: (NSString *)anObject 
    withParams: (NSArray *)paramList from: (NSString *)aPerson;
@@ -234,10 +234,10 @@ NSArray *SeparateIRCNickAndHost(NSString *prefix);
 - pongReceivedWithArgument: (NSString *)arg from: (NSString *)sender;
 
 - newNickNeededWhileRegistering;
+@end
 
-// Low-Level   
+@interface IRCObject (LowLevel)
 - lineReceived: (NSData *)aLine;
-
 - writeString: (NSString *)format, ...;
 @end
 

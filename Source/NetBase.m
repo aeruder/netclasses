@@ -14,6 +14,16 @@
  *   (at your option) any later version.                                   *
  *                                                                         *
  ***************************************************************************/
+/**
+ * <title>NetBase reference</title>
+ * <author name="Andrew Ruder">
+ * 	<email address="aeruder@ksu.edu" />
+ * 	<url url="http://aeruder.gnustep.us/index.html" />
+ * </author>
+ * <version>Revision 1</version>
+ * <date>November 8, 2003</date>
+ * <copy>Andrew Ruder</copy>
+ */
 
 #import "NetBase.h"
 
@@ -226,7 +236,17 @@ static void handle_cf_events(CFSocketRef s, CFSocketCallBackType callbackType,
 @end
 #endif
 
+/** 
+ * NetApplication is the workhorse of netclasses.  It manages all the 
+ * connections and ports by inserting them into the runloop and calling
+ * the callback methods when appropriate.  NetApplication is a singleton
+ * class; i.e. only one is in existence at a time.  For this reason, always
+ * use +sharedInstance to get the appropriate instance.
+ */
 @implementation NetApplication
+/** 
+ * Returns the instance of NetApplication for the current application.
+ */
 + sharedInstance
 {
 	return (netApplication) ? (netApplication) : [[NetApplication alloc] init];
@@ -319,7 +339,15 @@ static void handle_cf_events(CFSocketRef s, CFSocketCallBackType callbackType,
 		}
 	NS_ENDHANDLER																
 }
-			
+/** 
+ * Inserts <var>anObject</var> into the runloop (and retains it).  
+ * <var>anObject</var> should implement either the [(NetPort)] or 
+ * [(NetObject)] protocols. Throws a <code>NetException</code> if the 
+ * class follows neither protocol.  After connecting <var>anObject</var>,
+ * it will begin to receive the methods designated by its respective
+ * protocol.  <var>anObject</var> should only be connected with this
+ * after its transport is set.
+ */
 - connectObject: anObject
 {
 	void *desc = 0;
@@ -353,6 +381,20 @@ static void handle_cf_events(CFSocketRef s, CFSocketCallBackType callbackType,
 	
 	return self;
 }
+/**
+ * <p>
+ * Removes <var>anObject</var> from the runloop and releases it.
+ * <var>anObject</var> will no longer receive messages outlined by
+ * its protocol.  Does <em>not</em> close the descriptor of 
+ * <var>anObject</var>.  <var>anObject</var> will receive
+ * a [(NetObject)-connectionLost] message or a [(NetPort)-connectionLost]
+ * message.
+ * </p>
+ * <p>
+ * If any object should lose its connection, this will
+ * automatically be called with that object as its argument.
+ * </p>
+ */
 - disconnectObject: anObject
 {
 	id whichOne = nil;
@@ -394,6 +436,9 @@ static void handle_cf_events(CFSocketRef s, CFSocketCallBackType callbackType,
 	
 	return self;
 }
+/** 
+ * Calls -disconnectObject: on every object currently in the runloop.
+ */
 - closeEverything
 {
 	CREATE_AUTORELEASE_POOL(apr);
@@ -411,7 +456,14 @@ static void handle_cf_events(CFSocketRef s, CFSocketCallBackType callbackType,
 	RELEASE(apr);
 	return self;
 }
-- transportNeedsToWrite: aTransport
+/** 
+ * This is called to notify NetApplication that 
+ * <var>aTransport</var> has data that needs to be written out.
+ * Only after this method is called will <var>aTransport</var>
+ * begin to receive [(NetTransport)-writeData:] messages with a 
+ * nil argument when it can write.
+ */
+- transportNeedsToWrite: (id <NetTransport>)aTransport
 {
 	if ([aTransport conformsToProtocol: @protocol(NetTransport)])
 	{
