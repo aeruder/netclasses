@@ -42,6 +42,7 @@
 #include <netdb.h>
 #include <fcntl.h>
 #include <arpa/inet.h>
+#include <sys/time.h>
 
 #ifdef __APPLE__
 #ifndef socklen_t
@@ -908,15 +909,23 @@ static NetApplication *net_app = nil;
 
 	[super dealloc];
 }
+#define READ_BLOCK_SIZE 10000
 /**
  * Handles the actual reading of data from the connection.
  * Throws an exception if an error occurs while reading data.
+ * If <var>maxDataSize</var> is <= 0, all possible data will be
+ * read.
  */
 - (NSData *)readData: (int)maxDataSize
 {
 	char *buffer;
 	int readReturn;
-	NSData *data;
+	NSMutableData *data;
+	int remaining;
+	int bufsize;
+	fd_set readSet;
+	int toRead;
+	struct timeval zeroTime = { 0, 0 };
 	
 	if (!connected)
 	{
@@ -924,39 +933,78 @@ static NetApplication *net_app = nil;
 		  format: @"Not connected"];
 	}
 	
-	if (maxDataSize == 0)
+	if (maxDataSize <= 0)
 	{
-		return nil;
+		remaining = -1;
+		bufsize = READ_BLOCK_SIZE;
+	}
+	else
+	{
+		remaining = maxDataSize;
+		bufsize = (READ_BLOCK_SIZE < remaining ? READ_BLOCK_SIZE : remaining);
 	}
 	
-	if (maxDataSize < 0)
+	buffer = malloc(bufsize);
+	if (!buffer)
 	{
-		[NSException raise: FatalNetException
-		 format: @"Invalid number of bytes specified"];
+		[NSException raise: NSMallocException 
+		  format: @"%s", strerror(errno)];
 	}
+	data = [NSMutableData dataWithCapacity: bufsize];
 	
-	buffer = malloc(maxDataSize + 1);
-	readReturn = read(desc, buffer, maxDataSize);
-	
-	if (readReturn == 0)
+	do
 	{
-		free(buffer);
-		[NSException raise: NetException
-		 format: @"Socket closed"];
-	}
-	
-	if (readReturn == -1)
-	{
-		free(buffer);
-		[NSException raise: FatalNetException
-		 format: @"%s", strerror(errno)];
-	}
-	
-	data = [NSData dataWithBytes: buffer length: readReturn];
+		if (remaining == -1)
+		{
+			toRead = bufsize;
+		}
+		else
+		{
+			toRead = bufsize < remaining ? bufsize : remaining;
+		}
+
+		readReturn = read(desc, buffer, toRead); 
+		if (readReturn == 0)
+		{
+			free(buffer);
+			[NSException raise: NetException
+			  format: @"Socket closed"];
+		}
+
+		if (readReturn == -1)
+		{
+			free(buffer);
+			[NSException raise: FatalNetException
+			  format: @"%s", strerror(errno)];
+		}
+
+		[data appendBytes: buffer length: readReturn];
+		
+		if (readReturn < bufsize)
+		{
+			break;
+		}
+
+		if (remaining != -1)
+		{
+			remaining -= readReturn;
+			if (remaining == 0)
+			{
+				break;
+			}
+		}
+		
+		FD_ZERO(&readSet);
+		FD_SET(desc, &readSet);
+		select(desc + 1, &readSet, NULL, NULL, &zeroTime);
+
+	} while (FD_ISSET(desc, &readSet));
+		
 	free(buffer);
 	
 	return data;
 }
+#undef READ_BLOCK_SIZE
 /**
  * Returns YES if there is no more data to write in the buffer and NO if 
  * there is.

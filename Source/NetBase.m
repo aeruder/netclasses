@@ -308,7 +308,7 @@ static void handle_cf_events(CFSocketRef s, CFSocketCallBackType callbackType,
 			case ET_RDESC:
 				if ([object conformsToProtocol: @protocol(NetObject)])
 				{
-					[object dataReceived: [[object transport] readData: 2048]];
+					[object dataReceived: [[object transport] readData: 0]];
 				}
 				else
 				{

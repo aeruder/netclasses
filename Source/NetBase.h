@@ -69,7 +69,8 @@
 /**
  * Called by [NetApplication] when it is safe to write.  Should return
  * data read from the connection with a maximum size of 
- * <var>maxReadSize</var>.
+ * <var>maxReadSize</var>.  If <var>maxReadSize</var> should be zero, all
+ * data available on the connection should be returned.
  */
 - (NSData *)readData: (int)maxReadSize;
 /**
