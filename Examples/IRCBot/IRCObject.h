@@ -45,17 +45,29 @@ NSArray *SeparateIRCNickAndHost(NSString *prefix);
 @interface IRCObject : LineObject
 	{
 		NSString *nick;
-		int nicknameIndex;
 		BOOL connected;
 		
-		NSArray *initialNicknames;
-		NSString *passwordString;
-		NSString *userString;
+		NSString *userName;
+		NSString *realName;
+		NSString *password;
+
 		NSString *errorString;
 	}
-- initWithNicknames: (NSArray *)nicknames
+- initWithNickname: (NSString *)nickname
    withUserName: (NSString *)user withRealName: (NSString *)realName
    withPassword: (NSString *)password;
+
+- setNickname: (NSString *)nickname;
+- (NSString *)nickname;
+
+- setUserName: (NSString *)user;
+- (NSString *)userName;
+
+- setRealName: (NSString *)realName;
+- (NSString *)realName;
+
+- setPassword: (NSString *)password;
+- (NSString *)password;
 
 - (NSString *)errorString;
 
@@ -207,6 +219,8 @@ NSArray *SeparateIRCNickAndHost(NSString *prefix);
 
 - actionReceived: (NSString *)anAction to: (NSString *)to
               from: (NSString *)sender;
+
+- newNickNeededWhileRegistering;
 
 // Low-Level   
 - lineReceived: (NSData *)aLine;

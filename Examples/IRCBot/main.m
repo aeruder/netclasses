@@ -34,7 +34,7 @@ int main(int argc, char **argv, char **env)
 	NSLog(@"Connecting to irc.openprojects.net 6667...");
 	
 	connection = [[IRCBot alloc] 
-	  initWithNicknames: [NSArray arrayWithObject: @"Niles"]
+	  initWithNickname: @"Niles"
 	  withUserName: nil withRealName: @"Andy Ruder"
 	  withPassword: nil];
 	  

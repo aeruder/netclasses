@@ -44,7 +44,6 @@ static NSMapTable *ctcp_to_function = 0;
 static NSData *IRC_new_line = nil;
 
 @interface IRCObject (InternalIRCObject)
-- setNick: (NSString *)aNick;
 - setErrorString: (NSString *)anError;
 @end
 
@@ -335,7 +334,7 @@ static void rec_nick(IRCObject *client, NSString *command,
 	if ([ExtractIRCNick(prefix) caseInsensitiveCompare: [client nick]] 
 	      == NSOrderedSame)
 	{
-		[client setNick: [paramList objectAtIndex: 0]];
+		[client setNickname: [paramList objectAtIndex: 0]];
 	}
 
 	[client nickChangedTo: [paramList objectAtIndex: 0] from: prefix];
@@ -414,11 +413,6 @@ static void rec_privmsg(IRCObject *client, NSString *command,
 {
 	id message;
 	
-	if (!prefix)
-	{
-		return;
-	}
-
 	if ([paramList count] < 2)
 	{
 		return;
@@ -584,12 +578,6 @@ static void rec_error(IRCObject *client, NSString *command, NSString *prefix,
 
 
 @implementation IRCObject (InternalIRCObject)
-- setNick: (NSString *)aNick
-{
-	RELEASE(nick);
-	nick = RETAIN(aNick);
-	return self;
-}
 - setErrorString: (NSString *)anError
 {
 	RELEASE(errorString);
@@ -630,61 +618,74 @@ static void rec_error(IRCObject *client, NSString *command, NSString *prefix,
 	NSMapInsert(ctcp_to_function, @"\001CLIENTINFO", rec_cclientinfo);
 	NSMapInsert(ctcp_to_function, @"\001DCC", rec_cdcc);
 }
-- initWithNicknames: (NSArray *)nicknames withUserName: (NSString *)user
-   withRealName: (NSString *)realName
-   withPassword: (NSString *)password
+- initWithNickname: (NSString *)aNickname withUserName: (NSString *)aUser
+   withRealName: (NSString *)aRealName
+   withPassword: (NSString *)aPassword
 {
-	NSEnumerator *iter = [nicknames objectEnumerator];
-	NSMutableArray *array = AUTORELEASE([NSMutableArray new]);
-	id object;
-
 	if (!(self = [super init])) return nil;
 	
-	if ([nicknames count] == 0)
+	if (![self setNickname: aNickname])
 	{
-		[self setErrorString: @"No nicknames provided"];
-		[self dealloc];
 		return nil;
 	}
-	
-	while ((object = [iter nextObject]))
+
+	if (![self setUserName: aUser])
 	{
-		object = string_to_character(object, ' ');
-		if ([object length] == 0)
-		{
-			continue;
-		}
-		[array addObject: object];
-	}
-	
-	if ([array count] == 0)
-	{
-		[self setErrorString: @"No usable nicknames provided"];
-		[self dealloc];
 		return nil;
 	}
+
+	if (![self setRealName: aRealName])
+	{
+		return nil;
+	}
+
+	if (![self setPassword: aPassword])
+	{
+		return nil;
+	}
+
+	return self;
+}
+- (void)dealloc
+{
+	DESTROY(nick);
+	DESTROY(userName);
+	DESTROY(realName);
+	DESTROY(password);
+	DESTROY(errorString);
 	
-	if ([password length])
+	[super dealloc];
+}
+- setNickname: (NSString *)aNickname
+{
+	if (aNickname == nick) return self;
+	
+	aNickname = string_to_character(aNickname, ' ');
+	if ([aNickname length] == 0)
 	{
-		if (contains_a_space(password))
-		{
-			[self setErrorString: @"Password contains a space"];
-			[self dealloc];
-			return nil;
-		}
+		[self setErrorString: @"No usable nickname provided"];
+		return nil;
 	}
-	else
-	{
-		password = nil;
-	}
+
+	RELEASE(nick);
+	nick = RETAIN(aNickname);
+
+	return self;
+}
+- (NSString *)nickname
+{
+	return nick;
+}
+- setUserName: (NSString *)user
+{
+	id enviro;
 	
 	if ([user length] == 0)
 	{
-		id enviro;
 		enviro = [[NSProcessInfo processInfo] environment];
-
-		user = [enviro objectForKey: @"LOGNAME"];
 		
+		user = [enviro objectForKey: @"LOGNAME"];
+
 		if ([user length] == 0)
 		{
 			user = @"netclasses";
@@ -695,31 +696,54 @@ static void rec_error(IRCObject *client, NSString *command, NSString *prefix,
 		user = @"netclasses";
 	}
 
-	if ([realName length] == 0)
-	{
-		realName = @"John Doe";
-	}
-	
-	if (password)
-	{
-		passwordString = [[NSString alloc] initWithFormat: @"PASS %@", 
-		  password];
-	}
-	
-	initialNicknames = [[NSArray alloc] initWithArray: array];
-	
-	userString = [[NSString alloc] initWithFormat:
-	 @"USER %@ %@ %@ :%@", user, @"localhost", @"netclasses", realName];
+	RELEASE(userName);
+	userName = RETAIN(user);
 	
 	return self;
-}		  
-- (void)dealloc
+}
+- (NSString *)userName
 {
-	DESTROY(initialNicknames);
-	DESTROY(userString);
-	DESTROY(passwordString);
-	DESTROY(errorString);
-	[super dealloc];
+	return userName;
+}
+- setRealName: (NSString *)aRealName
+{
+	if ([aRealName length] == 0)
+	{
+		aRealName = @"John Doe";
+	}
+
+	RELEASE(realName);
+	realName = RETAIN(aRealName);
+
+	return self;
+}
+- (NSString *)realName
+{
+	return realName;
+}
+- setPassword: (NSString *)aPass
+{
+	if ([aPass length])
+	{
+		if (contains_a_space(aPass))
+		{
+			[self setErrorString: @"Password contains a space"];
+			return nil;
+		}
+	}
+	else
+	{
+		aPass = nil;
+	}
+	
+	DESTROY(password);
+	password = RETAIN(aPass);
+	
+	return self;
+}
+- (NSString *)password
+{
+	return password;
 }
 - (NSString *)errorString
 {
@@ -727,16 +751,18 @@ static void rec_error(IRCObject *client, NSString *command, NSString *prefix,
 }
 - connectionEstablished: aTransport
 {
-	id object;
 	[super connectionEstablished: aTransport];
 	
-	[self writeString: passwordString];
-	object = [initialNicknames objectAtIndex: 0];
+	if (password)
+	{
+		[self writeString: [NSString stringWithFormat: 
+		  @"PASS %@", password]];
+	}
 
-	[self setNick: object];
-	[self changeNick: object];
+	[self changeNick: nick];
 
-	[self writeString: userString];
+	[self writeString: @"USER %@ %@ %@ :%@", userName, @"localhost", 
+	  @"netclasses", realName];
 	return self;
 }
 - (void)connectionLost
@@ -1756,6 +1782,13 @@ static void rec_error(IRCObject *client, NSString *command, NSString *prefix,
 {
 	return self;
 }
+- newNickNeededWhileRegistering
+{
+	[self setNickname: [nick stringByAppendingString: @"_"]];
+	[self changeNick: nick];
+	
+	return self;
+}
 - lineReceived: (NSData *)aLine
 {
 	NSString *prefix = nil;
@@ -1796,49 +1829,6 @@ static void rec_error(IRCObject *client, NSString *command, NSString *prefix,
 		}
 		[paramList addObject: object];
 	}
-
-	if (!connected)
-	{
-		if ([command isEqualToString: ERR_ERRONEUSNICKNAME] || 
-		    [command isEqualToString: ERR_NEEDMOREPARAMS] ||
-			[command isEqualToString: ERR_ALREADYREGISTRED] ||
-			[command isEqualToString: ERR_NONICKNAMEGIVEN] ||
-			[command isEqualToString: ERR_NICKCOLLISION])
-		{
-			[[NetApplication sharedInstance] disconnectObject: self];
-			[self couldNotRegister: [NSString stringWithFormat:
-			 @"%@ %@ %@", prefix, command, paramList]];
-			return nil;
-		}
-		else if ([command isEqualToString: ERR_NICKNAMEINUSE])
-		{
-			int actualIndex = ((++nicknameIndex) >= [initialNicknames count]) ? 
-			                  0 : nicknameIndex;
-			int underscores = (actualIndex == 0) ? nicknameIndex : 0;
-			
-			nick = RETAIN([initialNicknames objectAtIndex: actualIndex]);
-			
-			if (underscores > 0)
-			{
-				char *buffer = malloc(underscores);
-				memset(buffer, '_', underscores);
-				
-				AUTORELEASE(nick);
-				nick = RETAIN([nick stringByAppendingString:
-				 [NSString stringWithCString: buffer length: underscores]]);
-
-				free(buffer);
-			}
-
-			[self changeNick: nick];
-			return self;
-		}
-		else if ([command isEqualToString: RPL_WELCOME])
-		{
-			connected = YES;
-			[self registeredWithServer];
-		}
-	}
 	
 	if (is_numeric_command(command))
 	{		
@@ -1866,6 +1856,31 @@ static void rec_error(IRCObject *client, NSString *command, NSString *prefix,
 			NSLog(@"Could not handle :%@ %@ %@", prefix, command, paramList);
 		}
 	}
+
+	if (!connected)
+	{
+		if ([command isEqualToString: ERR_NEEDMOREPARAMS] ||
+			[command isEqualToString: ERR_ALREADYREGISTRED] ||
+			[command isEqualToString: ERR_NONICKNAMEGIVEN])
+		{
+			[[NetApplication sharedInstance] disconnectObject: self];
+			[self couldNotRegister: [NSString stringWithFormat:
+			 @"%@ %@ %@", prefix, command, paramList]];
+			return nil;
+		}
+		else if ([command isEqualToString: ERR_NICKNAMEINUSE] ||
+		         [command isEqualToString: ERR_NICKCOLLISION] ||
+				 [command isEqualToString: ERR_ERRONEUSNICKNAME])
+		{
+			[self newNickNeededWhileRegistering];
+		}
+		else if ([command isEqualToString: RPL_WELCOME])
+		{
+			connected = YES;
+			[self registeredWithServer];
+		}
+	}
+	
 	return self;
 }
 - writeString: (NSString *)format, ...
