@@ -2345,164 +2345,647 @@ static void rec_error(IRCObject *client, NSString *command, NSString *prefix,
 }
 @end
 
+/**
+ *  001 - Please see RFC 1459 for additional information.
+ */
 NSString *RPL_WELCOME = @"001";
+/**
+ *  002 - Please see RFC 1459 for additional information.
+ */
 NSString *RPL_YOURHOST = @"002";
+/**
+ *  003 - Please see RFC 1459 for additional information.
+ */
 NSString *RPL_CREATED = @"003";
+/**
+ *  004 - Please see RFC 1459 for additional information.
+ */
 NSString *RPL_MYINFO = @"004";
+/**
+ *  005 - Please see RFC 1459 for additional information.
+ */
 NSString *RPL_BOUNCE = @"005";
+/**
+ *  302 - Please see RFC 1459 for additional information.
+ */
 NSString *RPL_USERHOST = @"302";
+/**
+ *  303 - Please see RFC 1459 for additional information.
+ */
 NSString *RPL_ISON = @"303";
+/**
+ *  301 - Please see RFC 1459 for additional information.
+ */
 NSString *RPL_AWAY = @"301";
+/**
+ *  305 - Please see RFC 1459 for additional information.
+ */
 NSString *RPL_UNAWAY = @"305";
+/**
+ *  306 - Please see RFC 1459 for additional information.
+ */
 NSString *RPL_NOWAWAY = @"306";
+/**
+ *  311 - Please see RFC 1459 for additional information.
+ */
 NSString *RPL_WHOISUSER = @"311";
+/**
+ *  312 - Please see RFC 1459 for additional information.
+ */
 NSString *RPL_WHOISSERVER = @"312";
+/**
+ *  313 - Please see RFC 1459 for additional information.
+ */
 NSString *RPL_WHOISOPERATOR = @"313";
+/**
+ *  317 - Please see RFC 1459 for additional information.
+ */
 NSString *RPL_WHOISIDLE = @"317";
+/**
+ *  318 - Please see RFC 1459 for additional information.
+ */
 NSString *RPL_ENDOFWHOIS = @"318";
+/**
+ *  319 - Please see RFC 1459 for additional information.
+ */
 NSString *RPL_WHOISCHANNELS = @"319";
+/**
+ *  314 - Please see RFC 1459 for additional information.
+ */
 NSString *RPL_WHOWASUSER = @"314";
+/**
+ *  369 - Please see RFC 1459 for additional information.
+ */
 NSString *RPL_ENDOFWHOWAS = @"369";
+/**
+ *  321 - Please see RFC 1459 for additional information.
+ */
 NSString *RPL_LISTSTART = @"321";
+/**
+ *  322 - Please see RFC 1459 for additional information.
+ */
 NSString *RPL_LIST = @"322";
+/**
+ *  323 - Please see RFC 1459 for additional information.
+ */
 NSString *RPL_LISTEND = @"323";
+/**
+ *  325 - Please see RFC 1459 for additional information.
+ */
 NSString *RPL_UNIQOPIS = @"325";
+/**
+ *  324 - Please see RFC 1459 for additional information.
+ */
 NSString *RPL_CHANNELMODEIS = @"324";
+/**
+ *  331 - Please see RFC 1459 for additional information.
+ */
 NSString *RPL_NOTOPIC = @"331";
+/**
+ *  332 - Please see RFC 1459 for additional information.
+ */
 NSString *RPL_TOPIC = @"332";
+/**
+ *  341 - Please see RFC 1459 for additional information.
+ */
 NSString *RPL_INVITING = @"341";
+/**
+ *  342 - Please see RFC 1459 for additional information.
+ */
 NSString *RPL_SUMMONING = @"342";
+/**
+ *  346 - Please see RFC 1459 for additional information.
+ */
 NSString *RPL_INVITELIST = @"346";
+/**
+ *  347 - Please see RFC 1459 for additional information.
+ */
 NSString *RPL_ENDOFINVITELIST = @"347";
+/**
+ *  348 - Please see RFC 1459 for additional information.
+ */
 NSString *RPL_EXCEPTLIST = @"348";
+/**
+ *  349 - Please see RFC 1459 for additional information.
+ */
 NSString *RPL_ENDOFEXCEPTLIST = @"349";
+/**
+ *  351 - Please see RFC 1459 for additional information.
+ */
 NSString *RPL_VERSION = @"351";
+/**
+ *  352 - Please see RFC 1459 for additional information.
+ */
 NSString *RPL_WHOREPLY = @"352";
+/**
+ *  315 - Please see RFC 1459 for additional information.
+ */
 NSString *RPL_ENDOFWHO = @"315";
+/**
+ *  353 - Please see RFC 1459 for additional information.
+ */
 NSString *RPL_NAMREPLY = @"353";
+/**
+ *  366 - Please see RFC 1459 for additional information.
+ */
 NSString *RPL_ENDOFNAMES = @"366";
+/**
+ *  364 - Please see RFC 1459 for additional information.
+ */
 NSString *RPL_LINKS = @"364";
+/**
+ *  365 - Please see RFC 1459 for additional information.
+ */
 NSString *RPL_ENDOFLINKS = @"365";
+/**
+ *  367 - Please see RFC 1459 for additional information.
+ */
 NSString *RPL_BANLIST = @"367";
+/**
+ *  368 - Please see RFC 1459 for additional information.
+ */
 NSString *RPL_ENDOFBANLIST = @"368";
+/**
+ *  371 - Please see RFC 1459 for additional information.
+ */
 NSString *RPL_INFO = @"371";
+/**
+ *  374 - Please see RFC 1459 for additional information.
+ */
 NSString *RPL_ENDOFINFO = @"374";
+/**
+ *  375 - Please see RFC 1459 for additional information.
+ */
 NSString *RPL_MOTDSTART = @"375";
+/**
+ *  372 - Please see RFC 1459 for additional information.
+ */
 NSString *RPL_MOTD = @"372";
+/**
+ *  376 - Please see RFC 1459 for additional information.
+ */
 NSString *RPL_ENDOFMOTD = @"376";
+/**
+ *  381 - Please see RFC 1459 for additional information.
+ */
 NSString *RPL_YOUREOPER = @"381";
+/**
+ *  382 - Please see RFC 1459 for additional information.
+ */
 NSString *RPL_REHASHING = @"382";
+/**
+ *  383 - Please see RFC 1459 for additional information.
+ */
 NSString *RPL_YOURESERVICE = @"383";
+/**
+ *  391 - Please see RFC 1459 for additional information.
+ */
 NSString *RPL_TIME = @"391";
+/**
+ *  392 - Please see RFC 1459 for additional information.
+ */
 NSString *RPL_USERSSTART = @"392";
+/**
+ *  393 - Please see RFC 1459 for additional information.
+ */
 NSString *RPL_USERS = @"393";
+/**
+ *  394 - Please see RFC 1459 for additional information.
+ */
 NSString *RPL_ENDOFUSERS = @"394";
+/**
+ *  395 - Please see RFC 1459 for additional information.
+ */
 NSString *RPL_NOUSERS = @"395";
+/**
+ *  200 - Please see RFC 1459 for additional information.
+ */
 NSString *RPL_TRACELINK = @"200";
+/**
+ *  201 - Please see RFC 1459 for additional information.
+ */
 NSString *RPL_TRACECONNECTING = @"201";
+/**
+ *  202 - Please see RFC 1459 for additional information.
+ */
 NSString *RPL_TRACEHANDSHAKE = @"202";
+/**
+ *  203 - Please see RFC 1459 for additional information.
+ */
 NSString *RPL_TRACEUNKNOWN = @"203";
+/**
+ *  204 - Please see RFC 1459 for additional information.
+ */
 NSString *RPL_TRACEOPERATOR = @"204";
+/**
+ *  205 - Please see RFC 1459 for additional information.
+ */
 NSString *RPL_TRACEUSER = @"205";
+/**
+ *  206 - Please see RFC 1459 for additional information.
+ */
 NSString *RPL_TRACESERVER = @"206";
+/**
+ *  207 - Please see RFC 1459 for additional information.
+ */
 NSString *RPL_TRACESERVICE = @"207";
+/**
+ *  208 - Please see RFC 1459 for additional information.
+ */
 NSString *RPL_TRACENEWTYPE = @"208";
+/**
+ *  209 - Please see RFC 1459 for additional information.
+ */
 NSString *RPL_TRACECLASS = @"209";
+/**
+ *  210 - Please see RFC 1459 for additional information.
+ */
 NSString *RPL_TRACERECONNECT = @"210";
+/**
+ *  261 - Please see RFC 1459 for additional information.
+ */
 NSString *RPL_TRACELOG = @"261";
+/**
+ *  262 - Please see RFC 1459 for additional information.
+ */
 NSString *RPL_TRACEEND = @"262";
+/**
+ *  211 - Please see RFC 1459 for additional information.
+ */
 NSString *RPL_STATSLINKINFO = @"211";
+/**
+ *  212 - Please see RFC 1459 for additional information.
+ */
 NSString *RPL_STATSCOMMANDS = @"212";
+/**
+ *  219 - Please see RFC 1459 for additional information.
+ */
 NSString *RPL_ENDOFSTATS = @"219";
+/**
+ *  242 - Please see RFC 1459 for additional information.
+ */
 NSString *RPL_STATSUPTIME = @"242";
+/**
+ *  243 - Please see RFC 1459 for additional information.
+ */
 NSString *RPL_STATSOLINE = @"243";
+/**
+ *  221 - Please see RFC 1459 for additional information.
+ */
 NSString *RPL_UMODEIS = @"221";
+/**
+ *  234 - Please see RFC 1459 for additional information.
+ */
 NSString *RPL_SERVLIST = @"234";
+/**
+ *  235 - Please see RFC 1459 for additional information.
+ */
 NSString *RPL_SERVLISTEND = @"235";
+/**
+ *  251 - Please see RFC 1459 for additional information.
+ */
 NSString *RPL_LUSERCLIENT = @"251";
+/**
+ *  252 - Please see RFC 1459 for additional information.
+ */
 NSString *RPL_LUSEROP = @"252";
+/**
+ *  253 - Please see RFC 1459 for additional information.
+ */
 NSString *RPL_LUSERUNKNOWN = @"253";
+/**
+ *  254 - Please see RFC 1459 for additional information.
+ */
 NSString *RPL_LUSERCHANNELS = @"254";
+/**
+ *  255 - Please see RFC 1459 for additional information.
+ */
 NSString *RPL_LUSERME = @"255";
+/**
+ *  256 - Please see RFC 1459 for additional information.
+ */
 NSString *RPL_ADMINME = @"256";
+/**
+ *  257 - Please see RFC 1459 for additional information.
+ */
 NSString *RPL_ADMINLOC1 = @"257";
+/**
+ *  258 - Please see RFC 1459 for additional information.
+ */
 NSString *RPL_ADMINLOC2 = @"258";
+/**
+ *  259 - Please see RFC 1459 for additional information.
+ */
 NSString *RPL_ADMINEMAIL = @"259";
+/**
+ *  263 - Please see RFC 1459 for additional information.
+ */
 NSString *RPL_TRYAGAIN = @"263";
+/**
+ *  401 - Please see RFC 1459 for additional information.
+ */
 NSString *ERR_NOSUCHNICK = @"401";
+/**
+ *  402 - Please see RFC 1459 for additional information.
+ */
 NSString *ERR_NOSUCHSERVER = @"402";
+/**
+ *  403 - Please see RFC 1459 for additional information.
+ */
 NSString *ERR_NOSUCHCHANNEL = @"403";
+/**
+ *  404 - Please see RFC 1459 for additional information.
+ */
 NSString *ERR_CANNOTSENDTOCHAN = @"404";
+/**
+ *  405 - Please see RFC 1459 for additional information.
+ */
 NSString *ERR_TOOMANYCHANNELS = @"405";
+/**
+ *  406 - Please see RFC 1459 for additional information.
+ */
 NSString *ERR_WASNOSUCHNICK = @"406";
+/**
+ *  407 - Please see RFC 1459 for additional information.
+ */
 NSString *ERR_TOOMANYTARGETS = @"407";
+/**
+ *  408 - Please see RFC 1459 for additional information.
+ */
 NSString *ERR_NOSUCHSERVICE = @"408";
+/**
+ *  409 - Please see RFC 1459 for additional information.
+ */
 NSString *ERR_NOORIGIN = @"409";
+/**
+ *  411 - Please see RFC 1459 for additional information.
+ */
 NSString *ERR_NORECIPIENT = @"411";
+/**
+ *  412 - Please see RFC 1459 for additional information.
+ */
 NSString *ERR_NOTEXTTOSEND = @"412";
+/**
+ *  413 - Please see RFC 1459 for additional information.
+ */
 NSString *ERR_NOTOPLEVEL = @"413";
+/**
+ *  414 - Please see RFC 1459 for additional information.
+ */
 NSString *ERR_WILDTOPLEVEL = @"414";
+/**
+ *  415 - Please see RFC 1459 for additional information.
+ */
 NSString *ERR_BADMASK = @"415";
+/**
+ *  421 - Please see RFC 1459 for additional information.
+ */
 NSString *ERR_UNKNOWNCOMMAND = @"421";
+/**
+ *  422 - Please see RFC 1459 for additional information.
+ */
 NSString *ERR_NOMOTD = @"422";
+/**
+ *  423 - Please see RFC 1459 for additional information.
+ */
 NSString *ERR_NOADMININFO = @"423";
+/**
+ *  424 - Please see RFC 1459 for additional information.
+ */
 NSString *ERR_FILEERROR = @"424";
+/**
+ *  431 - Please see RFC 1459 for additional information.
+ */
 NSString *ERR_NONICKNAMEGIVEN = @"431";
+/**
+ *  432 - Please see RFC 1459 for additional information.
+ */
 NSString *ERR_ERRONEUSNICKNAME = @"432";
+/**
+ *  433 - Please see RFC 1459 for additional information.
+ */
 NSString *ERR_NICKNAMEINUSE = @"433";
+/**
+ *  436 - Please see RFC 1459 for additional information.
+ */
 NSString *ERR_NICKCOLLISION = @"436";
+/**
+ *  437 - Please see RFC 1459 for additional information.
+ */
 NSString *ERR_UNAVAILRESOURCE = @"437";
+/**
+ *  441 - Please see RFC 1459 for additional information.
+ */
 NSString *ERR_USERNOTINCHANNEL = @"441";
+/**
+ *  442 - Please see RFC 1459 for additional information.
+ */
 NSString *ERR_NOTONCHANNEL = @"442";
+/**
+ *  443 - Please see RFC 1459 for additional information.
+ */
 NSString *ERR_USERONCHANNEL = @"443";
+/**
+ *  444 - Please see RFC 1459 for additional information.
+ */
 NSString *ERR_NOLOGIN = @"444";
+/**
+ *  445 - Please see RFC 1459 for additional information.
+ */
 NSString *ERR_SUMMONDISABLED = @"445";
+/**
+ *  446 - Please see RFC 1459 for additional information.
+ */
 NSString *ERR_USERSDISABLED = @"446";
+/**
+ *  451 - Please see RFC 1459 for additional information.
+ */
 NSString *ERR_NOTREGISTERED = @"451";
+/**
+ *  461 - Please see RFC 1459 for additional information.
+ */
 NSString *ERR_NEEDMOREPARAMS = @"461";
+/**
+ *  462 - Please see RFC 1459 for additional information.
+ */
 NSString *ERR_ALREADYREGISTRED = @"462";
+/**
+ *  463 - Please see RFC 1459 for additional information.
+ */
 NSString *ERR_NOPERMFORHOST = @"463";
+/**
+ *  464 - Please see RFC 1459 for additional information.
+ */
 NSString *ERR_PASSWDMISMATCH = @"464";
+/**
+ *  465 - Please see RFC 1459 for additional information.
+ */
 NSString *ERR_YOUREBANNEDCREEP = @"465";
+/**
+ *  466 - Please see RFC 1459 for additional information.
+ */
 NSString *ERR_YOUWILLBEBANNED = @"466";
+/**
+ *  467 - Please see RFC 1459 for additional information.
+ */
 NSString *ERR_KEYSET = @"467";
+/**
+ *  471 - Please see RFC 1459 for additional information.
+ */
 NSString *ERR_CHANNELISFULL = @"471";
+/**
+ *  472 - Please see RFC 1459 for additional information.
+ */
 NSString *ERR_UNKNOWNMODE = @"472";
+/**
+ *  473 - Please see RFC 1459 for additional information.
+ */
 NSString *ERR_INVITEONLYCHAN = @"473";
+/**
+ *  474 - Please see RFC 1459 for additional information.
+ */
 NSString *ERR_BANNEDFROMCHAN = @"474";
+/**
+ *  475 - Please see RFC 1459 for additional information.
+ */
 NSString *ERR_BADCHANNELKEY = @"475";
+/**
+ *  476 - Please see RFC 1459 for additional information.
+ */
 NSString *ERR_BADCHANMASK = @"476";
+/**
+ *  477 - Please see RFC 1459 for additional information.
+ */
 NSString *ERR_NOCHANMODES = @"477";
+/**
+ *  478 - Please see RFC 1459 for additional information.
+ */
 NSString *ERR_BANLISTFULL = @"478";
+/**
+ *  481 - Please see RFC 1459 for additional information.
+ */
 NSString *ERR_NOPRIVILEGES = @"481";
+/**
+ *  482 - Please see RFC 1459 for additional information.
+ */
 NSString *ERR_CHANOPRIVSNEEDED = @"482";
+/**
+ *  483 - Please see RFC 1459 for additional information.
+ */
 NSString *ERR_CANTKILLSERVER = @"483";
+/**
+ *  484 - Please see RFC 1459 for additional information.
+ */
 NSString *ERR_RESTRICTED = @"484";
+/**
+ *  485 - Please see RFC 1459 for additional information.
+ */
 NSString *ERR_UNIQOPPRIVSNEEDED = @"485";
+/**
+ *  491 - Please see RFC 1459 for additional information.
+ */
 NSString *ERR_NOOPERHOST = @"491";
+/**
+ *  501 - Please see RFC 1459 for additional information.
+ */
 NSString *ERR_UMODEUNKNOWNFLAG = @"501";
+/**
+ *  502 - Please see RFC 1459 for additional information.
+ */
 NSString *ERR_USERSDONTMATCH = @"502";
+/**
+ *  231 - Please see RFC 1459 for additional information.
+ */
 NSString *RPL_SERVICEINFO = @"231";
+/**
+ *  232 - Please see RFC 1459 for additional information.
+ */
 NSString *RPL_ENDOFSERVICES = @"232";
+/**
+ *  233 - Please see RFC 1459 for additional information.
+ */
 NSString *RPL_SERVICE = @"233";
+/**
+ *  300 - Please see RFC 1459 for additional information.
+ */
 NSString *RPL_NONE = @"300";
+/**
+ *  316 - Please see RFC 1459 for additional information.
+ */
 NSString *RPL_WHOISCHANOP = @"316";
+/**
+ *  361 - Please see RFC 1459 for additional information.
+ */
 NSString *RPL_KILLDONE = @"361";
+/**
+ *  262 - Please see RFC 1459 for additional information.
+ */
 NSString *RPL_CLOSING = @"262";
+/**
+ *  363 - Please see RFC 1459 for additional information.
+ */
 NSString *RPL_CLOSEEND = @"363";
+/**
+ *  373 - Please see RFC 1459 for additional information.
+ */
 NSString *RPL_INFOSTART = @"373";
+/**
+ *  384 - Please see RFC 1459 for additional information.
+ */
 NSString *RPL_MYPORTIS = @"384";
+/**
+ *  213 - Please see RFC 1459 for additional information.
+ */
 NSString *RPL_STATSCLINE = @"213";
+/**
+ *  214 - Please see RFC 1459 for additional information.
+ */
 NSString *RPL_STATSNLINE = @"214";
+/**
+ *  215 - Please see RFC 1459 for additional information.
+ */
 NSString *RPL_STATSILINE = @"215";
+/**
+ *  216 - Please see RFC 1459 for additional information.
+ */
 NSString *RPL_STATSKLINE = @"216";
+/**
+ *  217 - Please see RFC 1459 for additional information.
+ */
 NSString *RPL_STATSQLINE = @"217";
+/**
+ *  218 - Please see RFC 1459 for additional information.
+ */
 NSString *RPL_STATSYLINE = @"218";
+/**
+ *  240 - Please see RFC 1459 for additional information.
+ */
 NSString *RPL_STATSVLINE = @"240";
+/**
+ *  241 - Please see RFC 1459 for additional information.
+ */
 NSString *RPL_STATSLLINE = @"241";
+/**
+ *  244 - Please see RFC 1459 for additional information.
+ */
 NSString *RPL_STATSHLINE = @"244";
+/**
+ *  245 - Please see RFC 1459 for additional information.
+ */
 NSString *RPL_STATSSLINE = @"245";
+/**
+ *  246 - Please see RFC 1459 for additional information.
+ */
 NSString *RPL_STATSPING = @"246";
+/**
+ *  247 - Please see RFC 1459 for additional information.
+ */
 NSString *RPL_STATSBLINE = @"247";
+/**
+ *  250 - Please see RFC 1459 for additional information.
+ */
 NSString *RPL_STATSDLINE = @"250";
+/**
+ *  492 - Please see RFC 1459 for additional information.
+ */
 NSString *ERR_NOSERVICEHOST = @"492";
