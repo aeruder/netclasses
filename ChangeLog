@@ -1,3 +1,7 @@
+2004-04-03 Andy Ruder <aeruder at ksu dot edu>
+ * Got rid of the 2k per read limit imposed by the base system, speeds up
+   local sends ~7 times.
+
 2004-02-18 Andy Ruder <aeruder at ksu dot edu>
  * Changed the building of the documentation slightly, RFC 1459 is now linked
    to the main page.
