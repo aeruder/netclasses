@@ -24,6 +24,7 @@
 #import <Foundation/NSHost.h>
 
 #include <time.h>
+#include <stdlib.h>
 
 int main(int argc, char **argv, char **env)
 {
