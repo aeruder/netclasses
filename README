@@ -29,8 +29,6 @@ Comments are welcome.
 ==========
 Compiling:
 ==========
-	autoheader
-	autoconf
 	./configure
 	make
 	make install

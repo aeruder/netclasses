@@ -50,8 +50,6 @@ Step 2:
 
 Step 3:
 	Generate the autoconfigure stuff:
-		autoheader
-		autoconf
 		./configure
 	One note about ./configure, I am not using it for makefiles, so the 
 	--prefix and other flags will have -no- effect on the output.  It is

@@ -909,10 +909,13 @@ static NetApplication *net_app = nil;
 
 	[super dealloc];
 }
-#define READ_BLOCK_SIZE 10000
+#define READ_BLOCK_SIZE 65530 
 /**
  * Handles the actual reading of data from the connection.
  * Throws an exception if an error occurs while reading data.
+ * The @"Data" key in the userInfo for these exceptions should
+ * be any NSData that could not be returned.
+ *
  * If <var>maxDataSize</var> is <= 0, all possible data will be
  * read.
  */
@@ -925,6 +928,7 @@ static NetApplication *net_app = nil;
 	int bufsize;
 	fd_set readSet;
 	int toRead;
+	int loops = 8;
 	struct timeval zeroTime = { 0, 0 };
 	
 	if (!connected)
@@ -966,16 +970,26 @@ static NetApplication *net_app = nil;
 		readReturn = read(desc, buffer, toRead); 
 		if (readReturn == 0)
 		{
+			id except;
 			free(buffer);
-			[NSException raise: NetException
-			  format: @"Socket closed"];
+			except = [NSException exceptionWithName: NetException
+			  reason: @"Socket closed" userInfo: 
+			  [NSDictionary dictionaryWithObjectsAndKeys:
+			    data, @"Data", nil]];
+			
+			[except raise];
 		}
 
 		if (readReturn == -1)
 		{
+			id except;
 			free(buffer);
-			[NSException raise: FatalNetException
-			  format: @"%s", strerror(errno)];
+			except = [NSException exceptionWithName: NetException
+			  reason: [NSString stringWithCString: strerror(errno)] 
+			  userInfo: [NSDictionary dictionaryWithObjectsAndKeys:
+			    data, @"Data", nil]];
+			
+			[except raise];
 		}
 
 		[data appendBytes: buffer length: readReturn];
@@ -997,8 +1011,8 @@ static NetApplication *net_app = nil;
 		FD_ZERO(&readSet);
 		FD_SET(desc, &readSet);
 		select(desc + 1, &readSet, NULL, NULL, &zeroTime);
-
-	} while (FD_ISSET(desc, &readSet));
+		--loops;
+	} while (loops && FD_ISSET(desc, &readSet));
 		
 	free(buffer);
 	

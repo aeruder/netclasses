@@ -331,6 +331,16 @@ static void handle_cf_events(CFSocketRef s, CFSocketCallBackType callbackType,
 		if (([[localException name] isEqualToString:NetException]) ||
 		    ([[localException name] isEqualToString:FatalNetException]))
 		{
+			if (type == ET_RDESC) 
+			{
+				id data;
+				data = [[localException userInfo]
+				  objectForKey: @"Data"];
+				if (data && ([data length] > 0))
+				{
+					[object dataReceived: data];
+				}
+			}	
 			[self disconnectObject: object];
 		}
 		else
