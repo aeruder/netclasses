@@ -15,8 +15,8 @@
  *                                                                         *
  ***************************************************************************/
 
-#include "LineObject.h"
-#include <Foundation/NSData.h>
+#import "LineObject.h"
+#import <Foundation/NSData.h>
 
 static inline NSData *chomp_line(NSMutableData *data)
 {

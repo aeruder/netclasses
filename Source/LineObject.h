@@ -20,8 +20,8 @@
 #ifndef LINE_OBJECT_H
 #define LINE_OBJECT_H
 
-#include "NetBase.h"
-#include <Foundation/NSObject.h>
+#import "NetBase.h"
+#import <Foundation/NSObject.h>
 
 @class NSMutableData, NSData;
 

@@ -24,13 +24,19 @@
 #include <netdb.h>
 #include <fcntl.h>
 
-#include "NetTCP.h"
-#include <Foundation/NSString.h>
-#include <Foundation/NSData.h>
-#include <Foundation/NSArray.h>
-#include <Foundation/NSTimer.h>
-#include <Foundation/NSException.h>
-#include <Foundation/NSHost.h>
+#import "NetTCP.h"
+#import <Foundation/NSString.h>
+#import <Foundation/NSData.h>
+#import <Foundation/NSArray.h>
+#import <Foundation/NSTimer.h>
+#import <Foundation/NSException.h>
+#import <Foundation/NSHost.h>
+
+#ifdef __APPLE__
+#ifndef socklen_t
+typedef int socklen_t;
+#endif
+#endif
 
 NSString *NetclassesErrorTimeout = @"Connection timed out";
 NSString *NetclassesErrorBadAddress = @"Bad address";
@@ -196,7 +202,7 @@ static TCPSystem *default_system = nil;
 }
 - connectingFailed: (NSString *)error
 {
-	if ([netObject conformsTo: @protocol(TCPConnecting)])
+	if ([netObject conformsToProtocol: @protocol(TCPConnecting)])
 	{
 		[netObject connectingFailed: error];
 	}
@@ -259,7 +265,7 @@ static TCPSystem *default_system = nil;
 {
 	transport = RETAIN(aTransport);	
 	[[NetApplication sharedInstance] connectObject: self];
-	if ([netObject conformsTo: @protocol(TCPConnecting)])
+	if ([netObject conformsToProtocol: @protocol(TCPConnecting)])
 	{
 		[netObject connectingStarted: self];
 	}

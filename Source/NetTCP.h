@@ -20,8 +20,8 @@
 #ifndef NET_TCP_H
 #define NET_TCP_H
 
-#include "NetBase.h"
-#include <Foundation/NSObject.h>
+#import "NetBase.h"
+#import <Foundation/NSObject.h>
 
 #include <netinet/in.h>
 #include <stdint.h>

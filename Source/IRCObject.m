@@ -15,22 +15,22 @@
  *                                                                         *
  ***************************************************************************/
 
-#include "NetBase.h"
-#include "NetTCP.h"
-#include "IRCObject.h"
+#import "NetBase.h"
+#import "NetTCP.h"
+#import "IRCObject.h"
 
-#include <Foundation/NSString.h>
-#include <Foundation/NSException.h>
-#include <Foundation/NSEnumerator.h>
-#include <Foundation/NSArray.h>
-#include <Foundation/NSDictionary.h>
-#include <Foundation/NSData.h>
-#include <Foundation/NSSet.h>
-#include <Foundation/NSCharacterSet.h>
-#include <Foundation/NSProcessInfo.h>
-#include <Foundation/NSValue.h>
-#include <Foundation/NSTimer.h>
-#include <Foundation/NSScanner.h>
+#import <Foundation/NSString.h>
+#import <Foundation/NSException.h>
+#import <Foundation/NSEnumerator.h>
+#import <Foundation/NSArray.h>
+#import <Foundation/NSDictionary.h>
+#import <Foundation/NSData.h>
+#import <Foundation/NSSet.h>
+#import <Foundation/NSCharacterSet.h>
+#import <Foundation/NSProcessInfo.h>
+#import <Foundation/NSValue.h>
+#import <Foundation/NSTimer.h>
+#import <Foundation/NSScanner.h>
 
 #include <string.h>
 #include <netinet/in.h>

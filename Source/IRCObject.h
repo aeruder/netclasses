@@ -20,9 +20,9 @@
 #ifndef IRC_OBJECT_H
 #define IRC_OBJECT_H
 
-#include "LineObject.h"
-#include "NetTCP.h"
-#include <Foundation/NSObject.h>
+#import "LineObject.h"
+#import "NetTCP.h"
+#import <Foundation/NSObject.h>
 
 extern NSString *IRCException;
 

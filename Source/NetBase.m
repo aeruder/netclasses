@@ -15,15 +15,16 @@
  *                                                                         *
  ***************************************************************************/
 
-#include "NetBase.h"
-#include <Foundation/NSArray.h>
-#include <Foundation/NSMapTable.h>
-#include <Foundation/NSString.h>
-#include <Foundation/NSRunLoop.h>
-#include <Foundation/NSDictionary.h>
-#include <Foundation/NSDate.h>
-#include <Foundation/NSException.h>
-#include <Foundation/NSAutoreleasePool.h>
+#import "NetBase.h"
+
+#import <Foundation/NSArray.h>
+#import <Foundation/NSMapTable.h>
+#import <Foundation/NSString.h>
+#import <Foundation/NSRunLoop.h>
+#import <Foundation/NSDictionary.h>
+#import <Foundation/NSDate.h>
+#import <Foundation/NSException.h>
+#import <Foundation/NSAutoreleasePool.h>
 
 #include <string.h>
 
@@ -31,6 +32,209 @@ NSString *NetException = @"NetException";
 NSString *FatalNetException = @"FatalNetException";
 
 NetApplication *netApplication;
+
+#ifdef __APPLE__
+#include <CoreFoundation/CoreFoundation.h>
+
+static NSMapTable *desc_to_info = 0;
+
+typedef struct {
+	CFSocketRef socket;
+	CFRunLoopSourceRef source;
+	int modes;
+	NSMapTable *watchers;
+} net_socket_info;
+
+static void handle_cf_events(CFSocketRef s, CFSocketCallBackType callbackType,
+  CFDataRef address, const void *data, void *info);
+
+static void remove_info_for_socket(int desc)
+{
+	net_socket_info *x;
+
+	NSLog(@"Removing info for %d", desc);
+	x = NSMapGet(desc_to_info, desc);
+
+	if (!x) return;
+
+	CFRunLoopRemoveSource(CFRunLoopGetCurrent(), x->source,
+	  kCFRunLoopDefaultMode);
+
+	CFRelease(x->source);
+	CFRelease(x->socket);
+	NSFreeMapTable(x->watchers);
+	free(x);
+
+	NSMapRemove(desc_to_info, desc);
+
+	return;
+}
+
+static BOOL is_info_for_socket(int desc)
+{
+	return NSMapGet(desc_to_info, desc) != 0;
+}
+
+static net_socket_info *info_for_socket(int desc)
+{
+	CFSocketRef sock;
+	CFRunLoopSourceRef source;
+	net_socket_info *x;
+
+	x = NSMapGet(desc_to_info, desc);
+
+	if (x) return x;
+
+	sock = CFSocketCreateWithNative(
+	  NULL, desc, kCFSocketReadCallBack | kCFSocketWriteCallBack, handle_cf_events, NULL );
+	
+	CFSocketDisableCallBacks( sock, kCFSocketWriteCallBack | kCFSocketReadCallBack);
+
+	if (!sock) return NULL;
+
+	source = CFSocketCreateRunLoopSource(
+	  NULL, sock, 1);
+
+	if (!source)
+	{
+		CFRelease(sock);
+		return NULL;
+	}
+
+	x = malloc (sizeof(net_socket_info));
+
+	x->socket = sock;
+	x->source = source;
+	x->modes = 0;
+	x->watchers = NSCreateMapTable(NSIntMapKeyCallBacks, 
+	 NSObjectMapValueCallBacks, 100);
+
+	NSMapInsert(desc_to_info, desc, x);
+
+	CFRunLoopAddSource(CFRunLoopGetCurrent(), source, kCFRunLoopDefaultMode);
+
+	return x;
+}
+
+static void handle_cf_events(CFSocketRef s, CFSocketCallBackType callbackType,
+  CFDataRef address, const void *data, void *info)
+{
+	int desc;
+	net_socket_info *x;
+
+	desc = (int)CFSocketGetNative(s);
+
+	NSLog(@"Handling %d", desc);
+
+	if (!is_info_for_socket(desc))
+	{
+		NSLog(@"No desc!");
+		return;
+	}
+	x = info_for_socket(desc); 
+
+	if (!x) return;
+
+	if (callbackType & kCFSocketWriteCallBack)
+	{
+		NSLog(@"Writing in %d", desc);
+		[NSMapGet(x->watchers, (1 << ET_WDESC)) receivedEvent: (void *)desc
+		  type: ET_WDESC extra: 0 forMode: nil];
+	}
+	if (callbackType & kCFSocketReadCallBack)
+	{
+		NSLog(@"Reading in %d", desc);
+		[NSMapGet(x->watchers, (1 << ET_RDESC)) receivedEvent: (void *)desc
+		  type: ET_RDESC extra: 0 forMode: nil];
+	}
+}
+
+@interface NSRunLoop (RunLoopEventsAdditions)
+- (void) addEvent: (void *)data type: (RunLoopEventType)type
+  watcher: (id)watcher forMode: (NSString *)mode;
+- (void) removeEvent: (void *)data type: (RunLoopEventType)type
+   forMode: (NSString *)mode all: (BOOL)removeAll;
+@end
+
+@implementation NSRunLoop (RunLoopEventsAdditions)
++ (void) initialize
+{
+	desc_to_info = NSCreateMapTable(NSIntMapKeyCallBacks, 
+	 NSIntMapValueCallBacks, 100);
+}
+- (void) addEvent: (void *)data type: (RunLoopEventType)type
+  watcher: (id)watcher forMode: (NSString *)mode
+{
+	int desc = (int)data;
+	int add_mode = (int)type;
+	net_socket_info *x;
+
+
+	x = info_for_socket(desc);
+
+	if (x->modes & (1 << add_mode)) return;
+
+	switch(add_mode)
+	{
+		case ET_RDESC:
+			NSLog(@"Added read for %@ for %d", watcher, desc);
+			CFSocketEnableCallBacks( x->socket, kCFSocketReadCallBack );
+			x->modes |= (1 << add_mode);
+			NSMapInsert(x->watchers, (1 << add_mode), watcher);
+			NSLog(@"%@", NSStringFromMapTable(x->watchers));
+			break;
+		case ET_WDESC:
+			NSLog(@"Added write for %@ for %d", watcher, desc);
+			CFSocketEnableCallBacks( x->socket, kCFSocketWriteCallBack );
+			x->modes |= (1 << add_mode);
+			NSMapInsert(x->watchers, (1 << add_mode), watcher);
+			NSLog(@"%@", NSStringFromMapTable(x->watchers));
+			break;
+		default:
+			break;
+	}
+}
+
+- (void) removeEvent: (void *)data type: (RunLoopEventType)type
+   forMode: (NSString *)mode all: (BOOL)removeAll
+{
+	int desc = (int)data;
+	int remove_mode = (int)type;
+	net_socket_info *x;
+
+	if (!is_info_for_socket(desc))
+	{
+		return;
+	}
+
+	x = info_for_socket(desc);
+
+	switch(remove_mode)
+	{
+		case ET_RDESC:
+			NSLog(@"Removing reading for %d", desc);
+			CFSocketDisableCallBacks( x->socket, kCFSocketReadCallBack );
+			x->modes &= ~(1 << remove_mode);
+			NSMapRemove(x->watchers, (1 << remove_mode));
+			break;
+		case ET_WDESC:
+			NSLog(@"Removing writing for %d", desc);
+			CFSocketDisableCallBacks( x->socket, kCFSocketWriteCallBack );
+			x->modes &= ~(1 << remove_mode);
+			NSMapRemove(x->watchers, (1 << remove_mode));
+			break;
+		default:
+			break;
+	}
+
+	if (x->modes == 0)
+	{
+		remove_info_for_socket(desc);
+	}
+
+}
+@end
+#endif
 
 @implementation NetApplication
 + sharedInstance
@@ -92,7 +296,7 @@ NetApplication *netApplication;
 			default:
 				break;
 			case ET_RDESC:
-				if ([object conformsTo: @protocol(NetObject)])
+				if ([object conformsToProtocol: @protocol(NetObject)])
 				{
 					[object dataReceived: [[object transport] readData: 2048]];
 				}
@@ -219,7 +423,7 @@ NetApplication *netApplication;
 }
 - transportNeedsToWrite: aTransport
 {
-	if ([aTransport conformsTo: @protocol(NetTransport)])
+	if ([aTransport conformsToProtocol: @protocol(NetTransport)])
 	{
 		[[NSRunLoop currentRunLoop] addEvent: 
 		 (void *)[aTransport desc] type: ET_WDESC watcher: self 

@@ -20,8 +20,9 @@
 #ifndef NET_BASE_H
 #define NET_BASE_H
 
-#include <Foundation/NSObject.h>
-#include <Foundation/NSRunLoop.h>
+#import <Foundation/NSObject.h>
+#import <Foundation/NSRunLoop.h>
+#import <Foundation/NSMapTable.h>
 
 #include <sys/time.h>
 #include <sys/types.h>
@@ -57,7 +58,13 @@
 extern NSString *NetException;
 extern NSString *FatalNetException;
 
+#ifdef __APPLE__
+typedef enum { ET_RDESC, ET_WDESC, ET_RPORT, ET_EDESC } RunLoopEventType;
+
+@interface NetApplication : NSObject
+#else
 @interface NetApplication : NSObject < RunLoopEvents >
+#endif
 	{
 		NSMutableArray *portArray;
 		NSMutableArray *netObjectArray;
