@@ -20,14 +20,12 @@
 #ifndef IRCBOT_H
 #define IRCBOT_H
 
-#include "IRCObject.h"
+#import <netclasses/IRCObject.h>
 
 @class NSString;
 
 @interface IRCBot : IRCObject
 	{
-		id dcc;
-		NSMutableData *fileData;
 	}
 @end
 

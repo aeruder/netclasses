@@ -1,7 +1,9 @@
 include $(GNUSTEP_MAKEFILES)/common.make
 
 TOOL_NAME = IRCBot
-IRCBot_OBJC_FILES = main.m NetBase.m NetTCP.m IRCObject.m LineObject.m IRCBot.m 
+IRCBot_OBJC_FILES = main.m IRCBot.m 
+
+IRCBot_TOOL_LIBS = -lnetclasses
 
 ADDITIONAL_OBJCFLAGS = -Wall
 

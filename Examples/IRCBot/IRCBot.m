@@ -15,11 +15,11 @@
  *                                                                         *
  ***************************************************************************/
 
-#include "IRCBot.h"
-#include <Foundation/NSTimer.h>
-#include <Foundation/NSString.h>
-#include <Foundation/NSData.h>
-#include <Foundation/NSValue.h>
+#import "IRCBot.h"
+#import <Foundation/NSTimer.h>
+#import <Foundation/NSString.h>
+#import <Foundation/NSData.h>
+#import <Foundation/NSValue.h>
 
 static inline NSData *chomp_line(NSMutableData *data)
 {
@@ -60,12 +60,10 @@ static inline NSData *chomp_line(NSMutableData *data)
 @implementation IRCBot
 - connectionEstablished: aTransport
 {
-	fileData = [NSMutableData new];
 	return [super connectionEstablished: aTransport];
 }
 - (void)connectionLost
 {
-	DESTROY(fileData);
 	[super connectionLost];
 }
 - registeredWithServer
