@@ -7,4 +7,5 @@ after-distclean::
 	$(MAKE) -C Tests -f GNUmakefile clean
 	$(MAKE) -C Examples -f GNUmakefile clean
 	$(MAKE) -C Documentation -f GNUmakefile clean
+	rm -fr configure config.* Source/config.h* autom4te.cache
 	

@@ -25,6 +25,8 @@
  * <copy>Andrew Ruder</copy>
  */
 
+#include "config.h"
+
 #import "NetTCP.h"
 #import <Foundation/NSString.h>
 #import <Foundation/NSData.h>
@@ -44,10 +46,8 @@
 #include <arpa/inet.h>
 #include <sys/time.h>
 
-#ifndef GNUSTEP 
-#ifndef socklen_t
+#ifndef HAVE_SOCKLEN_T 
 typedef int socklen_t;
-#endif
 #endif
 
 /**
