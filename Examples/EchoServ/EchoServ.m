@@ -15,7 +15,7 @@
  *                                                                         *
  ***************************************************************************/
 
-#include "EchoServ.h"
+#import "EchoServ.h"
 #import <Foundation/NSData.h>
 #import <Foundation/NSString.h> 
 #import <Foundation/NSHost.h>
