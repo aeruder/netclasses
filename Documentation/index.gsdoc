@@ -25,6 +25,10 @@
 				asynchronous connections in Objective-C under GNUstep as
 				well as OS X.
 			</p>
+			<p>
+				Please also refer to <uref url="rfc1459.txt">RFC 1459</uref>
+				as a supplement to the IRC portion of this documentation.
+			</p>
 			</chapter>
 		</front>
 
@@ -32,6 +36,5 @@
 			<entry id="overview">Overview of Use</entry>
 			<index scope="project" type="title" />
 		</chapter>
-
 	</body>
 </gsdoc>
