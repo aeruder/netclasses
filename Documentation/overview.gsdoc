@@ -49,9 +49,9 @@
 		{
 			 id transport;
 		}
-		- connectionEstablished: aTransport;
+		- connectionEstablished: (id &lt;NetTransport&gt;)aTransport;
 		- dataReceived: (NSData *)data;
-		- transport;
+		- (id &lt;NetTransport&gt;)transport;
 		- (void)connectionLost;
 	@end
 			</example>
@@ -75,7 +75,7 @@
 				netclasses NetApplication system.
 			</p>
 			<example>
-	- connectionEstablished: aTransport
+	- connectionEstablished: (id &lt;NetTransport&gt;)aTransport
 	{
 		 transport = [aTransport retain];
 		 [[NetApplication sharedInstance] connectObject: self];
@@ -99,7 +99,7 @@
 				connectionEstablished:
 			</p>
 			<example>
-	- transport
+	- (id &lt;NetTransport&gt;)transport
 	{
 		 return transport;
 	}
