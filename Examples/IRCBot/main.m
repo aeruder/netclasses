@@ -38,7 +38,6 @@ int main(int argc, char **argv, char **env)
 	  withUserName: nil withRealName: @"Andy Ruder"
 	  withPassword: nil];
 	  
-	NSLog(@"%@", connection);
 	[[TCPSystem sharedInstance] connectNetObjectInBackground: connection 
 	  toHost: @"irc.openprojects.net" onPort: 6667 withTimeout: 30];
 	

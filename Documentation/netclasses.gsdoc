@@ -213,7 +213,8 @@
 					the transport to actually send/receive data.  This object should also call
 					<ref id="connectObject:">[NetApplication connectObject:]</ref>.  Know that
 					<ref id="connectObject:">[NetApplication connectObject:]</ref> will need
-					access to this object's transport, so that should be set before.
+					access to this object's transport, so that should be set before.  Do not send 
+					or receive data before connecting it to the NetApplication!!
 				</desc>
 			</method>
 			<method type="id" factory="no" id="dataReceived:">

@@ -174,7 +174,7 @@ static TCPSystem *default_system = nil;
 	id newTrans = AUTORELEASE([[TCPTransport alloc] initWithDesc:
 	    [transport desc]
 	  atAddress: [transport address]]);
-	id buffer = [transport writeBuffer];
+	id buffer = RETAIN([transport writeBuffer]);
 	
 	[timeout invalidate];
 	
@@ -182,6 +182,7 @@ static TCPSystem *default_system = nil;
 	[netObject connectionEstablished: newTrans];
 
 	[newTrans writeData: buffer];
+	RELEASE(buffer);
 
 	return self;
 }
