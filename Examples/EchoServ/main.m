@@ -17,6 +17,7 @@
 
 #import "EchoServ.h"
 #import <netclasses/NetTCP.h>
+#import <netclasses/NetUDP.h>
 #import <Foundation/NSAutoreleasePool.h>
 #import <Foundation/NSString.h>
 #import <Foundation/NSRunLoop.h>
@@ -24,15 +25,22 @@
 int main(int argc, char **argv, char **env)
 {
 	TCPPort *x;
+	UDPPort *y;
 	CREATE_AUTORELEASE_POOL(arp);
 
 	x = AUTORELEASE([[[TCPPort alloc] initOnPort: 0] 
 	                setNetObject: [EchoServ class]]);
-	NSLog(@"Ready to go on port %d", [x port]);
+	y = AUTORELEASE([[[UDPPort alloc] initOnPort: 0]
+			setNetObject: [EchoServ class]]);
+	NSLog(@"Ready to go on TCP port %d and UDP port %d", [x port], [y port]);
 
 	if (!x)
 	{
 		NSLog(@"%@", [[TCPSystem sharedInstance] errorString]);
+		return 0;
+	}
+	if (!y) {
+		NSLog(@"%@", [[UDPSystem sharedInstance] errorString]);
 		return 0;
 	}
 	
