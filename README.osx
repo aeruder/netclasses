@@ -28,9 +28,10 @@ I have absolutely no way to actually maintain proper building methods on
 OSX.  Therefore, building on OSX will be limited to gnustep-make style
 compilations.
 
-Secondly, if you cannot understand the instructions herein.  Please download
+Secondly, if you cannot understand the instructions herein, please download
 the binaries rather than wasting my time with issues related to lack of skill
-with unix-like systems and the command line environment.
+with unix-like systems and the command line environment.  The binaries are
+the recommended way of dealing with netclasses on OS X.  You have been warned.
 
 ****
 
@@ -41,22 +42,31 @@ Step 1:
 	included documentation and proceed with its installation.
 
 Step 2:
-	Set OBJC_INCLUDE_PATH to the directory containing GNUstep.h.  This file
-	is found in the standard GNUstep distribution.  I have distributed it along
-	with netclasses in the Misc/ directory.
-
-Step 3:
 	Set GNUSTEP_INSTALLATION_DIR to the root directory that you wish to install
 	to.  All directories will be based off this root directory.  If you wish
-	to install into the stanard location for frameworks, you probably want
+	to install into the standard location for frameworks, you probably want
 	GNUSTEP_INSTALLATION_DIR=/.  If you do not have administrator rights, you
-	will need to use GNUSTEP_INSTALLATION_DIR=~/.
+	will need to use GNUSTEP_INSTALLATION_DIR=$HOME
 
-Step 4:
+Step 3:
 	Type make followed by make install.  netclasses should be installed.  
 	You will not be able to build the documentation without gnustep-base
-	installed.
+	installed.  It is recommended to download the documentation off the
+	website (http://aeruder.gnustep.us).
+
+Example:
+	The following commands will work in most cases:
+		GNUSTEP_INSTALLATION_DIR=/ make install
+	or
+		GNUSTEP_INSTALLATION_DIR=$HOME make install
+	
+Conclusion:
+	Have fun!  If you got through this successfully you are ready to start
+	developing with netclasses.  If you didn't, just give in already and
+	get the binaries!  I already went through the pain of getting them to
+	compile so you don't have to.
 
 ===============================================================================
 Copyright (C) 2003 by Andy Ruder
-	
+aeruder@ksu.edu
+http://aeruder.gnustep.us

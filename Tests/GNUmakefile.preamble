@@ -1,0 +1,3 @@
+ifeq ($(OBJC_RUNTIME_LIB), apple)
+	ADDITIONAL_INCLUDE_DIRS = -I../Misc
+endif

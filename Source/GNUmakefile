@@ -7,12 +7,6 @@ netclasses_HEADER_FILES = NetBase.h NetTCP.h IRCObject.h LineObject.h
 netclasses_CURRENT_VERSION_NAME=1.0.2
 netclasses_DEPLOY_WITH_CURRENT_VERSION=yes
 
-ADDITIONAL_OBJCFLAGS = -Wall
-
-ifeq ($(OBJC_RUNTIME_LIB), apple)
-ADDITIONAL_OBJCFLAGS += -include GNUstep.h
-endif
-
 GUI_LIB =
 
 -include GNUmakefile.preamble

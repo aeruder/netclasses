@@ -1,0 +1,10 @@
+after-clean::
+	$(MAKE) -C Tests -f GNUmakefile clean
+	$(MAKE) -C Examples -f GNUmakefile clean
+	$(MAKE) -C Documentation -f GNUmakefile clean
+
+after-distclean::
+	$(MAKE) -C Tests -f GNUmakefile clean
+	$(MAKE) -C Examples -f GNUmakefile clean
+	$(MAKE) -C Documentation -f GNUmakefile clean
+	

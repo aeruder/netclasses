@@ -60,7 +60,11 @@ Documentation:
 Use:
 ====
 	Simply link to the framework after it is installed in your application.
+
 	See the Examples/ directory for examples of the use of netclasses.
+
+	Tests/ contains various tests to examine the extent to which things 
+	work on other operating systems or other architectures.
 
 ========
 Authors:
@@ -72,3 +76,5 @@ Authors:
 
 ===============================================================================
 Copyright (C) 2003 Andy Ruder
+aeruder@ksu.edu
+http://aeruder.gnustep.us
