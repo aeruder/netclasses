@@ -65,6 +65,8 @@ NSArray *SeparateIRCNickAndHost(NSString *prefix);
 		NSString *password;
 
 		NSString *errorString;
+		
+		NSStringEncoding defaultEncoding;
 	}
 - initWithNickname: (NSString *)nickname
    withUserName: (NSString *)user withRealName: (NSString *)realName
@@ -85,6 +87,9 @@ NSArray *SeparateIRCNickAndHost(NSString *prefix);
 - (NSString *)errorString;
 
 - (BOOL)connected;
+
+- setEncoding: (NSStringEncoding)encoding;
+- (NSStringEncoding)encoding;
 
 // IRC Operations
 - changeNick: (NSString *)aNick;
@@ -181,10 +186,12 @@ NSArray *SeparateIRCNickAndHost(NSString *prefix);
 - couldNotRegister: (NSString *)reason;
 
 - CTCPRequestReceived: (NSString *)aCTCP 
-   withArgument: (NSString *)argument from: (NSString *)aPerson;
+   withArgument: (NSString *)argument to: (NSString *)receiver
+   from: (NSString *)aPerson;
 
 - CTCPReplyReceived: (NSString *)aCTCP
-   withArgument: (NSString *)argument from: (NSString *)aPerson;
+   withArgument: (NSString *)argument to: (NSString *)receiver
+   from: (NSString *)aPerson;
 
 - errorReceived: (NSString *)anError;
 

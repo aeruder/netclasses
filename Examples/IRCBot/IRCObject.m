@@ -299,12 +299,12 @@ static void rec_ccustom(IRCObject *client, NSString *prefix,
 	if ([command isEqualToString: @"NOTICE"])
 	{
 		[client CTCPReplyReceived: ctcp withArgument: rest
-		  from: prefix];
+		  to: to from: prefix];
 	}
 	else
 	{
 		[client CTCPRequestReceived: ctcp withArgument: rest
-		  from: prefix];
+		  to: to from: prefix];
 	}
 }
 
@@ -621,6 +621,8 @@ static void rec_error(IRCObject *client, NSString *command, NSString *prefix,
 {
 	if (!(self = [super init])) return nil;
 	
+	defaultEncoding = [NSString defaultCStringEncoding];
+	
 	if (![self setNick: aNickname])
 	{
 		return nil;
@@ -770,6 +772,15 @@ static void rec_error(IRCObject *client, NSString *command, NSString *prefix,
 - (BOOL)connected
 {
 	return connected;
+}
+- setEncoding: (NSStringEncoding)encoding
+{
+	defaultEncoding = encoding;
+	return self;
+}
+- (NSStringEncoding)encoding
+{
+	return defaultEncoding;
 }
 - changeNick: (NSString *)aNick
 {
@@ -1668,12 +1679,14 @@ static void rec_error(IRCObject *client, NSString *command, NSString *prefix,
 	return self;
 }	
 - CTCPRequestReceived: (NSString *)aCTCP
-   withArgument: (NSString *)argument from: (NSString *)aPerson
+   withArgument: (NSString *)argument to: (NSString *)receiver
+   from: (NSString *)aPerson
 {
 	return self;
 }
 - CTCPReplyReceived: (NSString *)aCTCP
-   withArgument: (NSString *)argument from: (NSString *)aPerson
+   withArgument: (NSString *)argument to: (NSString *)receiver
+   from: (NSString *)aPerson
 {
 	return self;
 }
@@ -1765,7 +1778,7 @@ static void rec_error(IRCObject *client, NSString *command, NSString *prefix,
 	NSString *line, *orig;
 	
 	orig = line = AUTORELEASE([[NSString alloc] initWithData: aLine
-	  encoding: NSISOLatin1StringEncoding]);
+	  encoding: defaultEncoding]);
 
 	if ([line length] == 0)
 	{
@@ -1862,8 +1875,7 @@ static void rec_error(IRCObject *client, NSString *command, NSString *prefix,
 	va_start(ap, format);
 	temp = [NSString stringWithFormat: format arguments: ap];
 
-	[transport writeData: [NSData dataWithBytes: [temp cString]
-	                                     length: [temp cStringLength]]];
+	[transport writeData: [temp dataUsingEncoding: defaultEncoding]];
 	
 	if (![temp hasSuffix: @"\r\n"])
 	{
