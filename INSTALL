@@ -1,6 +1,6 @@
 netclasses
 ===============================================================================
-netclasses is a small framework of Objective-C networking classes
+netclasses is a small distribution of Objective-C networking classes
 ===============================================================================
 Copyright (C) 2003 Andy Ruder
 
@@ -19,26 +19,17 @@ Copyright (C) 2003 Andy Ruder
   Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
 Comments are welcome.
+
 ===============================================================================
+Installation Instructions:
 
-Compiling:
-    Typing 'make' will compile the netclasses framework. 
+2. Install netclasses 
+ andy ~/netclasses $ make
+ andy ~/netclasses $ su -c 'make install'
+	
+Enjoy!
 
-	On OSX, you must have gnustep-make installed to compile!
- 
-Installing:
-	Typing 'make install' as root will install the netclasses framework.
-
-	On OSX, you probably want 'GNUSTEP_INSTALLATION_DIR=/ make install'
-	to have it install into /Library
-
-Documentation:
-    Documentation/netclasses.gsdoc is the documentation.  To make a html
-    file out of it, simply type 'make'
-
-Use:
-	Simply link to the framework after it is installed in your application.
-	See the Examples/ directory for examples of the use of netclasses.
+See the README for more usage instructions
 
 ===============================================================================
 Copyright (C) 2003 by Andy Ruder <aeruder@yahoo.com>
