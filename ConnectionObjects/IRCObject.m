@@ -39,9 +39,8 @@ static NSMapTable *ctcp_to_function = 0;
 static NSData *IRC_new_line = nil;
 
 @interface IRCObject (InternalIRCObject)
-- setInitialNicknames: (NSArray *)names;
 - setNick: (NSString *)aNick;
-- setServer: (NSString *)aServer;
+- setErrorString: (NSString *)anError;
 @end
 
 #define REMOVE_SPACES(__buffer, __bufferEnd)\
@@ -536,25 +535,16 @@ static void rec_error(IRCObject *client, NSString *command, NSString *prefix,
 
 
 @implementation IRCObject (InternalIRCObject)
-- setInitialNicknames: (NSArray *)names
-{
-	if (!connected)
-	{
-		RELEASE(initialNicknames);
-		initialNicknames = RETAIN(names);
-	}
-	return self;
-}
 - setNick: (NSString *)aNick
 {
 	RELEASE(nick);
 	nick = RETAIN(aNick);
 	return self;
 }
-- setServer: (NSString *)aServer
+- setErrorString: (NSString *)anError
 {
-	RELEASE(server);
-	server = RETAIN(aServer);
+	RELEASE(errorString);
+	errorString = RETAIN(anError);
 	return self;
 }
 @end
@@ -590,20 +580,21 @@ static void rec_error(IRCObject *client, NSString *command, NSString *prefix,
 	NSMapInsert(ctcp_to_function, @"\001USERINFO", rec_cuserinfo);
 	NSMapInsert(ctcp_to_function, @"\001CLIENTINFO", rec_cclientinfo);
 }
-+ (IRCObject *)connectTo: (NSString *)host onPort: (int)aPort
-   withTimeout: (int)timeout withNicknames: (NSArray *)nicknames
-   withUserName: (NSString *)user withRealName: (NSString *)realName
+- initWithNicknames: (NSArray *)nicknames withUserName: (NSString *)user
+   withRealName: (NSString *)realName
    withPassword: (NSString *)password
 {
-	IRCObject *connection;
 	NSEnumerator *iter = [nicknames objectEnumerator];
 	NSMutableArray *array = AUTORELEASE([NSMutableArray new]);
 	id object;
 
+	if (!(self = [super init])) return nil;
+	
 	if ([nicknames count] == 0)
 	{
-		[NSException raise: IRCException
-		 format: @"[IRCObject connectTo...] No nicknames provided"];
+		[self setErrorString: @"No nicknames provided"];
+		[self dealloc];
+		return nil;
 	}
 	
 	while ((object = [iter nextObject]))
@@ -618,27 +609,18 @@ static void rec_error(IRCObject *client, NSString *command, NSString *prefix,
 	
 	if ([array count] == 0)
 	{
-		[NSException raise: IRCException
-		 format: @"[IRCObject connectTo...] No usable nicknames provided"];
-	}
-	
-	if ([host length] == 0)
-	{
-		[NSException raise: IRCException
-		 format: @"[IRCObject connectTo...] No host provided"];
-	}
-
-	if (aPort <= 0)
-	{
-		aPort = 6667;
+		[self setErrorString: @"No usable nicknames provided"];
+		[self dealloc];
+		return nil;
 	}
 	
 	if ([password length])
 	{
 		if (contains_a_space(password))
 		{
-			[NSException raise: IRCException
-			 format: @"[IRCObject connectTo...] Password contains a space"];
+			[self setErrorString: @"Password contains a space"];
+			[self dealloc];
+			return nil;
 		}
 	}
 	else
@@ -668,37 +650,43 @@ static void rec_error(IRCObject *client, NSString *command, NSString *prefix,
 		realName = @"John Doe";
 	}
 	
-	connection = [[TCPSystem sharedInstance] connectNetObject: self
-	 toHost: host onPort: aPort withTimeout: timeout];
-	
-	if (!connection)
-	{
-		[NSException raise: IRCException
-		 format: @"[IRCObject connectTo...] Couldn't connect: '%@'", 
-		 [[TCPSystem sharedInstance] errorString]];
-	}
-	
 	if (password)
 	{
-		[connection writeString: @"PASS %@", password];
+		passwordString = [[NSString alloc] initWithFormat: @"PASS %@", 
+		  password];
 	}
-
-	[connection setInitialNicknames: array];
 	
-	object = [array objectAtIndex: 0];
-	[connection setNick: object];
-	[connection setServer: host];
+	initialNicknames = [[NSArray alloc] initWithArray: array];
 	
-	[connection changeNick: object];
+	userString = [[NSString alloc] initWithFormat:
+	 @"USER %@ %@ %@ :%@", user, @"localhost", @"netclasses", realName];
 	
-	[connection writeString: @"USER %@ %@ %@ :%@", user, @"localhost",
-	 @"netclasses", realName];
-	
-	return connection;
+	return self;
 }		  
+- (void)dealloc
+{
+	DESTROY(initialNicknames);
+	DESTROY(userString);
+	DESTROY(passwordString);
+	DESTROY(errorString);
+	[super dealloc];
+}
+- (NSString *)errorString
+{
+	return errorString;
+}
 - connectionEstablished: aTransport
 {
+	id object;
 	[super connectionEstablished: aTransport];
+	
+	[self writeString: passwordString];
+	object = [initialNicknames objectAtIndex: 0];
+
+	[self setNick: object];
+	[self changeNick: object];
+
+	[self writeString: userString];
 	return self;
 }
 - (void)connectionLost
@@ -713,10 +701,6 @@ static void rec_error(IRCObject *client, NSString *command, NSString *prefix,
 - (NSString *)nick
 {
 	return nick;
-}
-- (NSString *)server
-{
-	return server;
 }
 - changeNick: (NSString *)aNick
 {

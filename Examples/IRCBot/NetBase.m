@@ -16,7 +16,14 @@
  ***************************************************************************/
 #include <string.h>
 #import "NetBase.h"
-#import <Foundation/Foundation.h>
+#import <Foundation/NSArray.h>
+#import <Foundation/NSMapTable.h>
+#import <Foundation/NSString.h>
+#import <Foundation/NSRunLoop.h>
+#import <Foundation/NSDictionary.h>
+#import <Foundation/NSDate.h>
+#import <Foundation/NSException.h>
+#import <Foundation/NSAutoreleasePool.h>
 
 NSString *NetException = @"NetException";
 NSString *FatalNetException = @"FatalNetException";

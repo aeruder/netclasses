@@ -18,23 +18,48 @@
 #import "NetBase.h"
 #import <Foundation/NSObject.h>
 
-@class NSString, NSNumber, NSString, NSData, NSMutableData;
+@class NSString, NSNumber, NSString, NSData, NSMutableData, TCPConnecting;
 
 @interface TCPSystem : NSObject
-{
-	NSString *errorString;
-}
+	{
+		NSString *errorString;
+	}
 + sharedInstance;
 
 - (NSString *)errorString;
 
-- (id)connectNetObject: (Class)netObject toIp: (NSString *)ip 
+- (id)connectNetObject: (id)netObject toIp: (NSString *)ip 
                 onPort: (int)aPort withTimeout: (int)timeout;
-- (id)connectNetObject: (Class)netObject toHost: (NSString *)host 
+- (id)connectNetObject: (id)netObject toHost: (NSString *)host 
                 onPort: (int)aPort withTimeout: (int)timeout;
+
+- (TCPConnecting *)connectNetObjectInBackground: (id)netObject
+    toIp: (NSString *)ip onPort: (int)aPort withTimeout: (int)timeout;
+	
+- (TCPConnecting *)connectNetObjectInBackground: (id)netObject
+    toHost: (NSString *)host onPort: (int)aPort withTimeout: (int)timeout;
 
 - (NSString *)hostFromIp: (NSString *)ip;
 - (NSString *)ipFromHost: (NSString *)host;
+@end
+
+@protocol TCPConnecting
+- connectingFailed: (NSString *)error;
+@end
+
+@interface TCPConnecting : NSObject < NetObject >
+	{
+		id transport;
+		id netObject;
+		NSTimer *timeout;
+	}
+- (id)netObject;
+- (void)abortConnection;
+
+- (void)connectionLost;
+- connectionEstablished: aTransport;
+- dataReceived: (NSData *)data;
+- (id)transport;
 @end
 
 @interface TCPPort : NSObject < NetPort >
@@ -57,7 +82,7 @@
 		NSMutableData *writeBuffer;
 		NSString *address;
 	}
-- initWithDesc: (int)aDesc atAddress:(NSString *)theAddress;
+- initWithDesc: (int)aDesc atAddress: (NSString *)theAddress;
 - (NSData *)readData: (int)maxDataSize;
 - (BOOL)isDoneWriting;
 - writeData: (NSData *)data;

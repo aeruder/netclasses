@@ -43,23 +43,24 @@ NSArray *SeparateIRCNickAndHost(NSString *prefix);
 
 @interface IRCObject : LineObject
 	{
-		NSString *server;
 		NSString *nick;
 		int nicknameIndex;
 		BOOL connected;
 		
-		NSMutableArray *initialNicknames;
+		NSArray *initialNicknames;
+		NSString *passwordString;
+		NSString *userString;
+		NSString *errorString;
 	}
-+ (IRCObject *)connectTo: (NSString *)host onPort: (int)aPort 
-   withTimeout: (int)timeout withNicknames: (NSArray *)nicknames 
-   withUserName: (NSString *)user withRealName: (NSString *)realName 
+- initWithNicknames: (NSArray *)nicknames
+   withUserName: (NSString *)user withRealName: (NSString *)realName
    withPassword: (NSString *)password;
-   
+
+- (NSString *)errorString;
+
 - (BOOL)connected;
 
 - (NSString *)nick;
-
-- (NSString *)server;
 
 // IRC Operations
 - changeNick: (NSString *)aNick;

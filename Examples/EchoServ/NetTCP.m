@@ -26,9 +26,222 @@
 #include <netinet/in.h>
 
 #import "NetTCP.h"
-#import <Foundation/Foundation.h>
+#import <Foundation/NSString.h>
+#import <Foundation/NSData.h>
+#import <Foundation/NSArray.h>
+#import <Foundation/NSTimer.h>
+#import <Foundation/NSException.h>
 
 static TCPSystem *default_system = nil;
+
+@interface TCPConnecting (InternalTCPConnecting)
+- initWithNetObject: (id)netObject withTimeout: (int)aTimeout;
+- connectingFailed: (NSString *)error;
+- connectingSucceeded;
+- timeoutReceived: (NSTimer *)aTimer;
+@end
+	
+@interface TCPConnectingTransport : NSObject < NetTransport >
+	{
+		BOOL connected;
+		int desc;
+		NSString *address;
+		NSMutableData *writeBuffer;
+		TCPConnecting *owner;	
+	}
+- (NSMutableData *)writeBuffer;
+
+- initWithDesc: (int)aDesc atAddress: (NSString *)theAddress
+     withOwner: (TCPConnecting *)anObject;
+	 
+- (void)close;
+
+- (NSData *)readData: (int)maxDataSize;
+- (BOOL)isDoneWriting;
+- writeData: (NSData *)data;
+
+- (NSString *)address;
+- (int)desc;
+@end
+
+@implementation TCPConnectingTransport
+- (NSMutableData *)writeBuffer
+{
+	return writeBuffer;
+}
+- initWithDesc: (int)aDesc atAddress: (NSString *)theAddress 
+     withOwner: (TCPConnecting *)anObject
+{
+	if (!(self = [super init])) return nil;
+	
+	desc = aDesc;
+
+	writeBuffer = [NSMutableData new];
+	address = RETAIN(theAddress);
+	owner = anObject;
+	connected = YES;
+	
+	[[NetApplication sharedInstance] transportNeedsToWrite: self];
+
+	return self;
+}
+- (void)dealloc
+{
+	RELEASE(writeBuffer);
+	RELEASE(address);
+
+	[super dealloc];
+}
+- (NSData *)readData: (int)maxDataSize
+{
+	return nil;
+}
+- (BOOL)isDoneWriting
+{
+	return YES;
+}
+- writeData: (NSData *)data
+{
+	char buffer[2];
+	if (data)
+	{
+		[writeBuffer appendData: data];
+		return self;
+	}
+	
+	if (recv(desc, buffer, sizeof(buffer), MSG_PEEK) == -1)
+	{
+		if (errno != EAGAIN)
+		{
+			[owner connectingFailed: [NSString stringWithFormat:
+			 @"[TCPConnectingTransport writeData: (nil)] recv() failed: %s",
+			  strerror(errno)]];
+			return self;
+		}
+	}
+	
+	[owner connectingSucceeded];
+	return self;
+}
+- (NSString *)address
+{
+	return address;
+}
+- (int)desc
+{
+	return desc;
+}
+- (void)close
+{
+	if (connected)
+	{
+		close(desc);
+		connected = NO;
+	}
+}
+@end
+
+@implementation TCPConnecting (InternalTCPConnecting)
+- initWithNetObject: (id)aNetObject withTimeout: (int)aTimeout
+{
+	if (!(self = [super init])) return nil;
+	
+	netObject = RETAIN(aNetObject);
+	if (aTimeout > 0)
+	{
+		timeout = RETAIN([NSTimer scheduledTimerWithTimeInterval:
+		    (NSTimeInterval)aTimeout
+		  target: self selector: @selector(timeoutReceived:)
+		  userInfo: nil repeats: NO]);
+	}
+		
+	return self;
+}
+- connectingFailed: (NSString *)error
+{
+	if ([netObject conformsTo: @protocol(TCPConnecting)])
+	{
+		[netObject connectingFailed: error];
+	}
+	[timeout invalidate];
+	[transport close];
+	[[NetApplication sharedInstance] disconnectObject: self];
+
+	return self;
+}
+- connectingSucceeded
+{
+	id newTrans = AUTORELEASE([[TCPTransport alloc] initWithDesc:
+	    [transport desc]
+	  atAddress: [transport address]]);
+	id buffer = [transport writeBuffer];
+	
+	[timeout invalidate];
+	
+	[[NetApplication sharedInstance] disconnectObject: self];
+	[netObject connectionEstablished: newTrans];
+
+	[newTrans writeData: buffer];
+
+	return self;
+}
+- timeoutReceived: (NSTimer *)aTimer
+{
+	if ([netObject conformsTo: @protocol(TCPConnecting)])
+	{
+		[netObject connectingFailed: @"Timeout reached"];
+	}
+	if (aTimer != timeout)
+	{
+		[aTimer invalidate];
+	}
+	
+	[timeout invalidate];
+	[transport close];
+	[[NetApplication sharedInstance] disconnectObject: self];
+	
+	return self;
+}
+@end
+
+@implementation TCPConnecting
+- (void)dealloc
+{
+	RELEASE(netObject);
+	RELEASE(timeout);
+	
+	[super dealloc];
+}
+- (id)netObject
+{
+	return netObject;
+}
+- (void)abortConnection
+{
+	[timeout invalidate];
+	[transport close];
+	[[NetApplication sharedInstance] disconnectObject: self];
+}
+- (void)connectionLost
+{
+	DESTROY(transport);
+}
+- connectionEstablished: aTransport
+{
+	transport = RETAIN(aTransport);	
+	[[NetApplication sharedInstance] connectObject: self];
+
+	return self;
+}
+- dataReceived: (NSData *)data
+{
+	return self;
+}
+- (id)transport
+{
+	return transport;
+}
+@end
 
 @interface TCPSystem (InternalTCPSystem)
 - (int)openPort: (int)portNumber;
@@ -38,6 +251,9 @@ static TCPSystem *default_system = nil;
        withTimeout: (int)timeout;
 - (int)connectToHost: (NSString *)aHost onPort: (int)portNumber
          withTimeout: (int)timeout;
+
+- (int)connectToIpInBackground: (NSString *)ip onPort: (int)portNumber;
+- (int)connectToHostInBackground: (NSString *)aHost onPort: (int)portNumber;
 
 - setErrorString: (NSString *)anError;
 @end
@@ -274,6 +490,75 @@ static const char *my_hstrerror(int aError)
 	}
 	return -1;
 }
+- (int)connectToIpInBackground: (NSString *)ip onPort: (int)portNumber
+{
+	int myDesc;
+	struct sockaddr_in destAddr;
+
+	if (!ip)
+	{
+		[self setErrorString: [NSString stringWithFormat: 
+		 @"[TCPSystem connectToIpInBackground: (nil) onPort: %d] Ip cannot be nil",
+		 portNumber]];
+		return -1;
+	}
+	
+	if ((myDesc = socket(AF_INET, SOCK_STREAM, 0)) == -1)
+	{
+		[self setErrorString: [NSString stringWithFormat:
+		 @"[TCPSystem connectToIpInBackground: %@ onPort: %d] socket(): %s",
+		 ip, portNumber, strerror(errno)]];
+		return -1;
+	}
+
+	destAddr.sin_family = AF_INET;
+	destAddr.sin_port = htons(portNumber);
+	if (!(inet_aton([ip cString], &destAddr.sin_addr)))
+	{
+		[self setErrorString: [NSString stringWithFormat:
+		 @"[TCPSystem connectToIpInBackground: %@ onPort: %d] inet_aton(): Invalid IP",
+		 ip, portNumber]];
+		close(myDesc);
+		return -1;
+	}
+	memset(&(destAddr.sin_zero), 0, sizeof(destAddr.sin_zero));
+
+	if (fcntl(myDesc, F_SETFL, O_NONBLOCK) == -1)
+	{
+		[self setErrorString: [NSString stringWithFormat:
+		 @"[TCPSystem connectToIpInBackground: %@ onPort: %d] fcntl(O_NONBLOCK): %s",
+		 ip, portNumber, strerror(errno)]];
+		close(myDesc);
+		return -1;
+	}
+	
+	if (connect(myDesc, (struct sockaddr *)&destAddr, sizeof(destAddr)) == -1)
+	{
+		if (errno == EINPROGRESS)
+		{
+			return myDesc;
+		}
+		else // connect failed with something other than EINPROGRESS
+		{
+			[self setErrorString: [NSString stringWithFormat:
+			 @"[TCPSystem connectToIpInBackground: %@ onPort: %d] connect(): %s",
+			 ip, portNumber, strerror(errno)]];
+			close(myDesc);
+			return -1;
+		}
+	}
+	
+	return myDesc;
+}
+- (int)connectToHostInBackground: (NSString *)aHost onPort: (int)portNumber
+{
+	id ip = [self ipFromHost: aHost];
+	if (ip)
+	{
+		return [self connectToIpInBackground: ip onPort: portNumber];
+	}
+	return -1;
+}
 - setErrorString: (NSString *)anError
 {
 	RELEASE(errorString);
@@ -282,8 +567,6 @@ static const char *my_hstrerror(int aError)
 }
 @end		
 	
-	
-
 @implementation TCPSystem
 + sharedInstance
 {
@@ -306,12 +589,11 @@ static const char *my_hstrerror(int aError)
 {
 	return errorString;
 }
-- (id)connectNetObject: (Class)netObject toIp: (NSString *)ip onPort: (int)aPort
+- (id)connectNetObject: (id)netObject toIp: (NSString *)ip onPort: (int)aPort
            withTimeout: (int)timeout
 {
 	int desc;
 	id transport;
-	id object;
 
 	desc = [self connectToIp: ip onPort: aPort withTimeout: timeout];
 	if (desc < 0)
@@ -326,16 +608,15 @@ static const char *my_hstrerror(int aError)
 		return nil;
 	}
 	
-	object = [AUTORELEASE([netObject new]) connectionEstablished: transport];
+	[netObject connectionEstablished: transport];
 	
-	return object;
+	return netObject;
 }
-- (id)connectNetObject: (Class)netObject toHost: (NSString *)host
-                onPort: (int)aPort  withTimeout: (int)timeout
+- (id)connectNetObject: (id)netObject toHost: (NSString *)host
+                onPort: (int)aPort withTimeout: (int)timeout
 {
 	int desc;
 	id transport;
-	id object;
 
 	desc = [self connectToHost: host onPort: aPort withTimeout: timeout];
 	if (desc < 0)
@@ -350,10 +631,65 @@ static const char *my_hstrerror(int aError)
 		return nil;
 	}
 
-	object = [AUTORELEASE([netObject new]) connectionEstablished: transport];
+	[netObject connectionEstablished: transport];
+	
+	return netObject;
+}
+- (TCPConnecting *)connectNetObjectInBackground: (id)netObject 
+    toIp: (NSString *)ip onPort: (int)aPort withTimeout: (int)timeout 
+{
+	int desc;
+	id transport;
+	id object;
+
+	desc = [self connectToIpInBackground: ip onPort: aPort];
+	if (desc < 0)
+	{
+		return nil;
+	}
+	
+	object = AUTORELEASE([[TCPConnecting alloc] initWithNetObject: netObject
+	  withTimeout: timeout]);
+	transport = AUTORELEASE([[TCPConnectingTransport alloc] initWithDesc: desc 
+	              atAddress: ip withOwner: object]);
+	
+	if (!transport)
+	{
+		return nil;
+	}
+	
+	[object connectionEstablished: transport];
 	
 	return object;
 }
+- (TCPConnecting *)connectNetObjectInBackground: (id)netObject 
+    toHost: (NSString *)host onPort: (int)aPort withTimeout: (int)timeout
+{
+	int desc;
+	id transport;
+	id object;
+
+	desc = [self connectToHostInBackground: host onPort: aPort];
+	if (desc < 0)
+	{
+		return nil;
+	}
+	
+	object = AUTORELEASE([[TCPConnecting alloc] initWithNetObject: netObject
+	   withTimeout: timeout]);
+	transport = AUTORELEASE([[TCPConnectingTransport alloc] initWithDesc: desc 
+	              atAddress: host withOwner: object]);
+	
+	if (!transport)
+	{
+		return nil;
+	}
+	
+	[object connectionEstablished: transport];
+	
+	return object;
+}
+
 - (NSString *)hostFromIp: (NSString *)ip
 {
 	struct in_addr address;
@@ -638,4 +974,5 @@ static NetApplication *net_app = nil;
 	close(desc);
 }
 @end	
+
 
