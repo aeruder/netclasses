@@ -30,6 +30,7 @@
 #import "NetTCP.h"
 #import <Foundation/NSString.h>
 #import <Foundation/NSData.h>
+#import <Foundation/NSDictionary.h>
 #import <Foundation/NSArray.h>
 #import <Foundation/NSTimer.h>
 #import <Foundation/NSException.h>
