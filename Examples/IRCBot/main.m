@@ -32,7 +32,7 @@ int main(int argc, char **argv, char **env)
 
 	srand(time(0) ^ gethostid() % getpid());
 		
-	NSLog(@"Connecting to irc.openprojects.net 6667...");
+	NSLog(@"Connecting to irc.freenode.net 6667...");
 	
 	connection = [[IRCBot alloc] 
 	  initWithNickname: @"Niles"
