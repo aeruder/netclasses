@@ -43,6 +43,65 @@ static NSMapTable *ctcp_to_function = 0;
 
 static NSData *IRC_new_line = nil;
 
+@implementation NSString (IRCAddition)
+// Because in IRC {}|^ are lowercase of []\~
+- (NSString *)uppercaseIRCString
+{
+	static char lowMap[4] = {'{', '}', '|', '^'};
+	static char hiMap[4] = {'[', ']', '\\', '~'};
+
+	char *location;
+	int iter;
+	
+	char aString[[self cStringLength] + 1];
+	
+	strcpy(aString, [self cString]);
+
+	for (iter = 0; iter < 4; iter++)
+	{
+		location = aString;
+
+		while((location = strchr(location, lowMap[iter])))
+		{
+			*location = hiMap[iter];
+			location++;
+		}
+	}
+	
+	return [[NSString stringWithCString: aString] uppercaseString];
+}
+- (NSString *)lowercaseIRCString
+{
+	static char lowMap[4] = {'{', '}', '|', '^'};
+	static char hiMap[4] = {'[', ']', '\\', '~'};
+
+	char *location;
+	int iter;
+	
+	char aString[[self cStringLength] + 1];
+	
+	strcpy(aString, [self cString]);
+
+	for (iter = 0; iter < 4; iter++)
+	{
+		location = aString;
+
+		while((location = strchr(location, hiMap[iter])))
+		{
+			*location = lowMap[iter];
+			location++;
+		}
+	}
+	
+	return [[NSString stringWithCString: aString] lowercaseString];
+}
+- (NSComparisonResult)caseInsensitiveIRCCompare: (NSString *)aString
+{
+	return [[self uppercaseIRCString] compare:
+	   [aString uppercaseIRCString]];
+}
+@end
+
 @interface IRCObject (InternalIRCObject)
 - setErrorString: (NSString *)anError;
 @end
@@ -346,7 +405,7 @@ static void rec_nick(IRCObject *client, NSString *command,
 		return;
 	}
 	
-	if ([ExtractIRCNick(prefix) caseInsensitiveCompare: [client nick]] 
+	if ([ExtractIRCNick(prefix) caseInsensitiveIRCCompare: [client nick]] 
 	      == NSOrderedSame)
 	{
 		[client setNickname: [paramList objectAtIndex: 0]];
@@ -784,11 +843,6 @@ static void rec_error(IRCObject *client, NSString *command, NSString *prefix,
 	[self writeString: @"USER %@ %@ %@ :%@", userName, @"localhost", 
 	  @"netclasses", realName];
 	return self;
-}
-- (void)connectionLost
-{
-	DESTROY(nick);
-	[super connectionLost];
 }
 - (BOOL)connected
 {

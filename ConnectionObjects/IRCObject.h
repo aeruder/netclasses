@@ -37,6 +37,14 @@ extern NSString *IRCException;
  * it, odds are you may want to look into using these functions.
  */
 
+
+@interface NSString (IRCAddition)
+// Because in IRC {}|^ are lowercase of []\~
+- (NSString *)uppercaseIRCString;
+- (NSString *)lowercaseIRCString;
+- (NSComparisonResult)caseInsensitiveIRCCompare: (NSString *)aString;
+@end
+
 NSString *ExtractIRCNick(NSString *prefix);
 NSString *ExtractIRCHost(NSString *prefix);
 
