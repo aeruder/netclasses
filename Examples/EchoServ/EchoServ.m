@@ -14,10 +14,11 @@
  *   (at your option) any later version.                                   *
  *                                                                         *
  ***************************************************************************/
-#import "EchoServ.h"
-#import <Foundation/NSData.h>
-#import <Foundation/NSString.h> 
-#import <Foundation/NSHost.h>
+
+#include "EchoServ.h"
+#include <Foundation/NSData.h>
+#include <Foundation/NSString.h> 
+#include <Foundation/NSHost.h>
 
 @implementation EchoServ
 - (void)connectionLost
@@ -27,7 +28,7 @@
 }
 - connectionEstablished: aTransport
 {
-    NSString *greetingString = [NSString stringWithFormat: @"Welcome to EchoServ v0.0.001, %@\r\n", [[aTransport address] name]];
+    NSString *greetingString = [NSString stringWithFormat: @"Welcome to EchoServ v0.0.001, %@\r\n", [(NSHost *)[aTransport address] name]];
 	NSData *greetingData = [NSData
 	       dataWithBytes: [greetingString cString]
 	              length: [greetingString cStringLength]];

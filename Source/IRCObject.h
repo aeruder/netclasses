@@ -15,9 +15,14 @@
  *                                                                         *
  ***************************************************************************/
 
-#import "LineObject.h"
-#import "NetTCP.h"
-#import <Foundation/NSObject.h>
+@class IRCObject, DCCObject, DCCReceiveObject, DCCSendObject;
+
+#ifndef IRC_OBJECT_H
+#define IRC_OBJECT_H
+
+#include "LineObject.h"
+#include "NetTCP.h"
+#include <Foundation/NSObject.h>
 
 extern NSString *IRCException;
 
@@ -477,3 +482,4 @@ extern NSString *RPL_STATSBLINE;
 extern NSString *RPL_STATSDLINE;
 extern NSString *ERR_NOSERVICEHOST;
 
+#endif

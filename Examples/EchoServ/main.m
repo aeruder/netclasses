@@ -14,11 +14,12 @@
  *   (at your option) any later version.                                   *
  *                                                                         *
  ***************************************************************************/
-#import "NetTCP.h"
-#import "EchoServ.h"
-#import <Foundation/NSAutoreleasePool.h>
-#import <Foundation/NSString.h>
-#import <Foundation/NSRunLoop.h>
+
+#include "NetTCP.h"
+#include "EchoServ.h"
+#include <Foundation/NSAutoreleasePool.h>
+#include <Foundation/NSString.h>
+#include <Foundation/NSRunLoop.h>
 
 
 int main(int argc, char **argv, char **env)

@@ -14,11 +14,18 @@
  *   (at your option) any later version.                                   *
  *                                                                         *
  ***************************************************************************/
+
+@class NetApplication;
+
+#ifndef NET_BASE_H
+#define NET_BASE_H
+
+#include <Foundation/NSObject.h>
+#include <Foundation/NSRunLoop.h>
+
 #include <sys/time.h>
 #include <sys/types.h>
 #include <unistd.h>
-#import <Foundation/NSObject.h>
-#import <Foundation/NSRunLoop.h>
 
 @class NSData, NSNumber, NSMutableDictionary, NSDictionary, NSArray;
 @class NSMutableArray, NSString;
@@ -74,3 +81,5 @@ extern NSString *FatalNetException;
 - disconnectObject: anObject;
 - closeEverything;
 @end
+
+#endif

@@ -15,13 +15,13 @@
  *                                                                         *
  ***************************************************************************/
 
-#import "NetTCP.h"
-#import "IRCBot.h"
-#import <Foundation/NSAutoreleasePool.h>
-#import <Foundation/NSString.h>
-#import <Foundation/NSRunLoop.h>
-#import <Foundation/NSDate.h>
-#import <Foundation/NSHost.h>
+#include "NetTCP.h"
+#include "IRCBot.h"
+#include <Foundation/NSAutoreleasePool.h>
+#include <Foundation/NSString.h>
+#include <Foundation/NSRunLoop.h>
+#include <Foundation/NSDate.h>
+#include <Foundation/NSHost.h>
 
 #include <time.h>
 

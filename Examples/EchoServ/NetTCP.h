@@ -15,8 +15,13 @@
  *                                                                         *
  ***************************************************************************/
 
-#import "NetBase.h"
-#import <Foundation/NSObject.h>
+@class TCPSystem, TCPConnecting, TCPPort, TCPTransport;
+
+#ifndef NET_TCP_H
+#define NET_TCP_H
+
+#include "NetBase.h"
+#include <Foundation/NSObject.h>
 
 #include <netinet/in.h>
 
@@ -92,4 +97,5 @@
 - (int)desc;
 - (void)close;
 @end
-		
+
+#endif

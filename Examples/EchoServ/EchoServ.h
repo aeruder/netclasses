@@ -14,8 +14,14 @@
  *   (at your option) any later version.                                   *
  *                                                                         *
  ***************************************************************************/
-#import "NetBase.h"
-#import <Foundation/NSObject.h>
+
+@class EchoServ;
+
+#ifndef ECHO_SERV_H
+#define ECHO_SERV_H
+
+#include "NetBase.h"
+#include <Foundation/NSObject.h>
 
 @class NSData;
 
@@ -29,3 +35,4 @@
 - (id)transport;
 @end
 
+#endif

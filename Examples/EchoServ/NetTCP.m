@@ -24,13 +24,13 @@
 #include <netdb.h>
 #include <fcntl.h>
 
-#import "NetTCP.h"
-#import <Foundation/NSString.h>
-#import <Foundation/NSData.h>
-#import <Foundation/NSArray.h>
-#import <Foundation/NSTimer.h>
-#import <Foundation/NSException.h>
-#import <Foundation/NSHost.h>
+#include "NetTCP.h"
+#include <Foundation/NSString.h>
+#include <Foundation/NSData.h>
+#include <Foundation/NSArray.h>
+#include <Foundation/NSTimer.h>
+#include <Foundation/NSException.h>
+#include <Foundation/NSHost.h>
 
 #ifdef IDENT
 	#undef IDENT

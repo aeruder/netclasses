@@ -15,7 +15,12 @@
  *                                                                         *
  ***************************************************************************/
 
-#import "IRCObject.h"
+@class IRCBot;
+
+#ifndef IRCBOT_H
+#define IRCBOT_H
+
+#include "IRCObject.h"
 
 @class NSString;
 
@@ -25,3 +30,5 @@
 		NSMutableData *fileData;
 	}
 @end
+
+#endif
