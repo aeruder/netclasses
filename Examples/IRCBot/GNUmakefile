@@ -12,5 +12,7 @@ else
 IRCBot_TOOL_LIBS = -lnetclasses
 endif
 
+GUI_LIB =
+
 include $(GNUSTEP_MAKEFILES)/tool.make
 
