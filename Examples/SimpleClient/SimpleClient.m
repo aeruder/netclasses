@@ -22,16 +22,22 @@
 #import <Foundation/NSCharacterSet.h>
 
 @implementation SimpleClient
+- (BOOL)isConnected
+{
+	return isConnected;
+}
 - (void)connectionLost
 {
 	[transport close];
 	DESTROY(transport);
+	isConnected = NO;
 }
 - connectionEstablished: aTransport
 {
 	transport = RETAIN(aTransport);
 
 	[[NetApplication sharedInstance] connectObject: self];
+	isConnected = YES;
 
 	return self;
 }

@@ -81,6 +81,10 @@ int main(int argc, char **argv, char **env)
 			[[client transport] 
 			  writeData: [NSData dataWithBytes: buffer length: length]];
 		}
+		if (![client isConnected])
+		{
+			break;
+		}
 		
 		[[NSRunLoop currentRunLoop] runUntilDate: [NSDate 
 		  dateWithTimeIntervalSinceNow: 1.0]];

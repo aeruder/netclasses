@@ -28,7 +28,9 @@
 @interface SimpleClient : NSObject < NetObject >
 	{
 		id transport;
+		BOOL isConnected;
 	}
+- (BOOL)isConnected;
 - (void)connectionLost;
 - connectionEstablished: aTransport;
 - dataReceived: (NSData *)data;
