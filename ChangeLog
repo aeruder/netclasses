@@ -1,4 +1,13 @@
-2004-01-09 Andy Ruder <aeruder at ksu dot edu>
+2004-02-18 Andy Ruder <aeruder at ksu dot edu>
+ * Changed the building of the documentation slightly, RFC 1459 is now linked
+   to the main page.
+
+2004-02-17 Andy Ruder <aeruder at ksu dot edu>
+ * Added a SimpleClient example
+ * Added ways to convert hosts to integers
+ * Added conversions.m test
+
+2004-02-09 Andy Ruder <aeruder at ksu dot edu>
  * Made the option SO_REUSEADDR be set -=before=- binding to the port.
    (I'm dumb)
 
