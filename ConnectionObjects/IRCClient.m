@@ -21,6 +21,7 @@
 
 #import <Foundation/NSString.h>
 #import <Foundation/NSException.h>
+#import <Foundation/NSEnumerator.h>
 #import <Foundation/NSArray.h>
 #import <Foundation/NSDictionary.h>
 #import <Foundation/NSData.h>
@@ -33,7 +34,6 @@
 NSString *IRCException = @"IRCException";
 
 static NSMapTable *command_to_function = 0;
-static NSMapTable *numeric_to_function = 0;
 
 static NSData *IRC_new_line = nil;
 
@@ -105,6 +105,20 @@ static inline NSString *get_next_IRC_word(NSData *data, int *offset)
 
 #undef REMOVE_SPACES
 
+static inline BOOL is_numeric_command(NSString *aString)
+{
+	char *marker;
+	
+	if ([aString length] != 3)
+	{
+		return NO;
+	}
+	
+	strtol([aString cString], &marker, 0);
+
+	return (*marker == '\0') ? YES : NO;
+}
+
 static inline BOOL contains_a_space(NSString *aString)
 {
 	return (strchr([aString cString], ' ')) ? YES : NO;
@@ -167,7 +181,7 @@ inline NSString *ExtractIRCHost(NSString *prefix)
 		return nil;
 	}
 
-	return [NSString stringWithCString: temp + 1];
+	return [NSString stringWithCString: test + 1];
 }
 
 inline NSArray *SeparateIRCNickAndHost(NSString *prefix)
@@ -193,7 +207,8 @@ inline NSArray *SeparateIRCNickAndHost(NSString *prefix)
 	 nil];
 }
 
-static void rec_nick(IRCClient *client, NSString *prefix, NSArray *paramList)
+static void rec_nick(IRCClient *client, NSString *command,
+                     NSString *prefix, NSArray *paramList)
 {
 	if (!prefix)
 	{
@@ -205,10 +220,11 @@ static void rec_nick(IRCClient *client, NSString *prefix, NSArray *paramList)
 		return;
 	}
 
-	[client changedNickFrom: prefix to: [paramList objectAtIndex: 0]];
+	[client nickChangedTo: [paramList objectAtIndex: 0] by: prefix];
 }
 
-static void rec_join(IRCClient *client, NSString *prefix, NSArray *paramList)
+static void rec_join(IRCClient *client, NSString *command, 
+                     NSString *prefix, NSArray *paramList)
 {
 	if (!prefix)
 	{
@@ -220,10 +236,11 @@ static void rec_join(IRCClient *client, NSString *prefix, NSArray *paramList)
 		return;
 	}
 
-	[client joinedChannel: [paramList objectAtIndex: 0] by: prefix];
+	[client channelJoined: [paramList objectAtIndex: 0] by: prefix];
 }
 
-static void rec_part(IRCClient *client, NSString *prefix, NSArray *paramList)
+static void rec_part(IRCClient *client, NSString *command,
+                     NSString *prefix, NSArray *paramList)
 {
 	int x;
 	
@@ -238,11 +255,12 @@ static void rec_part(IRCClient *client, NSString *prefix, NSArray *paramList)
 		return;
 	}
 
-	[client partedChannel: [paramList objectAtIndex: 0] withMessage:
+	[client channelParted: [paramList objectAtIndex: 0] withMessage:
 	  (x == 2) ? [paramList objectAtIndex: 1] : 0 by: prefix];
 }
 
-static void rec_quit(IRCClient *client, NSString *prefix, NSArray *paramList)
+static void rec_quit(IRCClient *client, NSString *command,
+                     NSString *prefix, NSArray *paramList)
 {
 	if (!prefix)
 	{
@@ -257,7 +275,8 @@ static void rec_quit(IRCClient *client, NSString *prefix, NSArray *paramList)
 	[client quitIRCWithMessage: [paramList objectAtIndex: 0] by: prefix];
 }
 
-static void rec_topic(IRCClient *client, NSString *prefix, NSArray *paramList)
+static void rec_topic(IRCClient *client, NSString *command,
+                      NSString *prefix, NSArray *paramList)
 {
 	if (!prefix)
 	{
@@ -273,7 +292,8 @@ static void rec_topic(IRCClient *client, NSString *prefix, NSArray *paramList)
 	  in: [paramList objectAtIndex: 0] by: prefix];
 }
 
-static void rec_privmsg(IRCClient *client, NSString *prefix, NSArray *paramList)
+static void rec_privmsg(IRCClient *client, NSString *command,
+                        NSString *prefix, NSArray *paramList)
 {
 	NSRange aRange = {0, 7};
 	int x;
@@ -299,12 +319,119 @@ static void rec_privmsg(IRCClient *client, NSString *prefix, NSArray *paramList)
 			aRange.location = 9;
 			aRange.length = x - 9;
 			[client actionReceived: [message substringWithRange: aRange]
-			   from: prefix to: [paramList objectAtIndex: 0]];
+			  to: [paramList objectAtIndex: 0] by: prefix];
 			return;
 		}
 	}	
-	[client messageReceived: message from: prefix
-	                     to: [paramList objectAtIndex: 0]];
+	[client messageReceived: message to: [paramList objectAtIndex: 0]
+	                     by: prefix];
+}
+static void rec_notice(IRCClient *client, NSString *command,
+                        NSString *prefix, NSArray *paramList)
+{
+	if (!prefix)
+	{
+		return;
+	}
+
+	if ([paramList count] < 2)
+	{
+		return;
+	}
+
+	[client noticeReceived: [paramList objectAtIndex: 1]
+	     to: [paramList objectAtIndex: 0] by: prefix];
+}
+static void rec_mode(IRCClient *client, NSString *command, NSString *prefix, 
+                     NSArray *paramList)
+{
+	NSArray *newParams;
+	int x;
+	
+	if (!prefix)
+	{
+		return;
+	}
+	
+	x = [paramList count];
+	if (x < 2)
+	{	
+		return;
+	}
+
+	if (x == 2)
+	{
+		newParams = AUTORELEASE([NSArray new]);
+	}
+	else
+	{
+		NSRange aRange;
+		aRange.location = 2;
+		aRange.length = x - 2;
+		
+		newParams = [paramList subarrayWithRange: aRange];
+	}
+	
+	[client modeChanged: [paramList objectAtIndex: 1] 
+	  on: [paramList objectAtIndex: 0] withParams: newParams by: prefix];
+}
+static void rec_invite(IRCClient *client, NSString *command, NSString *prefix, 
+                     NSArray *paramList)
+{
+	if (!prefix)
+	{
+		return;
+	}
+	if ([paramList count] < 2)
+	{
+		return;
+	}
+
+	NSLog(@"%@", [paramList objectAtIndex: 0]);
+	[client invitedTo: [paramList objectAtIndex: 1] by: prefix];
+}
+static void rec_kick(IRCClient *client, NSString *command, NSString *prefix,
+                       NSArray *paramList)
+{
+	id object;
+	
+	if (!prefix)
+	{
+		return;
+	}
+	if ([paramList count] < 2)
+	{
+		return;
+	}
+	
+	object = ([paramList count] > 2) ? [paramList objectAtIndex: 2] : nil;
+	
+	[client userKicked: [paramList objectAtIndex: 1]
+	   from: [paramList objectAtIndex: 0] for: object by: prefix];
+}
+static void rec_ping(IRCClient *client, NSString *command, NSString *prefix,
+                       NSArray *paramList)
+{
+	if ([paramList count] < 1)
+	{
+		return;
+	}
+	
+	[client writeString: @"PONG %@", [paramList objectAtIndex: 0]];
+}
+static void rec_wallops(IRCClient *client, NSString *command, NSString *prefix,
+                          NSArray *paramList)
+{
+	if (!prefix)
+	{
+		return;
+	}
+	if ([paramList count] < 1)
+	{
+		return;
+	}
+	
+	[client wallopsReceived: [paramList objectAtIndex: 0] by: prefix];
 }
 
 @interface IRCClient (InternalIRCClient)
@@ -343,18 +470,20 @@ static void rec_privmsg(IRCClient *client, NSString *prefix, NSArray *paramList)
 	IRC_new_line = [[NSData alloc] initWithBytes: "\r\n" length: 2];
 
 	command_to_function = NSCreateMapTable(NSObjectMapKeyCallBacks,
-	   NSIntMapValueCallBacks, 100);
+	   NSIntMapValueCallBacks, 10);
 	
-	numeric_to_function = NSCreateMapTable(NSObjectMapKeyCallBacks,
-	   NSIntMapValueCallBacks, 100);
-	   
 	NSMapInsert(command_to_function, @"NICK", rec_nick);
 	NSMapInsert(command_to_function, @"JOIN", rec_join);
 	NSMapInsert(command_to_function, @"PART", rec_part);
 	NSMapInsert(command_to_function, @"QUIT", rec_quit);
 	NSMapInsert(command_to_function, @"TOPIC", rec_topic);
 	NSMapInsert(command_to_function, @"PRIVMSG", rec_privmsg);
-
+	NSMapInsert(command_to_function, @"NOTICE", rec_notice);
+	NSMapInsert(command_to_function, @"MODE", rec_mode);
+	NSMapInsert(command_to_function, @"KICK", rec_kick);
+	NSMapInsert(command_to_function, @"INVITE", rec_invite);
+	NSMapInsert(command_to_function, @"PING", rec_ping);
+	NSMapInsert(command_to_function, @"WALLOPS", rec_wallops);
 }
 + (IRCClient *)connectTo: (NSString *)host onPort: (int)aPort
    withTimeout: (int)timeout withNicknames: (NSArray *)nicknames
@@ -460,8 +589,7 @@ static void rec_privmsg(IRCClient *client, NSString *prefix, NSArray *paramList)
 	[connection writeString: @"USER %@ %@ %@ :%@", user, @"localhost",
 	 @"netclasses", realName];
 	
-	
-	return self;
+	return connection;
 }		  
 - connectionEstablished: aTransport
 {
@@ -589,6 +717,27 @@ static void rec_privmsg(IRCClient *client, NSString *prefix, NSArray *paramList)
 	
 	return self;
 }
+- sendNotice: (NSString *)message to: (NSString *)receiver
+{
+	if ([message length] == 0)
+	{
+		return self;
+	}
+	if ([receiver length] == 0)
+	{
+		return self;
+	}
+	if (contains_a_space(receiver))
+	{
+		[NSException raise: IRCException
+		 format: @"[IRCClient sendNotice: '%@' to: '%@'] The receiver contains a space.",
+		  message, receiver];
+	}
+	
+	[self writeString: @"NOTICE %@ :%@", receiver, message];
+	
+	return self;
+}
 - sendAction: (NSString *)anAction to: (NSString *)whom
 {
 	if ([anAction length] == 0)
@@ -633,7 +782,643 @@ static void rec_privmsg(IRCClient *client, NSString *prefix, NSArray *paramList)
 	
 	return self;
 }
+- requestNamesOnChannel: (NSString *)aChannel fromServer: (NSString *)aServer
+{
+	if ([aChannel length] == 0)
+	{
+		[self writeString: @"NAMES"];
+		return self;
+	}
+	
+	if (contains_a_space(aChannel))
+	{
+		[NSException raise: IRCException
+		 format: 
+		  @"[IRCClient requestNamesOnChannel: %@ fromServer: %@] The channel contains a space.",
+		   aChannel, aServer];
+	}
+			
+	if ([aServer length] == 0)
+	{
+		[self writeString: @"NAMES %@", aChannel];
+		return self;
+	}
 
+	if (contains_a_space(aServer))
+	{
+		[NSException raise: IRCException
+		 format: @"[IRCClient requestNamesOnChannel: %@ fromServer: %@] The server contains a space.",
+		   aChannel, aServer];
+	}
+		
+	[self writeString: @"NAMES %@ %@", aChannel, aServer];
+	return self;
+}
+- requestMOTDOnServer: (NSString *)aServer
+{
+	if ([aServer length] == 0)
+	{
+		[self writeString: @"MOTD"];
+		return self;
+	}
+	if (contains_a_space(aServer))
+	{
+		[NSException raise: IRCException format: 
+		  @"[IRCClient requestMOTDOnServer:'%@'] Server contains a space",
+		  aServer];
+	}
+
+	[self writeString: @"MOTD %@", aServer];
+	return self;
+}
+- requestSizeInformationFromServer: (NSString *)aServer 
+    andForwardTo: (NSString *)anotherServer
+{
+	if ([aServer length] == 0)
+	{
+		[self writeString: @"LUSERS"];
+		return self;
+	}
+	if (contains_a_space(aServer))
+	{
+		[NSException raise: IRCException format:
+		 @"[IRCClient requestSizeInformationFromServer: '%@' andForwardTo: '%@'] First argument contains a space", 
+		  aServer, anotherServer];
+	}
+	if ([anotherServer length] == 0)
+	{
+		[self writeString: @"LUSERS %@", aServer];
+		return self;
+	}
+	if (contains_a_space(anotherServer))
+	{
+		[NSException raise: IRCException format:
+		 @"[IRCClient requestSizeInformationFromServer: '%@' andForwardTo: '%@'] Second argument contains a space",
+		 aServer, anotherServer];
+	}
+
+	[self writeString: @"LUSERS %@ %@", aServer, anotherServer];
+	return self;
+}	
+- requestVersionOfServer: (NSString *)aServer
+{
+	if ([aServer length] == 0)
+	{
+		[self writeString: @"VERSION"];
+		return self;
+	}
+	if (contains_a_space(aServer))
+	{
+		[NSException raise: IRCException format:
+		 @"[IRCClient requestVersionOfServer: '%@'] Server contains a space",
+		  aServer];
+	}
+
+	[self writeString: @"VERSION %@", aServer];
+	return self;
+}
+- requestServerStats: (NSString *)aServer for: (NSString *)query
+{
+	if ([query length] == 0)
+	{
+		[self writeString: @"STATS"];
+		return self;
+	}
+	if (contains_a_space(query))
+	{
+		[NSException raise: IRCException format:
+		 @"[IRCClient requestServerStats: '%@' for: '%@'] Query contains a space",
+		  aServer, query];
+	}
+	if ([aServer length] == 0)
+	{
+		[self writeString: @"STATS %@", query];
+		return self;
+	}
+	if (contains_a_space(aServer))
+	{
+		[NSException raise: IRCException format:
+		 @"[IRCClient requestServerStats: '%@' for: '%@'] Server contains a space",
+		  aServer, query];
+	}
+	
+	[self writeString: @"STATS %@ %@", query, aServer];
+	return self;
+}
+- requestServerLink: (NSString *)aLink from: (NSString *)aServer
+{
+	if ([aLink length] == 0)
+	{
+		[self writeString: @"LINKS"];
+		return self;
+	}
+	if (contains_a_space(aLink))
+	{
+		[NSException raise: IRCException format:
+		 @"[IRCClient requestServerLink: '%@' from: '%@'] Link contains a space",
+		  aLink, aServer];
+	}
+	if ([aServer length] == 0)
+	{
+		[self writeString: @"LINKS %@", aLink];
+		return self;
+	}
+	if (contains_a_space(aServer))
+	{
+		[NSException raise: IRCException format:
+		 @"[IRCClient requestServerLink: '%@' from: '%@'] Server contains a space", 
+		  aLink, aServer];
+	}
+
+	[self writeString: @"LINKS %@ %@", aServer, aLink];
+	return self;
+}
+- requestTimeOnServer: (NSString *)aServer
+{
+	if ([aServer length] == 0)
+	{
+		[self writeString: @"TIME"];
+		return self;
+	}
+	if (contains_a_space(aServer))
+	{
+		[NSException raise: IRCException format:
+		 @"[IRCClient requestTimeOnServer: '%@'] Server contains a space",
+		  aServer];
+	}
+
+	[self writeString: @"TIME %@", aServer];
+	return self;
+}
+- requestServerToConnect: (NSString *)aServer to: (NSString *)connectServer
+                  onPort: (NSString *)aPort
+{
+	if ([connectServer length] == 0)
+	{
+		return self;
+	}
+	if (contains_a_space(connectServer))
+	{
+		[NSException raise: IRCException format:
+		 @"[IRCClient requestServerToConnect: '%@' to: '%@' onPort: '%@'] Server to connect to contains a space",
+		  aServer, connectServer, aPort];
+	}
+	if ([aPort length] == 0)
+	{
+		return self;
+	}
+	if (contains_a_space(aPort))
+	{
+		[NSException raise: IRCException format:
+		 @"[IRCClient requestServerToConnect: '%@' to: '%@' onPort: '%@'] Port contains a space",
+		  aServer, connectServer, aPort];
+	}
+	if ([aServer length] == 0)
+	{
+		[self writeString: @"CONNECT %@ %@", connectServer, aPort];
+		return self;
+	}
+	if (contains_a_space(aServer))
+	{
+		[NSException raise: IRCException format: 
+		 @"[IRCClient requestServerToConnect: '%@' to: '%@' onPort: '%@'] Server contains a space",
+		  aServer, connectServer, aPort];
+	}
+	
+	[self writeString: @"CONNECT %@ %@ %@", connectServer, aPort, aServer];
+	return self;
+}
+- requestTraceOnServer: (NSString *)aServer
+{
+	if ([aServer length] == 0)
+	{
+		[self writeString: @"TRACE"];
+		return self;
+	}
+	if (contains_a_space(aServer))
+	{
+		[NSException raise: IRCException format: 
+		 @"[IRCClient requestTraceOnServer: '%@'] Server contains a space",
+		  aServer];
+	}
+	
+	[self writeString: @"TRACE %@", aServer];
+	return self;
+}
+- requestAdministratorOnServer: (NSString *)aServer
+{
+	if ([aServer length] == 0)
+	{
+		[self writeString: @"ADMIN"];
+		return self;
+	}
+	if (contains_a_space(aServer))
+	{
+		[NSException raise: IRCException format:
+		 @"[IRCClient requestAdministratorOnServer: '%@'] Server contains a space", 
+		  aServer];
+	}
+
+	[self writeString: @"ADMIN %@", aServer];
+	return self;
+}
+- requestInfoOnServer: (NSString *)aServer
+{
+	if ([aServer length] == 0)
+	{
+		[self writeString: @"INFO"];
+		return self;
+	}
+	if (contains_a_space(aServer))
+	{
+		[NSException raise: IRCException format:
+		 @"[IRCClient requestInfoOnServer: '%@'] Server contains a space",
+		  aServer];
+	}
+
+	[self writeString: @"INFO %@", aServer];
+	return self;
+}
+- requestServiceListWithMask: (NSString *)aMask ofType: (NSString *)type
+{
+	if ([aMask length] == 0)
+	{
+		[self writeString: @"SERVLIST"];
+		return self;
+	}
+	if (contains_a_space(aMask))
+	{
+		[NSException raise: IRCException format:
+		 @"[IRCClient requestServiceListWithMask: '%@' ofType: '%@'] Mask contains a space",
+		  aMask, type];
+	}
+	if ([type length] == 0)
+	{
+		[self writeString: @"SERVLIST %@", aMask];
+		return self;
+	}
+	if (contains_a_space(type))
+	{
+		[NSException raise: IRCException format:
+		 @"[IRCClient requestServiceListWithMask: '%@' ofType: '%@'] Type contains a space",
+		  aMask, type];
+	}
+
+	[self writeString: @"SERVLIST %@ %@", aMask, type];
+	return self;
+}
+- requestServerRehash
+{
+	[self writeString: @"REHASH"];
+	return self;
+}
+- requestServerShutdown
+{
+	[self writeString: @"DIE"];
+	return self;
+}
+- requestServerRestart
+{
+	[self writeString: @"RESTART"];
+	return self;
+}
+- requestUserInfoOnServer: (NSString *)aServer
+{
+	if ([aServer length] == 0)
+	{
+		[self writeString: @"USERS"];
+		return self;
+	}
+	if (contains_a_space(aServer))
+	{
+		[NSException raise: IRCException format:
+		 @"[IRCClient requestUserInfoOnServer: '%@'] Server contains a space",
+		  aServer];
+	}
+
+	[self writeString: @"USERS %@", aServer];
+	return self;
+}
+- areUsersOn: (NSString *)userList
+{
+	if ([userList length] == 0)
+	{
+		return self;
+	}
+	
+	[self writeString: @"ISON %@", userList];
+	return self;
+}
+- sendWallops: (NSString *)message
+{
+	if ([message length] == 0)
+	{
+		return self;
+	}
+
+	[self writeString: @"WALLOPS :%@", message];
+	return self;
+}
+- queryService: (NSString *)aService withMessage: (NSString *)aMessage
+{
+	if ([aService length] == 0)
+	{
+		return self;
+	}
+	if (contains_a_space(aService))
+	{
+		[NSException raise: IRCException format:
+		 @"[IRCClient queryService: '%@' withMessage: '%@'] Service contains a space",
+		  aService, aMessage];
+	}
+	if ([aMessage length] == 0)
+	{
+		return self;
+	}
+
+	[self writeString: @"SQUERY %@ :%@", aService, aMessage];
+	return self;
+}
+- listWho: (NSString *)aMask onlyOperators: (BOOL)operators
+{
+	if ([aMask length] == 0)
+	{
+		[self writeString: @"WHO"];
+		return self;
+	}
+	if (contains_a_space(aMask))
+	{
+		[NSException raise: IRCException format:
+		 @"[IRCClient listWho: '%@' onlyOperators: %d] Mask contains a space",
+		 aMask, operators];
+	}
+	
+	if (operators)
+	{
+		[self writeString: @"WHO %@ o", aMask];
+	}
+	else
+	{
+		[self writeString: @"WHO %@", aMask];
+	}
+	
+	return self;
+}
+- whois: (NSString *)aPerson onServer: (NSString *)aServer
+{
+	if ([aPerson length] == 0)
+	{
+		return self;
+	}
+	if (contains_a_space(aPerson))
+	{
+		[NSException raise: IRCException format:
+		 @"[IRCClient whois: '%@' onServer: '%@'] Person contains a space",
+		 aPerson, aServer];
+	}
+	if ([aServer length] == 0)
+	{
+		[self writeString: @"WHOIS %@", aPerson];
+		return self;
+	}
+	if (contains_a_space(aServer))
+	{
+		[NSException raise: IRCException format:
+		 @"[IRCClient whois: '%@' onServer: '%@'] Server contains a space",
+		  aPerson, aServer];
+	}
+
+	[self writeString: @"WHOIS %@ %@", aServer, aPerson];
+	return self;
+}
+- whowas: (NSString *)aPerson onServer: (NSString *)aServer
+      withNumberEntries: (NSString *)aNumber
+{
+	if ([aPerson length] == 0)
+	{
+		return self;
+	}
+	if (contains_a_space(aPerson))
+	{
+		[NSException raise: IRCException format:
+		 @"[IRCClient whowas: '%@' onServer: '%@' withNumberEntries: '%@'] Person contains a space",
+		  aPerson, aServer, aNumber];
+	}
+	if ([aNumber length] == 0)
+	{
+		[self writeString: @"WHOWAS %@", aPerson];
+		return self;
+	}
+	if (contains_a_space(aNumber))
+	{
+		[NSException raise: IRCException format:
+		 @"[IRCClient whowas: '%@' onServer: '%@' withNumberEntries: '%@'] Number of entries contains a space", 
+		  aPerson, aServer, aNumber];
+	}
+	if ([aServer length] == 0)
+	{
+		[self writeString: @"WHOWAS %@ %@", aPerson, aNumber];
+		return self;
+	}
+	if (contains_a_space(aServer))
+	{
+		[NSException raise: IRCException format:
+		 @"[IRCClient whowas: '%@' onServer: '%@' withNumberEntries: '%@'] Server contains a space",
+		  aPerson, aServer, aNumber];
+	}
+
+	[self writeString: @"WHOWAS %@ %@ %@", aPerson, aNumber, aServer];
+	return self;
+}
+- kill: (NSString *)aPerson withComment: (NSString *)aComment
+{
+	if ([aPerson length] == 0)
+	{
+		return self;
+	}
+	if (contains_a_space(aPerson))
+	{
+		[NSException raise: IRCException format:
+		 @"[IRCClient kill: '%@' withComment: '%@'] Person contains a space",
+		 aPerson, aComment];
+	}
+	if ([aComment length] == 0)
+	{
+		return self;
+	}
+
+	[self writeString: @"KILL %@ :%@", aPerson, aComment];
+	return self;
+}
+- setTopicForChannel: (NSString *)aChannel to: (NSString *)aTopic
+{
+	if ([aChannel length] == 0)
+	{
+		return self;
+	}
+	if (contains_a_space(aChannel))
+	{
+		[NSException raise: IRCException
+		 format: @"[IRCClient setTopicForChannel: %@ to: %@] The channel contains a space.",
+		   aChannel, aTopic];
+	}
+
+	if ([aTopic length] == 0)
+	{
+		[self writeString: @"TOPIC %@", aChannel];
+	}
+	else
+	{
+		[self writeString: @"TOPIC %@ :%@", aChannel, aTopic];
+	}
+
+	return self;
+}
+- setMode: (NSString *)aMode on: (NSString *)anObject 
+                     withParams: (NSArray *)list
+{
+	NSMutableString *aString;
+	NSEnumerator *iter;
+	id object;
+	
+	if ([anObject length] == 0)
+	{
+		return self;
+	}
+	if (contains_a_space(anObject))
+	{
+		[NSException raise: IRCException format:
+		  @"[IRCClient setMode:'%@' on:'%@' withParams:'%@'] Object contains a space", 
+		    aMode, anObject, list];
+	}
+	if ([aMode length] == 0)
+	{
+		[self writeString: @"MODE %@", anObject];
+		return self;
+	}
+	if (contains_a_space(aMode))
+	{		
+		[NSException raise: IRCException format:
+		  @"[IRCClient setMode:'%@' on:'%@' withParams:'%@'] Mode contains a space", 
+		    aMode, anObject, list];
+	}
+	if (!list)
+	{
+		[self writeString: @"MODE %@ %@", anObject, aMode];
+		return self;
+	}
+	
+	aString = [NSMutableString stringWithFormat: @"MDOE %@ %@", 
+	            anObject, aMode];
+				
+	iter = [list objectEnumerator];
+	
+	while ((object = [iter nextObject]))
+	{
+		[aString appendString: @" "];
+		[aString appendString: object];
+	}
+	
+	[self writeString: @"%@", aString];
+
+	return self;
+}
+- listChannel: (NSString *)aChannel onServer: (NSString *)aServer
+{
+	if ([aChannel length] == 0)
+	{
+		[self writeString: @"LIST"];
+		return self;
+	}
+	if (contains_a_space(aChannel))
+	{
+		[NSException raise: IRCException format:
+		 @"[IRCClient listChannel:'%@' onServer:'%@'] Channel contains a space",
+		  aChannel, aServer];
+	}
+	if ([aServer length] == 0)
+	{
+		[self writeString: @"LIST %@", aChannel];
+		return self;
+	}
+	if (contains_a_space(aChannel))
+	{
+		[NSException raise: IRCException format:
+		 @"[IRCClient listChannel:'%@' onServer:'%@'] Server contains a space",
+		  aChannel, aServer];
+	}
+	
+	[self writeString: @"LIST %@ %@", aChannel, aServer];
+	return self;
+}
+- invite: (NSString *)aPerson to: (NSString *)aChannel
+{
+	if ([aPerson length] == 0)
+	{
+		return self;
+	}
+	if ([aChannel length] == 0)
+	{
+		return self;
+	}
+	if (contains_a_space(aPerson))
+	{
+		[NSException raise: IRCException format:
+		 @"[IRCClient invite:'%@' to:'%@'] Person contains a space",
+		  aPerson, aChannel];
+	}
+	if (contains_a_space(aChannel))
+	{
+		[NSException raise: IRCException format:
+		 @"[IRCClient invite:'%@' to:'%@'] Channel contains a space",
+		  aPerson, aChannel];
+	}
+	
+	[self writeString: @"INVITE %@ %@", aPerson, aChannel];
+	return self;
+}
+- kick: (NSString *)aPerson offOf: (NSString *)aChannel for: (NSString *)reason
+{
+	if ([aPerson length] == 0)
+	{
+		return self;
+	}
+	if ([aChannel length] == 0)
+	{
+		return self;
+	}
+	if (contains_a_space(aPerson))
+	{
+		[NSException raise: IRCException format:
+		 @"[IRCClient kick:'%@' offOf:'%@' for:'%@'] Person contains a space",
+		  aPerson, aChannel, reason];
+	}
+	if (contains_a_space(aChannel))
+	{
+		[NSException raise: IRCException format:
+		 @"[IRCClient kick:'%@' offOf:'%@' for:'%@'] Channel contains a space",
+		  aPerson, aChannel, reason];
+	}
+	if ([reason length] == 0)
+	{
+		[self writeString: @"KICK %@ %@", aPerson, aChannel];
+		return self;
+	}
+
+	[self writeString: @"KICK %@ %@ :%@", aPerson, aChannel, reason];
+	return self;
+}
+- setAwayWithMessage: (NSString *)message
+{
+	if ([message length] == 0)
+	{
+		[self writeString: @"AWAY"];
+		return self;
+	}
+
+	[self writeString: @"AWAY :%@", message];
+	return self;
+}
 - registeredWithServer
 {
 	return self;
@@ -642,9 +1427,32 @@ static void rec_privmsg(IRCClient *client, NSString *prefix, NSArray *paramList)
 {
 	return self;
 }
-- changedNickFrom: (NSString *)formerName to: (NSString *)newName
+- wallopsReceived: (NSString *)message by: (NSString *)whom
 {
-	if ([ExtractIRCNick(formerName) caseInsensitiveCompare: nick] 
+	return self;
+}
+- userKicked: (NSString *)aPerson from: (NSString *)aChannel 
+         for: (NSString *)reason by: (NSString *)whom
+{
+	return self;
+}
+- invitedTo: (NSString *)aChannel by: (NSString *)aPerson
+{
+	return self;
+}
+- modeChanged: (NSString *)mode on: (NSString *)anObject 
+    withParams: (NSArray *)paramList by: (NSString *)whom
+{
+	return self;
+}
+- numericCommandReceived: (NSString *)command withParams: (NSArray *)paramList 
+    by: (NSString *)whom
+{
+	return self;
+}
+- nickChangedTo: (NSString *)newName by: (NSString *)whom
+{
+	if ([ExtractIRCNick(whom) caseInsensitiveCompare: nick] 
 	      == NSOrderedSame)
 	{
 		RELEASE(nick);
@@ -652,11 +1460,11 @@ static void rec_privmsg(IRCClient *client, NSString *prefix, NSArray *paramList)
 	}
 	return self;
 }
-- joinedChannel: (NSString *)channel by: (NSString *)whom
+- channelJoined: (NSString *)channel by: (NSString *)whom
 {
 	return self;
 }
-- partedChannel: (NSString *)channel withMessage: (NSString *)aMessage
+- channelParted: (NSString *)channel withMessage: (NSString *)aMessage
              by: (NSString *)whom
 {
 	return self;
@@ -670,13 +1478,18 @@ static void rec_privmsg(IRCClient *client, NSString *prefix, NSArray *paramList)
 {
 	return self;
 }
-- messageReceived: (NSString *)aMessage from: (NSString *)from 
-               to: (NSString *)to
+- messageReceived: (NSString *)aMessage to: (NSString *)to
+               by: (NSString *)whom
 {
 	return self;
 }
-- actionReceived: (NSString *)anAction from: (NSString *)from 
-               to: (NSString *)to
+- noticeReceived: (NSString *)aMessage to: (NSString *)to
+              by: (NSString *)whom
+{
+	return self;
+}
+- actionReceived: (NSString *)anAction to: (NSString *)to
+              by: (NSString *)whom
 {
 	return self;
 }
@@ -687,7 +1500,7 @@ static void rec_privmsg(IRCClient *client, NSString *prefix, NSArray *paramList)
 	NSMutableArray *paramList = nil;
 	int offset = 0;
 	id object;
-	void (*function)(IRCClient *, NSString *, NSArray *);
+	void (*function)(IRCClient *, NSString *, NSString *, NSArray *);
 
 	if ([aLine length] == 0)
 	{
@@ -764,12 +1577,22 @@ static void rec_privmsg(IRCClient *client, NSString *prefix, NSArray *paramList)
 		}
 	}
 	
-	function = NSMapGet(command_to_function, command);
-	if (function != 0)
+	if (is_numeric_command(command))
 	{
-		function(self, prefix, paramList);
+		[self numericCommandReceived: command withParams: paramList by: prefix];
 	}
-	
+	else
+	{
+		function = NSMapGet(command_to_function, command);
+		if (function != 0)
+		{
+			function(self, command, prefix, paramList);
+		}
+		else
+		{
+			NSLog(@"Could not handle :%@ %@ %@", prefix, command, paramList);
+		}
+	}
 	return self;
 }
 - writeString: (NSString *)format, ...

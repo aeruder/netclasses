@@ -24,17 +24,21 @@
 - registeredWithServer
 {
 	[super registeredWithServer];
-	[self joinChannel: @"#gnustep" withPassword: nil];
+	[self joinChannel: 
+	  @"#gnustep,#linpeople,#linuxhelp,#debian,#c,#c++,#kernelnewbies,#openprojects,#objc,#python" 
+	  withPassword: nil];
 	return self;
 }
-- messageReceived: (NSString *)aMessage from: (NSString *)from
-               to: (NSString *)to
+- messageReceived: (NSString *)aMessage to: (NSString *)to
+               by: (NSString *)whom
 {
 	NSString *sendTo;
+			
+	[super messageReceived: aMessage to: to by: whom];
 	
 	if ([nick caseInsensitiveCompare: to] == NSOrderedSame)
 	{
-		sendTo = ExtractIRCNick(from);
+		sendTo = ExtractIRCNick(whom);
 	}
 	else
 	{

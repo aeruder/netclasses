@@ -22,27 +22,25 @@
 #import <Foundation/NSRunLoop.h>
 #import <Foundation/NSDate.h>
 
+#include <time.h>
+
 int main(int argc, char **argv, char **env)
 {
 	id connection;
 	CREATE_AUTORELEASE_POOL(arp);
 
+	srand(time(0) ^ gethostid() % getpid());
+		
 	NSLog(@"Connecting to irc.openprojects.net 6667...");
 	
 	connection = [IRCClient connectTo: @"irc.openprojects.net" onPort: 6667
-	 withTimeout: 30 withNicknames: [NSArray arrayWithObject: @"netbot"]
+	 withTimeout: 30 withNicknames: [NSArray arrayWithObject: @"niles-_"]
 	 withUserName: nil withRealName: @"Andy Ruder"
 	 withPassword: nil withClass: [IRCBot class]];
 	 
 	NSLog(@"Connection established...");
 	
-	while (1)
-	{
-		[[NSRunLoop currentRunLoop] acceptInputForMode: NSDefaultRunLoopMode
-		  beforeDate: [NSDate dateWithTimeIntervalSinceNow: 5]];
-		DESTROY(arp);
-		RECREATE_AUTORELEASE_POOL(arp);
-	}
+	[[NSRunLoop currentRunLoop] run];
 		
 	RELEASE(arp);
 	return 0;

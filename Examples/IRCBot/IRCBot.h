@@ -23,6 +23,6 @@
 	{
 	}
 - registeredWithServer;
-- messageReceived: (NSString *)aMessage from: (NSString *)from
-               to: (NSString *)to;
+- messageReceived: (NSString *)aMessage to: (NSString *)to
+               by: (NSString *)whom;
 @end

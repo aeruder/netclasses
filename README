@@ -22,7 +22,7 @@ Comments are welcome.
 ===============================================================================
 
 Compiling:
-    Typing 'make' will compile a sample tool that uses the classes.
+    Typing 'make' will compile the sample tools that use the classes.
  
 Installing:
     There is nothing to install.
@@ -36,7 +36,8 @@ Use:
     allow a server app to be easily set up.  Since the distribution is so small
     I opted to do it this way instead of setting up an entire library.  Simply
     add these files into any project, follow the example, read the
-    docs and have fun.
+    docs and have fun.  Some connection objects are in the 
+    ConnectionObjects/ directory that may be useful.
 
 ===============================================================================
 Copyright (C) 2002 by Andy Ruder <aeruder@yahoo.com>

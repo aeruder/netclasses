@@ -59,30 +59,112 @@ NSArray *SeparateIRCNickAndHost(NSString *prefix);
 
 - sendMessage: (NSString *)message to: (NSString *)receiver;
 
+- sendNotice: (NSString *)message to: (NSString *)receiver;
+
 - sendAction: (NSString *)anAction to: (NSString *)whom;
+
+- becomeOperatorWithName: (NSString *)aName withPassword: (NSString *)pass;
+
+- requestNamesOnChannel: (NSString *)aChannel fromServer: (NSString *)aServer;
+
+- requestMOTDOnServer: (NSString *)aServer;
+
+- requestSizeInformationFromServer: (NSString *)aServer
+                      andForwardTo: (NSString *)anotherServer;
+
+- requestVersionOfServer: (NSString *)aServer;
+
+- requestServerStats: (NSString *)aServer for: (NSString *)query;
+
+- requestServerLink: (NSString *)aLink from: (NSString *)aServer;
+
+- requestTimeOnServer: (NSString *)aServer;
+
+- requestServerToConnect: (NSString *)aServer to: (NSString *)connectServer
+                  onPort: (NSString *)aPort;
+
+- requestTraceOnServer: (NSString *)aServer;
+
+- requestAdministratorOnServer: (NSString *)aServer;
+
+- requestInfoOnServer: (NSString *)aServer;
+
+- requestServiceListWithMask: (NSString *)aMask ofType: (NSString *)type;
+
+- requestServerRehash;
+
+- requestServerShutdown;
+
+- requestServerRestart;
+
+- requestUserInfoOnServer: (NSString *)aServer;
+
+- areUsersOn: (NSString *)userList;
+
+- sendWallops: (NSString *)message;
+
+- queryService: (NSString *)aService withMessage: (NSString *)aMessage;
+
+- listWho: (NSString *)aMask onlyOperators: (BOOL)operators;
+
+- whois: (NSString *)aPerson onServer: (NSString *)aServer;
+
+- whowas: (NSString *)aPerson onServer: (NSString *)aServer
+                     withNumberEntries: (NSString *)aNumber;
+
+- kill: (NSString *)aPerson withComment: (NSString *)aComment;
+
+- setTopicForChannel: (NSString *)aChannel to: (NSString *)aTopic;
+
+- setMode: (NSString *)aMode on: (NSString *)anObject 
+                     withParams: (NSArray *)list;
+					 
+- listChannel: (NSString *)aChannel onServer: (NSString *)aServer;
+
+- invite: (NSString *)aPerson to: (NSString *)aChannel;
+
+- kick: (NSString *)aPerson offOf: (NSString *)aChannel for: (NSString *)reason;
+
+- setAwayWithMessage: (NSString *)message;
 
 // Callbacks
 - registeredWithServer;
 
 - couldNotRegister: (NSString *)reason;
 
-- changedNickFrom: (NSString *)formerName to: (NSString *)newName;
+- wallopsReceived: (NSString *)message by: (NSString *)whom;
 
-- joinedChannel: (NSString *)channel by: (NSString *)whom;
+- userKicked: (NSString *)aPerson from: (NSString *)aChannel 
+         for: (NSString *)reason by: (NSString *)whom;
+		 
+- invitedTo: (NSString *)aChannel by: (NSString *)aPerson;
 
-- partedChannel: (NSString *)channel withMessage: (NSString *)aMessage
+- modeChanged: (NSString *)mode on: (NSString *)anObject 
+   withParams: (NSArray *)paramList by: (NSString *)whom;
+   
+- numericCommandReceived: (NSString *)command withParams: (NSArray *)paramList 
+                      by: (NSString *)whom;
+
+- nickChangedTo: (NSString *)newName by: (NSString *)whom;
+
+- channelJoined: (NSString *)channel by: (NSString *)whom;
+
+- channelParted: (NSString *)channel withMessage: (NSString *)aMessage
              by: (NSString *)whom;
 
 - quitIRCWithMessage: (NSString *)aMessage by: (NSString *)whom;
 
-- topicChangedTo: (NSString *)aTopic in: (NSString *)channel 
+- topicChangedTo: (NSString *)aTopic in: (NSString *)channel
               by: (NSString *)whom;
 
-- messageReceived: (NSString *)aMessage from: (NSString *)from
-               to: (NSString *)to;
+- messageReceived: (NSString *)aMessage to: (NSString *)to
+               by: (NSString *)whom;
 
-- actionReceived: (NSString *)anAction from: (NSString *)from
-               to: (NSString *)to;
+- noticeReceived: (NSString *)aMessage to: (NSString *)to
+              by: (NSString *)whom;
+
+- actionReceived: (NSString *)anAction to: (NSString *)to
+              by: (NSString *)whom;
 
 // Low-Level   
 - lineReceived: (NSData *)aLine;
