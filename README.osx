@@ -49,10 +49,18 @@ Step 2:
 	will need to use GNUSTEP_INSTALLATION_DIR=$HOME
 
 Step 3:
+	Generate the autoconfigure stuff:
+		autoheader
+		autoconf
+		./configure
+	One note about ./configure, I am not using it for makefiles, so the 
+	--prefix and other flags will have -no- effect on the output.  It is
+	only used to check for various types and headers.
+	
 	Type make followed by make install.  netclasses should be installed.  
 	You will not be able to build the documentation without gnustep-base
 	installed.  It is recommended to download the documentation off the
-	website (http://aeruder.gnustep.us).
+	website (http://netclasses.aeruder.net).
 
 Example:
 	The following commands will work in most cases:
@@ -69,4 +77,4 @@ Conclusion:
 ===============================================================================
 Copyright (C) 2003 by Andy Ruder
 aeruder@ksu.edu
-http://aeruder.gnustep.us
+http://netclasses.aeruder.net

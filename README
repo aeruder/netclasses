@@ -29,8 +29,15 @@ Comments are welcome.
 ==========
 Compiling:
 ==========
+	autoheader
+	autoconf
+	./configure
 	make
 	make install
+
+	One note about ./configure, I am not using it for makefiles, so the 
+	--prefix and other flags will have -no- effect on the output.  It is
+	only used to check for various types and headers.
 
 ======================
 Environment Variables:
@@ -79,4 +86,4 @@ Authors:
 ===============================================================================
 Copyright (C) 2003 Andy Ruder
 aeruder@ksu.edu
-http://aeruder.gnustep.us
+http://netclasses.aeruder.net
