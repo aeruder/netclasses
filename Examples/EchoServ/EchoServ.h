@@ -20,8 +20,8 @@
 #ifndef ECHO_SERV_H
 #define ECHO_SERV_H
 
-#include "NetBase.h"
-#include <Foundation/NSObject.h>
+#import <netclasses/NetBase.h>
+#import <Foundation/NSObject.h>
 
 @class NSData;
 

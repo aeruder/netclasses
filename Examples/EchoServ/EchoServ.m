@@ -16,9 +16,9 @@
  ***************************************************************************/
 
 #include "EchoServ.h"
-#include <Foundation/NSData.h>
-#include <Foundation/NSString.h> 
-#include <Foundation/NSHost.h>
+#import <Foundation/NSData.h>
+#import <Foundation/NSString.h> 
+#import <Foundation/NSHost.h>
 
 @implementation EchoServ
 - (void)connectionLost

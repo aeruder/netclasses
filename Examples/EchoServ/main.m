@@ -15,12 +15,11 @@
  *                                                                         *
  ***************************************************************************/
 
-#include "NetTCP.h"
-#include "EchoServ.h"
-#include <Foundation/NSAutoreleasePool.h>
-#include <Foundation/NSString.h>
-#include <Foundation/NSRunLoop.h>
-
+#import "EchoServ.h"
+#import <netclasses/NetTCP.h>
+#import <Foundation/NSAutoreleasePool.h>
+#import <Foundation/NSString.h>
+#import <Foundation/NSRunLoop.h>
 
 int main(int argc, char **argv, char **env)
 {
