@@ -11,5 +11,3 @@ netclasses_AGSDOC_FLAGS = -Up index
 
 include $(GNUSTEP_MAKEFILES)/documentation.make
 
-include GNUmakefile.postamble
-
