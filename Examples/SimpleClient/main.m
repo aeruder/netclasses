@@ -25,7 +25,7 @@
 
 #include <unistd.h>
 #include <fcntl.h>
-
+#include <signal.h>
 
 int main(int argc, char **argv, char **env)
 {
@@ -33,10 +33,15 @@ int main(int argc, char **argv, char **env)
 	int port;
 	char buffer[200];
 	ssize_t length;
-	
+
 	NSHost *aHost;
 	CREATE_AUTORELEASE_POOL(arp);
 
+	/* We don't want a SIGPIPE (when the server disconnects) to interfere
+	 * with us.
+	 */
+	signal(SIGPIPE, SIG_IGN);
+	
 	if (argc < 3)
 	{
 		printf("Usage: SimpleClient <host> <port>\n");
