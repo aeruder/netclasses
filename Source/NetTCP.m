@@ -374,6 +374,15 @@ static TCPSystem *default_system = nil;
 		  strerror(errno)] withErrno: errno];
 		return -1;
 	}
+	temp = 1;
+	if (setsockopt(myDesc, SOL_SOCKET, SO_REUSEADDR, 
+	               &temp, sizeof(temp)) == -1)
+	{
+		close(myDesc);
+		[self setErrorString: [NSString stringWithFormat: @"%s",
+		  strerror(errno)] withErrno: errno];
+		return -1;
+	}
 	if (bind(myDesc, (struct sockaddr *) &sin, sizeof(struct sockaddr)) < 0)
 	{
 		close(myDesc);
@@ -383,15 +392,6 @@ static TCPSystem *default_system = nil;
 	}
 	temp = 1;
 	if (setsockopt(myDesc, SOL_SOCKET, SO_KEEPALIVE, 
-	               &temp, sizeof(temp)) == -1)
-	{
-		close(myDesc);
-		[self setErrorString: [NSString stringWithFormat: @"%s",
-		  strerror(errno)] withErrno: errno];
-		return -1;
-	}
-	temp = 1;
-	if (setsockopt(myDesc, SOL_SOCKET, SO_REUSEADDR, 
 	               &temp, sizeof(temp)) == -1)
 	{
 		close(myDesc);

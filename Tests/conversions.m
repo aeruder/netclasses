@@ -20,6 +20,11 @@
 
 int main(void)
 {
+	char buffer[199];
+	
 	printf("Please enter an ip address: ");
+	scanf("%200[^\n]%*c", buffer);
+
+	
 
 }
