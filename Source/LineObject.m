@@ -67,29 +67,14 @@ static inline NSData *chomp_line(NSMutableData *data)
 	return lineData;
 }
 
-/**
- * LineObject is used for line-buffered connections (end in \r\n or just \n).
- * To use, simply override lineReceived: in a subclass of LineObject.  By
- * default, LineObject does absolutely nothing with lineReceived except throw
- * the line away.  Use line object if you simply want line-buffered input.
- * This can be used on IRC, telnet, etc.
- */
 
 @implementation LineObject
-/**
- * Cleans up the instance variables and closes/releases the transport.
- */
 - (void)connectionLost
 {
 	[transport close];
 	DESTROY(transport);
 	RELEASE(_readData);
 }
-/**
- * Initializes data and retains <var>aTransport</var>
- * <var>aTransport</var> should conform to the [(NetTransport)]
- * protocol.
- */
 - connectionEstablished: (id <NetTransport>)aTransport
 {
 	transport = RETAIN(aTransport);
@@ -99,11 +84,6 @@ static inline NSData *chomp_line(NSMutableData *data)
 
 	return self;
 }
-/**
- * Adds the data to a buffer.  Then calls -lineReceived: for all
- * full lines currently in the buffer.  Don't override this, override
- * -lineReceived:.
- */
 - dataReceived: (NSData *)newData
 {
 	id newLine;
@@ -114,17 +94,10 @@ static inline NSData *chomp_line(NSMutableData *data)
 	
 	return self;
 }
-/**
- * Returns the transport
- */
 - (id <NetTransport>)transport
 {
 	return transport;
 }
-/**
- * <override-subclass />
- * <var>aLine</var> contains a full line of text (without the ending newline)
- */
 - lineReceived: (NSData *)aLine
 {
 	return self;

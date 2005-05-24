@@ -1,3 +1,26 @@
+May 23 2005 Andrew Ruder <aeruder@ksu.edu>
+	* Source/NetTCP.h
+	* Source/NetTCP.m
+	* Source/NetBase.h
+	* Source/NetBase.m
+	* Source/IRCObject.h
+	* Source/IRCObject.m
+	* Source/LineObject.h
+	* Source/LineObject.m: Moved the gsdoc documentation into the
+	headers primarily instead of keeping it in the source files.
+	This will allow easier use by developers.
+
+	* Source/NetBase.m
+	* Source/NetBase.h: Added 3 methods to query the framework 
+	version from within the source code.
+
+	* Examples/IRCBot/IRCBot.m: Grabbing version from NetApplication
+	instead of changing manually.
+
+	* GNUmakefile
+	* Source/GNUmakefile: Moving version numbers to be configured by
+	autoconf.
+
 2004-08-29 Andy Ruder <aeruder at ksu dot edu>
  * Using GNUSTEP instead of __APPLE__ to determine if its cocoa or not
 
