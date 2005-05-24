@@ -15,7 +15,7 @@ May 23 2005 Andrew Ruder <aeruder@ksu.edu>
 	version from within the source code.
 
 	* Examples/IRCBot/IRCBot.m: Grabbing version from NetApplication
-	instead of changing manually.
+	instead of changing manually.  Make IRCBot respond to server pings.
 
 	* GNUmakefile
 	* Source/GNUmakefile: Moving version numbers to be configured by

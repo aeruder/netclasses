@@ -100,6 +100,12 @@ static inline NSData *chomp_line(NSMutableData *data)
 
 	return self;
 }		
+- pingReceivedWithArgument: (NSString *)anArgument from: (NSString *)aSender
+{
+	[self sendPongWithArgument: anArgument];
+
+	return self;
+}
 - messageReceived: (NSString *)aMessage to: (NSString *)to
                from: (NSString *)whom
 {
