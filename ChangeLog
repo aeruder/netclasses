@@ -16,6 +16,8 @@ May 23 2005 Andrew Ruder <aeruder@ksu.edu>
 
 	* Examples/IRCBot/IRCBot.m: Grabbing version from NetApplication
 	instead of changing manually.  Make IRCBot respond to server pings.
+	Corrected CTCPRequestReceived callback name so that the callback
+	actually gets called.
 
 	* GNUmakefile
 	* Source/GNUmakefile: Moving version numbers to be configured by

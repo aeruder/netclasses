@@ -78,10 +78,8 @@ static inline NSData *chomp_line(NSMutableData *data)
 	return self;
 }
 - CTCPRequestReceived: (NSString *)aCTCP withArgument: (NSString *)argument
-    from: (NSString *)aPerson
+    to: (NSString *)aReceiver from: (NSString *)aPerson
 {
-	aCTCP = [aCTCP uppercaseIRCString];
-
 	if ([aCTCP compare: @"PING"] == NSOrderedSame)
 	{
 		[self sendCTCPReply: @"PING" withArgument: argument
@@ -94,7 +92,7 @@ static inline NSData *chomp_line(NSMutableData *data)
 		version = [NetApplication netclassesVersion];
 		reply = [NSString stringWithFormat: @"netclasses:%@:GNUstep", version];
 		
-		[self sendCTCPReply: @"VERSION" withArgument: @"netclasses:%@:GNUstep"
+		[self sendCTCPReply: @"VERSION" withArgument: reply 
 		  to: ExtractIRCNick(aPerson)];
 	}
 
