@@ -190,6 +190,23 @@ typedef enum { ET_RDESC, ET_WDESC, ET_RPORT, ET_EDESC } RunLoopEventType;
 		NSMutableArray *badDescs;
 		NSMapTable *descTable;
 	}
+/* Return the minor version number of the netclasses framework.  If the 
+ * version is 1.03, this will return 3.
+ */
++ (int)netclassesMinorVersion;
+/* Return the major version number of the netclasses framework.  If the 
+ * version is 1.03, this will return 1.
+ */
++ (int)netclassesMajorVersion;
+/**
+ * Return the version string for the netclasses framework.  If the version
+ * is 1.03, this will return @"1.03".
+ */ 
++ (NSString *)netclassesVersion;
+/**
+ * There can be only one instance of NetApplication.  This method will 
+ * return that one instance.
+ */
 + sharedInstance;
 /**
  * Should not be called.  Used internally by [NetApplication] to receive

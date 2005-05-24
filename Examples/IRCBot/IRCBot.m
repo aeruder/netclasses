@@ -91,7 +91,7 @@ static inline NSData *chomp_line(NSMutableData *data)
 	{
 		NSString *version, *reply;
 
-		version = [NetApplication versionString];
+		version = [NetApplication netclassesVersion];
 		reply = [NSString stringWithFormat: @"netclasses:%@:GNUstep", version];
 		
 		[self sendCTCPReply: @"VERSION" withArgument: @"netclasses:%@:GNUstep"

@@ -246,7 +246,7 @@ static void handle_cf_events(CFSocketRef s, CFSocketCallBackType callbackType,
 
 	return x;
 }
-+ (int)netclassesMajorVersion;
++ (int)netclassesMajorVersion
 {
 	int x;
 

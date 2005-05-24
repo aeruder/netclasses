@@ -45,6 +45,27 @@ extern NSString *NetclassesErrorBadAddress;
  */
 extern NSString *NetclassesErrorAborted;
  
+/**
+ * A class can implement this protocol, and when it is connected in the 
+ * background using -connectNetObjectInBackground:toHost:onPort:withTimeout:
+ * it will receive the messages in this protocol which notify the object of
+ * certain events while being connected in the background.
+ */
+@protocol TCPConnecting
+/** 
+ * Tells the class implementing this protocol that the error in 
+ * <var>aError</var> has occurred and the connection will not 
+ * be established
+ */
+- connectingFailed: (NSString *)aError;
+/**
+ * Tells the class implementing this protocol that the connection
+ * has begun and will be using the connection place holder 
+ * <var>aConnection</var>
+ */
+- connectingStarted: (TCPConnecting *)aConnection;
+@end
+
 /** 
  * Used for certain operations in the TCP/IP system.  There is only one
  * instance of this class at a time, used +sharedInstance to get this
@@ -112,27 +133,6 @@ extern NSString *NetclassesErrorAborted;
  * Returns a host from a host order 32-bit integer ip address.
  */
 - (NSHost *)hostFromNetworkOrderInteger: (uint32_t)ip;
-@end
-
-/**
- * A class can implement this protocol, and when it is connected in the 
- * background using -connectNetObjectInBackground:toHost:onPort:withTimeout:
- * it will receive the messages in this protocol which notify the object of
- * certain events while being connected in the background.
- */
-@protocol TCPConnecting
-/** 
- * Tells the class implementing this protocol that the error in 
- * <var>aError</var> has occurred and the connection will not 
- * be established
- */
-- connectingFailed: (NSString *)aError;
-/**
- * Tells the class implementing this protocol that the connection
- * has begun and will be using the connection place holder 
- * <var>aConnection</var>
- */
-- connectingStarted: (TCPConnecting *)aConnection;
 @end
 
 /**
