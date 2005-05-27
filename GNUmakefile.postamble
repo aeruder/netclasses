@@ -7,5 +7,6 @@ after-distclean::
 	$(MAKE) -C Tests -f GNUmakefile distclean
 	$(MAKE) -C Examples -f GNUmakefile distclean
 	$(MAKE) -C Documentation -f GNUmakefile distclean
-	rm -fr Source/config.h config.*
+	rm -fr Source/config.h config.* GNUmakefile Source/GNUmakefile \
+	autom4te.cache
 	
