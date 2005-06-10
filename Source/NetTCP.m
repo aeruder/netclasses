@@ -512,8 +512,6 @@ static TCPSystem *default_system = nil;
 	int desc;
 	id transport;
 
-	aHost = [NSHost hostWithAddress: [aHost address]];
-	
 	desc = [self connectToHost: aHost onPort: aPort withTimeout: aTimeout 
 	  inBackground: NO];
 	if (desc < 0)
@@ -539,8 +537,6 @@ static TCPSystem *default_system = nil;
 	int desc;
 	id transport;
 	id object;
-
-	aHost = [NSHost hostWithAddress: [aHost address]];
 
 	desc = [self connectToHost: aHost onPort: aPort
 	  withTimeout: 0 inBackground: YES];

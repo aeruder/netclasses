@@ -1,3 +1,7 @@
+Jun 9  2005 Andrew Ruder <aeruder@ksu.edu>
+	* Source/NetTCP.m: Don't recalculate NSHost's if they
+	are provided.
+
 May 26 2005 Andrew Ruder <aeruder@ksu.edu>
 	* GNUmakefile.postamble: Remove autom4te.cache and the newly
 	generated GNUmakefile in the root and in Source/
