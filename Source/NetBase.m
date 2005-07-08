@@ -454,10 +454,12 @@ static void handle_cf_events(CFSocketRef s, CFSocketCallBackType callbackType,
 }
 - transportNeedsToWrite: (id <NetTransport>)aTransport
 {
-	if ([aTransport conformsToProtocol: @protocol(NetTransport)])
+	int desc = [aTransport desc];
+
+	if ((id)NSMapGet(descTable, (void *)desc))
 	{
 		[[NSRunLoop currentRunLoop] addEvent: 
-		 (void *)[aTransport desc] type: ET_WDESC watcher: self 
+		 (void *)desc type: ET_WDESC watcher: self 
 		 forMode: NSDefaultRunLoopMode];
 	}
 	return self;
