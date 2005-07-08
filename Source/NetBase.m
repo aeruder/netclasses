@@ -310,6 +310,7 @@ static void handle_cf_events(CFSocketRef s, CFSocketCallBackType callbackType,
 		 type: type forMode: NSDefaultRunLoopMode all: YES];
 		return;
 	}
+	AUTORELEASE(RETAIN(object));
 	
 	NS_DURING
 		switch(type)
