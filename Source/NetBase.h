@@ -224,10 +224,43 @@ typedef enum { ET_RDESC, ET_WDESC, ET_RPORT, ET_EDESC } RunLoopEventType;
                  extra: (void *)extra
                forMode: (NSString *)mode;
 													 
+/** 
+ * This is called to notify NetApplication that 
+ * <var>aTransport</var> has data that needs to be written out.
+ * Only after this method is called will <var>aTransport</var>
+ * begin to receive [(NetTransport)-writeData:] messages with a 
+ * nil argument when it can write.
+ */
 - transportNeedsToWrite: (id <NetTransport>)aTransport;
 
+/** 
+ * Inserts <var>anObject</var> into the runloop (and retains it).  
+ * <var>anObject</var> should implement either the [(NetPort)] or 
+ * [(NetObject)] protocols. Throws a <code>NetException</code> if the 
+ * class follows neither protocol.  After connecting <var>anObject</var>,
+ * it will begin to receive the methods designated by its respective
+ * protocol.  <var>anObject</var> should only be connected with this
+ * after its transport is set.
+ */
 - connectObject: anObject;
+/**
+ * <p>
+ * Removes <var>anObject</var> from the runloop and releases it.
+ * <var>anObject</var> will no longer receive messages outlined by
+ * its protocol.  Does <em>not</em> close the descriptor of 
+ * <var>anObject</var>.  <var>anObject</var> will receive
+ * a [(NetObject)-connectionLost] message or a [(NetPort)-connectionLost]
+ * message.
+ * </p>
+ * <p>
+ * If any object should lose its connection, this will
+ * automatically be called with that object as its argument.
+ * </p>
+ */
 - disconnectObject: anObject;
+/** 
+ * Calls -disconnectObject: on every object currently in the runloop.
+ */
 - closeEverything;
 @end
 
