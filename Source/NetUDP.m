@@ -28,7 +28,7 @@
  * <title>NetUDP reference</title>
  * <author name="Andrew Ruder">
  * 	<email address="aeruder@ksu.edu" />
- * 	<url url="http://aeruder.gnustep.us/index.html" />
+ * 	<url url="http://www.aeruder.net" />
  * </author>
  * <version>Revision 1</version>
  * <date>November 8, 2003</date>
