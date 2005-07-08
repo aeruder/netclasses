@@ -888,6 +888,10 @@ static NetApplication *net_app = nil;
 	
 	if (aData)
 	{
+		if ([aData length] == 0)
+		{
+			return self;
+		}
 		if ([writeBuffer length] == 0)
 		{
 			[net_app transportNeedsToWrite: self];
