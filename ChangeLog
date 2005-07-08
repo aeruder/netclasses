@@ -1,4 +1,8 @@
 Jul 7  2005 Andrew Ruder <aeruder@ksu.edu>
+	* Documentation: Add documentation on using netclasses
+	synchronously.  Update README.osx to include a short guide
+	to getting gnustep-make working.
+
 	* Source/NetBase.h: Add documentation that was lost when
 	moving from .m to .h in revision 27.
 	

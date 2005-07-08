@@ -6,10 +6,10 @@
 		<title>netclasses documentation</title>
 		<author name="Andrew Ruder">
 			<email address="aeruder@ksu.edu" />
-			<url url="http://aeruder.gnustep.us/index.html" />
+			<url url="http://www.aeruder.net" />
 		</author>
-		<version>Revision 1</version>
-		<date>November 7, 2003</date>
+		<version>Revision 2</version>
+		<date>July 7, 2005</date>
 		<abstract>
 			This is the documentation for netclasses.  It includes the 
 			class references as well as an introduction to netclasses.
@@ -23,7 +23,8 @@
 			<p>
 				netclasses is an easy to use, unbloated API for handling 
 				asynchronous connections in Objective-C under GNUstep as
-				well as OS X.
+				well as OS X.  It can also be used for synchronous connections
+				but this is -not- its primary use.
 			</p>
 			<p>
 				Please also refer to <uref url="rfc1459.txt">RFC 1459</uref>
@@ -33,7 +34,6 @@
 		</front>
 
 		<chapter>
-			<entry id="overview">Overview of Use</entry>
 			<index scope="project" type="title" />
 		</chapter>
 	</body>
