@@ -5,6 +5,12 @@ Jul 7  2005 Andrew Ruder <aeruder@ksu.edu>
 	* Source/NetBase.m: Ensure that objects aren't released
 	when receiving an event for them.
 
+	Make sure that the transportNeedsToWrite: receives a watched
+	descriptor.
+
+	* Source/NetTCP.m: Don't send a need to write signal when
+	passed a 0 length piece of data.
+
 Jun 9  2005 Andrew Ruder <aeruder@ksu.edu>
 	* Source/NetTCP.m: Don't recalculate NSHost's if they
 	are provided.
