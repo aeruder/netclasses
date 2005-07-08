@@ -227,7 +227,7 @@ extern NSString *NetclassesErrorAborted;
  */
 - (void)close;
 /**
- * Called when the connection is closed.  This will call -close
+ * Called when the connection is closed.  This will call [TCPPort-close]
  */
 - (void)connectionLost;
 /**
@@ -260,7 +260,7 @@ extern NSString *NetclassesErrorAborted;
  * The @"Data" key in the userInfo for these exceptions should
  * be any NSData that could not be returned.
  *
- * If <var>maxDataSize</var> is <= 0, all possible data will be
+ * If <var>maxDataSize</var> is &lt;= 0, all possible data will be
  * read.
  */
 - (NSData *)readData: (int)maxDataSize;
