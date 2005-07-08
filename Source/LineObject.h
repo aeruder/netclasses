@@ -38,7 +38,8 @@
 		NSMutableData *_readData;
 	}
 /**
- * Cleans up the instance variables and closes/releases the transport.
+ * Cleans up the instance variables and releases the transport.
+ * If/when the transport is dealloc'd, the connection will be closed.
  */
 - (void)connectionLost;
 /**

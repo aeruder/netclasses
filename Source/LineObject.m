@@ -71,7 +71,6 @@ static inline NSData *chomp_line(NSMutableData *data)
 @implementation LineObject
 - (void)connectionLost
 {
-	[transport close];
 	DESTROY(transport);
 	RELEASE(_readData);
 }
