@@ -118,7 +118,6 @@ static TCPSystem *default_system = nil;
 	remoteHost = RETAIN(theAddress);
 		
 	owner = anObject;
-	connected = YES;
 	
 	if (getsockname(desc, (struct sockaddr *)&x, &address_length) != 0) 
 	{
@@ -128,6 +127,7 @@ static TCPSystem *default_system = nil;
 		[self dealloc];
 		return nil;
 	}
+	connected = YES;
 	
 	localHost = RETAIN([[TCPSystem sharedInstance] 
 	  hostFromNetworkOrderInteger: x.sin_addr.s_addr]);
@@ -190,11 +190,10 @@ static TCPSystem *default_system = nil;
 }
 - (void)close
 {
-	if (connected)
-	{
-		close(desc);
-		connected = NO;
-	}
+	if (!connected)
+		return;
+	close(desc);
+	connected = NO;
 }
 @end
 
@@ -652,6 +651,7 @@ static TCPSystem *default_system = nil;
 		[self dealloc];
 		return nil;
 	}
+	connected = YES;
 	
 	port = ntohs(x.sin_port);
 
@@ -680,11 +680,13 @@ static TCPSystem *default_system = nil;
 }
 - (void)close
 {
+	if (!connected)
+		return;
 	close(desc);
+	connected = NO;
 }
 - (void)connectionLost
 {
-	[self close];
 }
 - newConnection
 {
@@ -723,6 +725,11 @@ static TCPSystem *default_system = nil;
 - (uint16_t)port
 {
 	return port;
+}
+- (void)dealloc
+{
+	[self close];
+	[super dealloc];
 }
 @end
 
@@ -946,9 +953,7 @@ static NetApplication *net_app = nil;
 - (void)close
 {
 	if (!connected)
-	{
 		return;
-	}
 	connected = NO;
 	close(desc);
 }

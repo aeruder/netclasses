@@ -161,7 +161,7 @@ extern NSString *NetclassesErrorAborted;
 - (void)abortConnection;
 
 /**
- * Cleans up the connection placeholder.
+ * Cleans up the connection placeholder.  This will release the transport.
  */
 - (void)connectionLost;
 /**
@@ -187,13 +187,15 @@ extern NSString *NetclassesErrorAborted;
  * TCPPort is a class that is used to bind a descriptor to a certain
  * TCP/IP port and listen for connections.  When a connection is received,
  * it will create a class set with -setNetObject: and set it up with the new
- * connection.
+ * connection.  When the TCPPort is dealloc'd it will close the descriptor
+ * if it had not been closed already.
  */
 @interface TCPPort : NSObject < NetPort >
     {
 		int desc;
 		Class netObjectClass;
 		uint16_t port;
+		BOOL connected;
 	}
 /**
  * Calls -initOnHost:onPort: with a nil argument for the host.
@@ -227,7 +229,7 @@ extern NSString *NetclassesErrorAborted;
  */
 - (void)close;
 /**
- * Called when the connection is closed.  This will call [TCPPort-close]
+ * Called when the connection is closed.
  */
 - (void)connectionLost;
 /**
@@ -238,7 +240,9 @@ extern NSString *NetclassesErrorAborted;
 @end
 
 /**
- * Handles the actual TCP/IP transfer of data.
+ * Handles the actual TCP/IP transfer of data.  When an instance of this
+ * object is deallocated, the descriptor will be closed if not already
+ * closed.
  */
 @interface TCPTransport : NSObject < NetTransport >
     {
@@ -288,7 +292,7 @@ extern NSString *NetclassesErrorAborted;
  */
 - (int)desc;
 /**
- * Closes the transport nd makes sure there is no more incoming or outgoing
+ * Closes the transport and makes sure there is no more incoming or outgoing
  * data on the connection.
  */
 - (void)close;
