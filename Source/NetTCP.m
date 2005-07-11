@@ -276,7 +276,7 @@ static TCPSystem *default_system = nil;
 {
 	transport = RETAIN(aTransport);	
 	[[NetApplication sharedInstance] connectObject: self];
-	[[NetApplication sharedInstance] transportNeedsToWrite: self];
+	[[NetApplication sharedInstance] transportNeedsToWrite: transport];
 	if ([netObject conformsToProtocol: @protocol(TCPConnecting)])
 	{
 		[netObject connectingStarted: self];
