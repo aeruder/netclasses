@@ -132,8 +132,6 @@ static TCPSystem *default_system = nil;
 	localHost = RETAIN([[TCPSystem sharedInstance] 
 	  hostFromNetworkOrderInteger: x.sin_addr.s_addr]);
 	
-	[[NetApplication sharedInstance] transportNeedsToWrite: self];
-
 	return self;
 }
 - (void)dealloc
@@ -278,6 +276,7 @@ static TCPSystem *default_system = nil;
 {
 	transport = RETAIN(aTransport);	
 	[[NetApplication sharedInstance] connectObject: self];
+	[[NetApplication sharedInstance] transportNeedsToWrite: self];
 	if ([netObject conformsToProtocol: @protocol(TCPConnecting)])
 	{
 		[netObject connectingStarted: self];
