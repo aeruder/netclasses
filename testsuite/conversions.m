@@ -33,9 +33,9 @@ NSString *num_to_hex_le(uint32_t num)
 	*t = num;
 
 	string = [NSMutableString stringWithString: @"0x"];
-	for (z = 0; z < 4; z++)
+	for (z = 3; z >= 0 ; z--)
 	{
-		[string appendString: [NSString stringWithFormat: @"%x",
+		[string appendString: [NSString stringWithFormat: @"%02x",
 		  (unsigned)y[z]]];
 	}
 	
