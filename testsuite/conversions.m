@@ -24,13 +24,11 @@ int main(void)
 {
 	NSString *string1;
 	NSHost *host;
-	NSAutoreleasePool *apr;
+	CREATE_AUTORELEASE_POOL(apr);
 	TCPSystem *system;
 	uint32_t num;
 	
 	char buffer[199];
-
-	apr = [NSAutoreleasePool new];
 
 	system = [TCPSystem sharedInstance];
 
