@@ -1,3 +1,6 @@
+Jul 11 2005 Andrew Ruder <aeruder@ksu.edu>
+    * testsuite/testtcp.m: Adding a TCP testsuite
+
 Jul 9  2005 Andrew Ruder <aeruder@ksu.edu>
 	* Source/NetTCP.[hm]: Clean up when descriptors are closed.
 	Nothing will be closed until deallocation (unless explicitely
