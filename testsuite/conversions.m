@@ -32,6 +32,8 @@ int main(void)
 	
 	system = [TCPSystem sharedInstance];
 
+	NSLog(@"This is a cruddy test, it will only work correctly on machines"
+	@" where host order != network order :)");
 	dict = 
 	  [NSDictionary dictionaryWithObjectsAndKeys:
 	  @"0x4466dc75", @"68.102.220.117",
