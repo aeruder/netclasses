@@ -21,6 +21,27 @@
 
 #import <Foundation/Foundation.h>
 
+NSString *num_to_hex_le(uint32_t num)
+{
+	unsigned char y[4];
+	uint32_t *t;
+	NSMutableString *string;
+	int z;
+
+	t = (uint32_t *)y;
+	
+	*t = num;
+
+	string = [NSMutableString stringWithString: @"0x"];
+	for (z = 0; z < 4; z++)
+	{
+		[string appendString: [NSString stringWithFormat: @"%x",
+		  (unsigned)y[z]]];
+	}
+	
+	return string;
+}
+	
 int main(void)
 {
 	CREATE_AUTORELEASE_POOL(apr);
@@ -51,7 +72,7 @@ int main(void)
 		num = 0;
 		[system hostOrderInteger: &num fromHost: [NSHost hostWithAddress: object]];
 		testEqual(@"Host order",
-		  [NSString stringWithFormat:@"0x%llx", (long long unsigned)num], val);
+		  num_to_hex_le(num), val);
 	}
 
 	dict = 
@@ -71,7 +92,7 @@ int main(void)
 		num = 0;
 		[system networkOrderInteger: &num fromHost: [NSHost hostWithAddress: object]];
 		testEqual(@"Network order",
-		  [NSString stringWithFormat:@"0x%llx", (long long unsigned)num], val);
+		  num_to_hex_le(num), val);
 	}
 
 	RELEASE(apr);
