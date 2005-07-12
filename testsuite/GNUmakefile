@@ -1,9 +1,12 @@
 include $(GNUSTEP_MAKEFILES)/common.make
 
-TOOL_NAME = conversions
+TOOL_NAME = conversions testtcp
 
-conversions_OBJC_FILES = conversions.m 
+conversions_OBJC_FILES = conversions.m
 conversions_COPY_INTO_DIR = .
+
+testtcp_OBJC_FILES = testtcp.m
+testtcp_COPY_INTO_DIR = .
 
 ADDITIONAL_OBJCFLAGS = -Wall
 
@@ -15,6 +18,7 @@ MY_TOOL_LIBS = -lnetclasses
 endif
 
 conversions_TOOL_LIBS = $(MY_TOOL_LIBS)
+testtcp_TOOL_LIBS = $(MY_TOOL_LIBS)
 
 GUI_LIB =
 

@@ -17,35 +17,60 @@
 
 #import <netclasses/NetTCP.h>
 #import <netclasses/NetBase.h>
+#import "testsuite.h"
 
 #import <Foundation/Foundation.h>
 
 int main(void)
 {
-	NSString *string1;
-	NSHost *host;
 	CREATE_AUTORELEASE_POOL(apr);
 	TCPSystem *system;
+	NSEnumerator *iter;
+	id object;
 	uint32_t num;
+	NSDictionary *dict;
 	
-	char buffer[199];
-
 	system = [TCPSystem sharedInstance];
 
-	printf("Please enter a host: ");
-	scanf("%200[^\n]%*c", buffer);
-	
-	string1 = [NSString stringWithCString: buffer];
-	host = [NSHost hostWithName: string1];
-	
-	printf("Host: %s\n", [[host name] cString]);
-	printf("Address: %s\n", [[host address] cString]);
-	num = 0;
-	[system hostOrderInteger: &num fromHost: host];
-	printf("Host order integer: %Xl\n", num);
-	num = 0;
-	[system networkOrderInteger: &num fromHost: host];
-	printf("Network order integer: %Xl\n", num);
+	dict = 
+	  [NSDictionary dictionaryWithObjectsAndKeys:
+	  @"0x4466dc75", @"68.102.220.117",
+	  @"0x7f000001", @"127.0.0.1",
+	  @"0xffffffff", @"255.255.255.255",
+	  nil];
+
+	iter = [dict keyEnumerator];
+
+	while ((object = [iter nextObject]))
+	{
+		id val;
+
+		val = [dict objectForKey: object];
+		num = 0;
+		[system hostOrderInteger: &num fromHost: [NSHost hostWithAddress: object]];
+		testEqual(@"Host order",
+		  [NSString stringWithFormat:@"0x%llx", (long long unsigned)num], val);
+	}
+
+	dict = 
+	  [NSDictionary dictionaryWithObjectsAndKeys:
+	  @"0x75dc6644", @"68.102.220.117", 
+	  @"0x100007f", @"127.0.0.1",
+	  @"0xffffffff", @"255.255.255.255",
+	  nil];
+
+	iter = [dict keyEnumerator];
+
+	while ((object = [iter nextObject]))
+	{
+		id val;
+
+		val = [dict objectForKey: object];
+		num = 0;
+		[system networkOrderInteger: &num fromHost: [NSHost hostWithAddress: object]];
+		testEqual(@"Network order",
+		  [NSString stringWithFormat:@"0x%llx", (long long unsigned)num], val);
+	}
 
 	RELEASE(apr);
 	
