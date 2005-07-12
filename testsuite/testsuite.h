@@ -30,7 +30,7 @@ inline BOOL PASS(NSString *desc) {
 
 inline BOOL FAIL(NSString *desc) {
 	testWrite(@"FAIL: %@\n" , desc);
-	exit(1);
+	return NO;
 }
 
 #define testTrue(desc, expression) \

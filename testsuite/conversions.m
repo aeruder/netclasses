@@ -78,7 +78,7 @@ int main(void)
 	dict = 
 	  [NSDictionary dictionaryWithObjectsAndKeys:
 	  @"0x75dc6644", @"68.102.220.117", 
-	  @"0x100007f", @"127.0.0.1",
+	  @"0x0100007f", @"127.0.0.1",
 	  @"0xffffffff", @"255.255.255.255",
 	  nil];
 
