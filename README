@@ -72,7 +72,7 @@ Use:
 
 	See the Examples/ directory for examples of the use of netclasses.
 
-	Tests/ contains various tests to examine the extent to which things 
+	testsuite/ contains various tests to examine the extent to which things 
 	work on other operating systems or other architectures.
 
 ========
