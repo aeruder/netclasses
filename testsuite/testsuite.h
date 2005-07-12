@@ -17,6 +17,7 @@
 
 #import <Foundation/NSString.h>
 #include <stdio.h>
+#include <stdlib.h>
 
 #define testWrite(format, args...) fprintf(stdout, "%s", \
    [[NSString stringWithFormat: \

@@ -22,6 +22,7 @@ testtcp_TOOL_LIBS = $(MY_TOOL_LIBS)
 
 GUI_LIB =
 
+-include GNUmakefile.preamble
 include $(GNUSTEP_MAKEFILES)/tool.make
 -include GNUmakefile.postamble
 
