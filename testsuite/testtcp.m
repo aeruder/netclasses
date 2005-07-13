@@ -171,9 +171,10 @@ int main(int argc, char **argv)
 	RUNABIT();
 	testFalse(@"?Can't make connection to port", [tcp connectNetObject: c1 toHost: host
 	  onPort: portnum withTimeout: 4]);
+
+	FINISH();
 	
 	RELEASE(apr);
 
-	NSLog(@"All tests passed");
 	return 0;
 }

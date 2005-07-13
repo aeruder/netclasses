@@ -19,18 +19,29 @@
 #include <stdio.h>
 #include <stdlib.h>
 
+unsigned int numtests = 0;
+unsigned int testspassed = 0;
+
 #define testWrite(format, args...) fprintf(stdout, "%s", \
    [[NSString stringWithFormat: \
    (format), ## args ] cString])
 
 inline BOOL PASS(NSString *desc) {
 	testWrite(@"PASS: %@\n" , desc);
+	numtests++;
+	testspassed++;
 	return YES;
 }
 
 inline BOOL FAIL(NSString *desc) {
 	testWrite(@"FAIL: %@\n" , desc);
+	numtests++;
 	return NO;
+}
+
+inline BOOL FINISH() {
+	NSLog(@"Passed %lu/%lu tests.", testspassed, numtests);
+	exit((testspassed == numtests) ? 0 : 1);
 }
 
 #define testTrue(desc, expression) \

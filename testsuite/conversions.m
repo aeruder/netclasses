@@ -95,6 +95,8 @@ int main(void)
 		  num_to_hex_le(num), val);
 	}
 
+	FINISH();
+
 	RELEASE(apr);
 	
 	return 0;
