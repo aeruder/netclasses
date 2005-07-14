@@ -89,7 +89,7 @@ static inline NSData *chomp_line(NSMutableData *data)
 	
 	[_readData appendData: newData];
 	
-	while ((newLine = chomp_line(_readData))) [self lineReceived: newLine];
+	while (transport && (newLine = chomp_line(_readData))) [self lineReceived: newLine];
 	
 	return self;
 }
