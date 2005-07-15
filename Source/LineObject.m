@@ -69,17 +69,28 @@ static inline NSData *chomp_line(NSMutableData *data)
 
 
 @implementation LineObject
+- init
+{
+	if (!(self = [super init])) return self;
+
+	_readData = [NSMutableData new];
+
+	return self;
+}
+- (void)dealloc
+{
+	RELEASE(_readData);
+	[super dealloc];
+}
 - (void)connectionLost
 {
+	[_readData setLength: 0];
 	DESTROY(transport);
-	RELEASE(_readData);
 }
 - connectionEstablished: (id <NetTransport>)aTransport
 {
 	transport = RETAIN(aTransport);
 	[[NetApplication sharedInstance] connectObject: self];
-	
-	_readData = [NSMutableData new];
 
 	return self;
 }
