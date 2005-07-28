@@ -875,6 +875,7 @@ static void rec_error(IRCObject *client, NSString *command, NSString *prefix,
 {
 	[super connectionEstablished: aTransport];
 	
+	lowercasingSelector = @selector(lowercaseIRCString);
 	if (password)
 	{
 		[self writeString: [NSString stringWithFormat: 
