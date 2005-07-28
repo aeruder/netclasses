@@ -43,11 +43,18 @@ extern NSString *IRCException;
  * to {}|^ respectively).
  */
 - (NSString *)lowercaseIRCString;
-/** 
- * Compares this string to <var>aString</var> while taking into account that
- * {}|^ are the lowercase versions of []\~.
+/**
+ * Returns a uppercased string (and converts any of {}| characters found
+ * to []\ respectively).  The original RFC 1459 forgot to include these
+ * and thus this method is included.
  */
-- (NSComparisonResult)caseInsensitiveIRCCompare: (NSString *)aString;
+- (NSString *)uppercaseStrictRFC1459IRCString;
+/**
+ * Returns a lowercased string (and converts any of []\ characters found
+ * to {}| respectively).  The original RFC 1459 forgot to include these
+ * and thus this method is included.
+ */
+- (NSString *)lowercaseStrictRFC1459IRCString;
 @end
 
 /* When one of the callbacks ends with from: (NSString *), that last 
@@ -115,6 +122,8 @@ NSArray *SeparateIRCNickAndHost(NSString *prefix);
 		NSString *errorString;
 		
 		NSStringEncoding defaultEncoding;
+
+		SEL lowercasingSelector;
 	}
 /**
  * <init />
@@ -125,6 +134,29 @@ NSArray *SeparateIRCNickAndHost(NSString *prefix);
 - initWithNickname: (NSString *)aNickname
    withUserName: (NSString *)aUser withRealName: (NSString *)aRealName
    withPassword: (NSString *)aPassword;
+
+/**
+ * Set the lowercasing selector.  This is the selector that is called
+ * on a NSString to get the lowercase form.  Used to determine if two
+ * nicknames are equivalent.  Generally <var>aSelector</var> would be
+ * either @selector(lowercaseString) or @selector(lowercaseIRCString).
+ * By default, this is lowercaseIRCString.
+ */
+- setLowercasingSelector: (SEL)aSelector;
+
+/**
+ * Return the lowercasing selector.  See -setLowercasingSelector: for
+ * more information on the use of this lowercasing selector.
+ */
+- (SEL)lowercasingSelector;
+
+/**
+ * Use the lowercasingSelector to compare two strings.  Returns a 
+ * NSComparisonResult ( NSOrderedAscending, NSOrderedSame or 
+ * NSOrderedDescending )
+ */
+- (NSComparisonResult)caseInsensitiveCompare: (NSString *)aString1
+   to: (NSString *)aString2;
 
 /**
  * Sets the nickname that this object will attempt to use upon a connection.
@@ -757,6 +789,10 @@ extern NSString *RPL_MYINFO;
  *  005 - Please see RFC 1459 for additional information.
  */
 extern NSString *RPL_BOUNCE;
+/**
+ *  005 - Please see RFC 1459 for additional information.
+ */
+extern NSString *RPL_ISUPPORT;
 /**
  *  302 - Please see RFC 1459 for additional information.
  */

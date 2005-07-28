@@ -80,6 +80,20 @@ static NSData *IRC_new_line = nil;
 	
 	return [aString uppercaseString];
 }
+- (NSString *)uppercaseStrictRFC1459IRCString
+{
+	NSMutableString *aString = [NSString stringWithString: [self uppercaseString]];
+	NSRange aRange = {0, [aString length]};
+
+	[aString replaceOccurrencesOfString: @"{" withString: @"[" options: 0
+	  range: aRange];
+	[aString replaceOccurrencesOfString: @"}" withString: @"]" options: 0
+	  range: aRange];
+	[aString replaceOccurrencesOfString: @"|" withString: @"\\" options: 0
+	  range: aRange];
+	
+	return [aString uppercaseString];
+}
 - (NSString *)lowercaseIRCString
 {
 	NSMutableString *aString = [NSMutableString 
@@ -97,10 +111,20 @@ static NSData *IRC_new_line = nil;
 	
 	return [aString lowercaseString];
 }
-- (NSComparisonResult)caseInsensitiveIRCCompare: (NSString *)aString
+- (NSString *)lowercaseStrictRFC1459IRCString
 {
-	return [[self uppercaseIRCString] compare:
-	   [aString uppercaseIRCString]];
+	NSMutableString *aString = [NSMutableString 
+	  stringWithString: [self lowercaseString]];
+	NSRange aRange = {0, [aString length]};
+
+	[aString replaceOccurrencesOfString: @"[" withString: @"{" options: 0
+	  range: aRange];
+	[aString replaceOccurrencesOfString: @"]" withString: @"}" options: 0
+	  range: aRange];
+	[aString replaceOccurrencesOfString: @"\\" withString: @"|" options: 0
+	  range: aRange];
+	
+	return [aString lowercaseString];
 }
 @end
 
@@ -303,6 +327,52 @@ inline NSArray *SeparateIRCNickAndHost(NSString *prefix)
 	  string_from_string(prefix, @"!"), nil];
 }
 
+static void rec_isupport(IRCObject *client, NSArray *paramList)
+{
+	NSEnumerator *iter;
+	id object;
+
+	iter = [paramList objectEnumerator];
+	while ((object = [iter nextObject]))
+	{
+		object = [object lowercaseString];
+		if ([object hasPrefix: @"casemapping="])
+		{
+			object = [object substringFromIndex: 12];
+			if ([object isEqualToString: @"rfc1459"])
+			{
+				[client setLowercasingSelector: @selector(lowercaseIRCString)];
+			} 
+			else if ([object isEqualToString: @"strict-rfc1459"])
+			{
+				[client setLowercasingSelector: 
+				  @selector(lowercaseStrictRFC1459IRCString)];
+			} 
+			else if ([object isEqualToString: @"ascii"])
+			{
+				[client setLowercasingSelector:
+				  @selector(lowercaseString)];
+			}
+			else
+			{
+				NSLog(@"Did not understand casemapping=%@", object);
+			}
+			break;
+		}
+	}
+}
+	
+static void rec_numeric(IRCObject *client, NSString *command,
+                        NSString *prefix, NSArray *paramList)
+{
+	if ([command isEqualToString: RPL_ISUPPORT])
+	{
+		rec_isupport(client, paramList);
+	}
+
+	[client numericCommandReceived: command withParams: paramList
+	  from: prefix];
+}
 static void rec_caction(IRCObject *client, NSString *prefix,
                         NSString *command, NSString *rest, NSString *to)
 {
@@ -342,7 +412,8 @@ static void rec_nick(IRCObject *client, NSString *command,
 		return;
 	}
 	
-	if ([[client nick] isEqualToString: ExtractIRCNick(prefix)])
+	if ([client caseInsensitiveCompare: [client nick] to: 
+         ExtractIRCNick(prefix)] == NSOrderedSame)
 	{
 		[client setNick: [paramList objectAtIndex: 0]];
 	}
@@ -642,6 +713,7 @@ static void rec_error(IRCObject *client, NSString *command, NSString *prefix,
 {
 	if (!(self = [super init])) return nil;
 	
+	lowercasingSelector = @selector(lowercaseIRCString);
 	defaultEncoding = [NSString defaultCStringEncoding];
 	
 	if (![self setNick: aNickname])
@@ -684,6 +756,27 @@ static void rec_error(IRCObject *client, NSString *command, NSString *prefix,
 {
 	connected = NO;
 	[super connectionLost];
+}
+- setLowercasingSelector: (SEL)aSelector
+{
+	if (aSelector == NULL)
+	{
+		lowercasingSelector = @selector(lowercaseIRCString);
+		return self;
+	}
+
+	lowercasingSelector = aSelector;
+	return self;
+}
+- (SEL)lowercasingSelector
+{
+	return lowercasingSelector;
+}
+- (NSComparisonResult)caseInsensitiveCompare: (NSString *)aString1
+   to: (NSString *)aString2
+{
+	return ([[aString1 performSelector: lowercasingSelector] compare: 
+	     [aString2 performSelector: lowercasingSelector]]);
 }
 - setNick: (NSString *)aNickname
 {
@@ -1795,10 +1888,9 @@ static void rec_error(IRCObject *client, NSString *command, NSString *prefix,
 
 			aRange.location = 1;
 			aRange.length = [paramList count] - 1;
-		
-			[self numericCommandReceived: command 
-			  withParams: [paramList subarrayWithRange: aRange]
-			  from: prefix];
+
+			rec_numeric(self, command, prefix, 
+			            [paramList subarrayWithRange: aRange]);
 		}	
 	}
 	else
@@ -1864,6 +1956,7 @@ NSString *RPL_YOURHOST = @"002";
 NSString *RPL_CREATED = @"003";
 NSString *RPL_MYINFO = @"004";
 NSString *RPL_BOUNCE = @"005";
+NSString *RPL_ISUPPORT = @"005";
 NSString *RPL_USERHOST = @"302";
 NSString *RPL_ISON = @"303";
 NSString *RPL_AWAY = @"301";
