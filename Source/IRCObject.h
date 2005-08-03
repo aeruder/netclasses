@@ -140,7 +140,9 @@ NSArray *SeparateIRCNickAndHost(NSString *prefix);
  * on a NSString to get the lowercase form.  Used to determine if two
  * nicknames are equivalent.  Generally <var>aSelector</var> would be
  * either @selector(lowercaseString) or @selector(lowercaseIRCString).
- * By default, this is lowercaseIRCString.
+ * By default, this is lowercaseIRCString but will be autodetected
+ * from the server if possible.  It will be reset to lowercaseIRCString
+ * upon reconnection.
  */
 - setLowercasingSelector: (SEL)aSelector;
 
