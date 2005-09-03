@@ -228,7 +228,7 @@ static TCPSystem *default_system = nil;
 	id newTrans = AUTORELEASE([[TCPTransport alloc] initWithDesc:
 	    dup([transport desc])
 	  withRemoteHost: [transport remoteHost]]);
-	id buffer = RETAIN([transport writeBuffer]);
+	id buffer = RETAIN([(TCPConnectingTransport *)transport writeBuffer]);
 	
 	[timeout invalidate];
 	
@@ -691,7 +691,7 @@ static TCPSystem *default_system = nil;
 {
 	int newDesc;
 	struct sockaddr_in sin;
-	int temp;
+	unsigned temp;
 	TCPTransport *transport;
 	NSHost *newAddress;
 	
@@ -937,11 +937,11 @@ static NetApplication *net_app = nil;
 	
 	return self;
 }
-- (NSHost *)localHost
+- (id)localHost
 {
 	return localHost;	
 }
-- (NSHost *)remoteHost
+- (id)remoteHost
 {
 	return remoteHost;
 }

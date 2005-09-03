@@ -144,7 +144,7 @@ extern NSString *NetclassesErrorAborted;
  */
 @interface TCPConnecting : NSObject < NetObject >
 	{
-		id transport;
+		id <NetTransport>transport;
 		id netObject;
 		NSTimer *timeout;
 	}
@@ -282,11 +282,11 @@ extern NSString *NetclassesErrorAborted;
 /**
  * Returns a NSHost of the local side of a connection.
  */
-- (NSHost *)localHost;
+- (id)localHost;
 /** 
  * Returns a NSHost of the remote side of a connection.
  */
-- (NSHost *)remoteHost;
+- (id)remoteHost;
 /**
  * Returns the low level file descriptor that is used internally.
  */

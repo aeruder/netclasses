@@ -775,7 +775,7 @@ static void rec_error(IRCObject *client, NSString *command, NSString *prefix,
 - (NSComparisonResult)caseInsensitiveCompare: (NSString *)aString1
    to: (NSString *)aString2
 {
-	return ([[aString1 performSelector: lowercasingSelector] compare: 
+	return ([(NSString *)[aString1 performSelector: lowercasingSelector] compare: 
 	     [aString2 performSelector: lowercasingSelector]]);
 }
 - setNick: (NSString *)aNickname
@@ -871,7 +871,7 @@ static void rec_error(IRCObject *client, NSString *command, NSString *prefix,
 {
 	return errorString;
 }
-- connectionEstablished: aTransport
+- connectionEstablished: (id <NetTransport>)aTransport;
 {
 	[super connectionEstablished: aTransport];
 	

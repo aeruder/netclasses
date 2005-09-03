@@ -34,7 +34,7 @@
  */
 @interface LineObject : NSObject < NetObject >
 	{
-		id transport;
+		id <NetTransport>transport;
 		NSMutableData *_readData;
 	}
 /**
