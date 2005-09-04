@@ -32,7 +32,7 @@
 	DESTROY(transport);
 	isConnected = NO;
 }
-- connectionEstablished: aTransport
+- connectionEstablished: (id <NetTransport>)aTransport
 {
 	transport = RETAIN(aTransport);
 
@@ -53,7 +53,7 @@
 
 	return self;
 }
-- transport
+- (id <NetTransport>)transport
 {
 	return transport;
 }

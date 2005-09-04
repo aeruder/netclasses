@@ -871,7 +871,7 @@ static void rec_error(IRCObject *client, NSString *command, NSString *prefix,
 {
 	return errorString;
 }
-- connectionEstablished: (id <NetTransport>)aTransport;
+- connectionEstablished: (id <NetTransport>)aTransport
 {
 	[super connectionEstablished: aTransport];
 	

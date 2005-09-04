@@ -1,5 +1,4 @@
-/***************************************************************************
-                                IRCBot.m
+/*************************************************************************** IRCBot.m
                           -------------------
     begin                : Wed Jun  5 03:28:59 UTC 2002
     copyright            : (C) 2003 by Andy Ruder
@@ -62,7 +61,7 @@ static inline NSData *chomp_line(NSMutableData *data)
 }
 
 @implementation IRCBot
-- connectionEstablished: aTransport
+- connectionEstablished: (id <NetTransport>)aTransport
 {
 	return [super connectionEstablished: aTransport];
 }
