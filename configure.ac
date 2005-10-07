@@ -1,4 +1,4 @@
-AC_INIT([netclasses], [1.05], [aeruder@ksu.edu], [netclasses])
+AC_INIT([netclasses], [1.06], [aeruder@ksu.edu], [netclasses])
 AC_PREREQ([2.57])
 AC_SUBST(PACKAGE_VERSION)
 AC_CONFIG_SRCDIR([Source/NetBase.m])

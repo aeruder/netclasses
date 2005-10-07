@@ -124,7 +124,7 @@ static TCPSystem *default_system = nil;
 		[[TCPSystem sharedInstance]
 		  setErrorString: [NSString stringWithFormat: @"%s",
 		  strerror(errno)] withErrno: errno];
-		[self dealloc];
+		[self release];
 		return nil;
 	}
 	connected = YES;
@@ -489,7 +489,7 @@ static TCPSystem *default_system = nil;
 	
 	if (default_system)
 	{
-		[self dealloc];
+		[self release];
 		return nil;
 	}
 	default_system = RETAIN(self);
@@ -639,7 +639,7 @@ static TCPSystem *default_system = nil;
 
 	if (desc < 0)
 	{
-		[self dealloc];
+		[self release];
 		return nil;
 	}
 	if (getsockname(desc, (struct sockaddr *)&x, &address_length) != 0)
@@ -647,7 +647,7 @@ static TCPSystem *default_system = nil;
 		[[TCPSystem sharedInstance] setErrorString: [NSString stringWithFormat: @"%s",
 		  strerror(errno)] withErrno: errno];
 		close(desc);
-		[self dealloc];
+		[self release];
 		return nil;
 	}
 	connected = YES;
@@ -756,7 +756,7 @@ static NetApplication *net_app = nil;
 		[[TCPSystem sharedInstance]
 		  setErrorString: [NSString stringWithFormat: @"%s",
 		  strerror(errno)] withErrno: errno];
-		[self dealloc];
+		[self release];
 		return nil;
 	}
 	

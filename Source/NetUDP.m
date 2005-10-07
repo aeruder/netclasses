@@ -135,7 +135,7 @@ static UDPSystem *default_system = nil;
 		  setErrorString: [NSString stringWithFormat:
 		       @"initWithDesc:withRemoteHost:withOwner:: %s",
 		  strerror(errno)] withErrno: errno];
-		[self dealloc];
+		[self release];
 		return nil;
 	}
 	
@@ -510,7 +510,7 @@ static UDPSystem *default_system = nil;
 	
 	if (default_system)
 	{
-		[self dealloc];
+		[self release];
 		return nil;
 	}
 	default_system = RETAIN(self);
@@ -715,7 +715,7 @@ static UDPSystem *default_system = nil;
 
 	if (desc < 0)
 	{
-		[self dealloc];
+		[self release];
 		return nil;
 	}
 	if (getsockname(desc, (struct sockaddr *)&x, &address_length) != 0)
@@ -723,7 +723,7 @@ static UDPSystem *default_system = nil;
 		[[UDPSystem sharedInstance] setErrorString: [NSString stringWithFormat: @"%s",
 		  strerror(errno)] withErrno: errno];
 		close(desc);
-		[self dealloc];
+		[self release];
 		return nil;
 	}
 	
@@ -856,7 +856,7 @@ static NetApplication *net_app = nil;
 		[[UDPSystem sharedInstance]
 		  setErrorString: [NSString stringWithFormat: @"%s",
 		  strerror(errno)] withErrno: errno];
-		[self dealloc];
+		[self release];
 		return nil;
 	}
 	

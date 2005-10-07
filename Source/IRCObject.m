@@ -50,6 +50,7 @@
 #import <Foundation/NSValue.h>
 #import <Foundation/NSTimer.h>
 #import <Foundation/NSScanner.h>
+#import <Foundation/NSPathUtilities.h>
 
 #include <string.h>
 #include <netinet/in.h>
@@ -718,25 +719,42 @@ static void rec_error(IRCObject *client, NSString *command, NSString *prefix,
 	
 	if (![self setNick: aNickname])
 	{
-		[self dealloc];
+		[self release];
 		return nil;
 	}
 
 	if (![self setUserName: aUser])
 	{
-		[self dealloc];
+		[self release];
 		return nil;
 	}
 
 	if (![self setRealName: aRealName])
 	{
-		[self dealloc];
+		[self release];
 		return nil;
 	}
 
 	if (![self setPassword: aPassword])
 	{
-		[self dealloc];
+		[self release];
+		return nil;
+	}
+
+	targetToEncoding = NSCreateMapTable(NSObjectMapKeyCallBacks,
+	  NSIntMapValueCallBacks, 10);
+
+	if (!targetToEncoding)
+	{
+		[self release];
+		return nil;
+	}
+
+	targetToOriginalTarget = [NSMutableDictionary new];
+
+	if (!targetToOriginalTarget)
+	{
+		[self release];
 		return nil;
 	}
 
@@ -744,6 +762,8 @@ static void rec_error(IRCObject *client, NSString *command, NSString *prefix,
 }
 - (void)dealloc
 {
+	NSFreeMapTable(targetToEncoding);
+	DESTROY(targetToOriginalTarget);
 	DESTROY(nick);
 	DESTROY(userName);
 	DESTROY(realName);
@@ -759,11 +779,30 @@ static void rec_error(IRCObject *client, NSString *command, NSString *prefix,
 }
 - setLowercasingSelector: (SEL)aSelector
 {
+	NSEnumerator *iter;
+	NSString *object;
+	NSString *normal;
+	NSStringEncoding aEncoding;
+	NSMutableDictionary *new;
+
 	if (aSelector == NULL)
 	{
-		lowercasingSelector = @selector(lowercaseIRCString);
-		return self;
+		aSelector = @selector(lowercaseIRCString);
 	}
+
+	new = [NSMutableDictionary new];
+	iter = [targetToOriginalTarget keyEnumerator];
+	while ((object = [iter nextObject]))
+	{
+		aEncoding = (NSStringEncoding)NSMapGet(targetToEncoding, object);
+		NSMapRemove(targetToEncoding, object);
+		normal = [targetToOriginalTarget objectForKey: object];
+		object = [normal performSelector: aSelector];
+		[new setObject: normal forKey: object];
+		NSMapInsert(targetToEncoding, object, (void *)aEncoding);
+	}
+	RELEASE(targetToOriginalTarget);
+	targetToOriginalTarget = new;
 
 	lowercasingSelector = aSelector;
 	return self;
@@ -800,13 +839,9 @@ static void rec_error(IRCObject *client, NSString *command, NSString *prefix,
 }
 - setUserName: (NSString *)aUser
 {
-	id enviro;
-	
 	if ([aUser length] == 0)
 	{
-		enviro = [[NSProcessInfo processInfo] environment];
-		
-		aUser = [enviro objectForKey: @"LOGNAME"];
+		aUser = NSUserName();
 
 		if ([aUser length] == 0)
 		{
@@ -875,7 +910,7 @@ static void rec_error(IRCObject *client, NSString *command, NSString *prefix,
 {
 	[super connectionEstablished: aTransport];
 	
-	lowercasingSelector = @selector(lowercaseIRCString);
+	[self setLowercasingSelector: @selector(lowercaseIRCString)];
 	if (password)
 	{
 		[self writeString: [NSString stringWithFormat: 
@@ -897,9 +932,41 @@ static void rec_error(IRCObject *client, NSString *command, NSString *prefix,
 	defaultEncoding = aEncoding;
 	return self;
 }
+- setEncoding: (NSStringEncoding)aEncoding forTarget: (NSString *)aTarget
+{
+	NSString *lower = [aTarget performSelector: lowercasingSelector];
+
+	if (!lower) return self;
+
+	NSMapInsert(targetToEncoding, lower, (void *)aEncoding);
+	[targetToOriginalTarget setObject: aTarget forKey: lower];
+
+	return self;
+}
 - (NSStringEncoding)encoding
 {
 	return defaultEncoding;
+}
+- (NSStringEncoding)encodingForTarget: (NSString *)aTarget
+{
+	NSString *lower = [aTarget performSelector: lowercasingSelector];
+
+	if (!lower) return defaultEncoding;
+
+	return (NSStringEncoding)NSMapGet(targetToEncoding, lower);
+}
+- (void)removeEncodingForTarget: (NSString *)aTarget
+{
+	NSString *lower = [aTarget performSelector: lowercasingSelector];
+
+	if (!lower) return;
+
+	NSMapRemove(targetToEncoding, lower);
+	[targetToOriginalTarget removeObjectForKey: lower];
+}
+- (NSArray *)targetsWithEncodings
+{
+	return NSAllMapTableKeys(targetToEncoding);
 }
 - changeNick: (NSString *)aNick
 {

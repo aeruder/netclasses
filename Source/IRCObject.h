@@ -122,6 +122,8 @@ NSArray *SeparateIRCNickAndHost(NSString *prefix);
 		NSString *errorString;
 		
 		NSStringEncoding defaultEncoding;
+		NSMapTable *targetToEncoding;
+		NSMutableDictionary *targetToOriginalTarget;
 
 		SEL lowercasingSelector;
 	}
@@ -227,10 +229,34 @@ NSArray *SeparateIRCNickAndHost(NSString *prefix);
  * IRC server.  Uses the system default by default.
  */
 - setEncoding: (NSStringEncoding)aEncoding;
+
+/**
+ * Sets the encoding that will be used for incoming as well as outgoing
+ * messages to a specific target.  <var>aEncoding</var> should be an 8-bit
+ * encoding for a typical IRC server.  Uses the encoding set with 
+ * setEncoding: by default.
+ */
+- setEncoding: (NSStringEncoding)aEncoding forTarget: (NSString *)aTarget;
+
 /**
  * Returns the encoding currently being used by the connection.
  */
 - (NSStringEncoding)encoding;
+
+/**
+ * Return the encoding for <var>aTarget</var>.
+ */
+- (NSStringEncoding)encodingForTarget: (NSString *)aTarget;
+
+/**
+ * Remove the encoding for <var>aTarget</var>.
+ */
+- (void)removeEncodingForTarget: (NSString *)aTarget;
+
+/**
+ * Return all targets with a specific encoding.
+ */
+- (NSArray *)targetsWithEncodings;
 
 // IRC Operations
 /**
