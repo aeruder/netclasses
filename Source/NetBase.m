@@ -464,5 +464,13 @@ static void handle_cf_events(CFSocketRef s, CFSocketCallBackType callbackType,
 	}
 	return self;
 }
+- (NSArray *)netObjectArray
+{
+	return [NSArray arrayWithArray: netObjectArray];
+}
+- (NSArray *)portArray
+{
+	return [NSArray arrayWithArray: portArray];
+}
 @end
 

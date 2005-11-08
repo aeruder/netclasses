@@ -264,6 +264,14 @@ typedef enum { ET_RDESC, ET_WDESC, ET_RPORT, ET_EDESC } RunLoopEventType;
  * Calls -disconnectObject: on every object currently in the runloop.
  */
 - closeEverything;
+/**
+ * Return an array of all net objects currently being handled by netclasses
+ */
+- (NSArray *)netObjectArray;
+/**
+ * Return an array of all port objects currently being handled by netclasses
+ */
+- (NSArray *)portArray;
 @end
 
 #endif
