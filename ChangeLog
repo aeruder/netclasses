@@ -1,3 +1,7 @@
+Feb 12 2006 Andrew Ruder <aeruder@ksu.edu>
+	* Source/LineObject.m: If someone sent an empty line, a single byte read
+	would be made against memory that was not allocated.
+
 Jul 14 2005 Andrew Ruder <aeruder@ksu.edu>
 	* Source/LineObject.m: Ensure that the lineobject hasn't been
 	released while receiving a line.
