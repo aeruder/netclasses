@@ -49,8 +49,7 @@ static inline NSData *chomp_line(NSMutableData *data)
 		return nil;
 	}
 	
-	while (((*lineEnd == '\n') || (*lineEnd == '\r'))
-	       && (lineEnd >= memory))
+	while ((lineEnd >= memory) && ((*lineEnd == '\n') || (*lineEnd == '\r')))
 	{
 		lineEnd--;
 	}
