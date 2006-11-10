@@ -225,7 +225,7 @@ static TCPSystem *default_system = nil;
 }
 - connectingSucceeded
 {
-	id newTrans = AUTORELEASE([[TCPTransport alloc] initWithDesc:
+	TCPTransport *newTrans = AUTORELEASE([[TCPTransport alloc] initWithDesc:
 	    dup([transport desc])
 	  withRemoteHost: [transport remoteHost]]);
 	id buffer = RETAIN([(TCPConnectingTransport *)transport writeBuffer]);
