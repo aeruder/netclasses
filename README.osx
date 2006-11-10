@@ -33,7 +33,19 @@ Step 1:
 Step 2:
 	xcodebuild
 
+Step 3:
+	Your result is in build/Release
+
+Step 4:
+	Profit
+
+Note:
+	The default installation directory is set to @executable_path/../Frameworks
+	which should be ideal for applications but perhaps not for tools.  If this
+	is a problem, open up Xcode and change the 'installation directory' in
+	the target's settings.
+
 ===============================================================================
-Copyright (C) 2005 by Andy Ruder
-aeruder@ksu.edu
+Copyright (C) 2006 by Andy Ruder
+andy@aeruder.net
 http://netclasses.aeruder.net
