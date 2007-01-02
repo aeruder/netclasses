@@ -24,26 +24,26 @@ Comments are welcome.
 ===============================================================================
 
 Step 1:
-	Generate the autoconfigure stuff:
-		./configure
-	One note about ./configure, I am not using it for makefiles, so the 
-	--prefix and other flags will have -no- effect on the output.  It is
-	only used to check for various types and headers.
-	
+    Generate the autoconfigure stuff:
+        ./configure
+    One note about ./configure, I am not using it for makefiles, so the 
+    --prefix and other flags will have -no- effect on the output.  It is
+    only used to check for various types and headers.
+    
 Step 2:
-	xcodebuild
+    xcodebuild
 
 Step 3:
-	Your result is in build/Release
+    Your result is in build/Release
 
 Step 4:
-	Profit
+    Profit
 
 Note:
-	The default installation directory is set to @executable_path/../Frameworks
-	which should be ideal for applications but perhaps not for tools.  If this
-	is a problem, open up Xcode and change the 'installation directory' in
-	the target's settings.
+    The default installation directory is set to @executable_path/../Frameworks
+    which should be ideal for applications but perhaps not for tools.  If this
+    is a problem, open up Xcode and change the 'installation directory' in
+    the target's settings.
 
 ===============================================================================
 Copyright (C) 2006 by Andy Ruder
