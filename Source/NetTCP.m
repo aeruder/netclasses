@@ -25,7 +25,9 @@
  * <copy>Andrew Ruder</copy>
  */
 
+#ifdef HAVE_CONFIG_H
 #include "config.h"
+#endif
 
 #import "NetTCP.h"
 #import <Foundation/NSString.h>

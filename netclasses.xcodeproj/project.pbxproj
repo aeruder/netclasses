@@ -8,14 +8,14 @@
 
 /* Begin PBXBuildFile section */
 		8DC2EF570486A6940098B216 /* Cocoa.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 1058C7B1FEA5585E11CA2CBB /* Cocoa.framework */; };
+		A11195E20BB72A99000663A3 /* NetTCP.h in Headers */ = {isa = PBXBuildFile; fileRef = A11195E00BB72A4C000663A3 /* NetTCP.h */; };
+		A11195E30BB72A9E000663A3 /* IRCObject.h in Headers */ = {isa = PBXBuildFile; fileRef = A11195D60BB72A08000663A3 /* IRCObject.h */; };
+		A11195E40BB72AA0000663A3 /* LineObject.h in Headers */ = {isa = PBXBuildFile; fileRef = A11195D70BB72A08000663A3 /* LineObject.h */; };
+		A11195E50BB72AA4000663A3 /* NetBase.h in Headers */ = {isa = PBXBuildFile; fileRef = A11195D80BB72A08000663A3 /* NetBase.h */; };
 		A121A3A10B042E1B0014A512 /* IRCObject.m in Sources */ = {isa = PBXBuildFile; fileRef = A121A39D0B042E1B0014A512 /* IRCObject.m */; };
 		A121A3A20B042E1B0014A512 /* LineObject.m in Sources */ = {isa = PBXBuildFile; fileRef = A121A39E0B042E1B0014A512 /* LineObject.m */; };
 		A121A3A30B042E1B0014A512 /* NetBase.m in Sources */ = {isa = PBXBuildFile; fileRef = A121A39F0B042E1B0014A512 /* NetBase.m */; };
 		A121A3A40B042E1B0014A512 /* NetTCP.m in Sources */ = {isa = PBXBuildFile; fileRef = A121A3A00B042E1B0014A512 /* NetTCP.m */; };
-		A121A3D70B0435B70014A512 /* IRCObject.h in Headers */ = {isa = PBXBuildFile; fileRef = A121A3D30B0435B70014A512 /* IRCObject.h */; settings = {ATTRIBUTES = (Public, ); }; };
-		A121A3D80B0435B70014A512 /* LineObject.h in Headers */ = {isa = PBXBuildFile; fileRef = A121A3D40B0435B70014A512 /* LineObject.h */; settings = {ATTRIBUTES = (Public, ); }; };
-		A121A3D90B0435B70014A512 /* NetBase.h in Headers */ = {isa = PBXBuildFile; fileRef = A121A3D50B0435B70014A512 /* NetBase.h */; settings = {ATTRIBUTES = (Public, ); }; };
-		A121A3DA0B0435B70014A512 /* NetTCP.h in Headers */ = {isa = PBXBuildFile; fileRef = A121A3D60B0435B70014A512 /* NetTCP.h */; settings = {ATTRIBUTES = (Public, ); }; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -23,14 +23,14 @@
 		0867D6A5FE840307C02AAC07 /* AppKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = AppKit.framework; path = /System/Library/Frameworks/AppKit.framework; sourceTree = "<absolute>"; };
 		1058C7B1FEA5585E11CA2CBB /* Cocoa.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Cocoa.framework; path = /System/Library/Frameworks/Cocoa.framework; sourceTree = "<absolute>"; };
 		8DC2EF5B0486A6940098B216 /* netclasses.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = netclasses.framework; sourceTree = BUILT_PRODUCTS_DIR; };
+		A11195D60BB72A08000663A3 /* IRCObject.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; name = IRCObject.h; path = Source/netclasses/IRCObject.h; sourceTree = "<group>"; };
+		A11195D70BB72A08000663A3 /* LineObject.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; name = LineObject.h; path = Source/netclasses/LineObject.h; sourceTree = "<group>"; };
+		A11195D80BB72A08000663A3 /* NetBase.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; name = NetBase.h; path = Source/netclasses/NetBase.h; sourceTree = "<group>"; };
+		A11195E00BB72A4C000663A3 /* NetTCP.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; name = NetTCP.h; path = Source/netclasses/NetTCP.h; sourceTree = "<group>"; };
 		A121A39D0B042E1B0014A512 /* IRCObject.m */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.objc; name = IRCObject.m; path = Source/IRCObject.m; sourceTree = "<group>"; };
 		A121A39E0B042E1B0014A512 /* LineObject.m */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.objc; name = LineObject.m; path = Source/LineObject.m; sourceTree = "<group>"; };
 		A121A39F0B042E1B0014A512 /* NetBase.m */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.objc; name = NetBase.m; path = Source/NetBase.m; sourceTree = "<group>"; };
 		A121A3A00B042E1B0014A512 /* NetTCP.m */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.objc; name = NetTCP.m; path = Source/NetTCP.m; sourceTree = "<group>"; };
-		A121A3D30B0435B70014A512 /* IRCObject.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; name = IRCObject.h; path = Source/IRCObject.h; sourceTree = "<group>"; };
-		A121A3D40B0435B70014A512 /* LineObject.h */ = {isa = PBXFileReference; explicitFileType = sourcecode.c.h; fileEncoding = 30; name = LineObject.h; path = Source/LineObject.h; sourceTree = "<group>"; };
-		A121A3D50B0435B70014A512 /* NetBase.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; name = NetBase.h; path = Source/NetBase.h; sourceTree = "<group>"; };
-		A121A3D60B0435B70014A512 /* NetTCP.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; name = NetTCP.h; path = Source/NetTCP.h; sourceTree = "<group>"; };
 		D2F7E79907B2D74100F64583 /* CoreData.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreData.framework; path = /System/Library/Frameworks/CoreData.framework; sourceTree = "<absolute>"; };
 /* End PBXFileReference section */
 
@@ -77,10 +77,10 @@
 		08FB77AEFE84172EC02AAC07 /* Classes */ = {
 			isa = PBXGroup;
 			children = (
-				A121A3D60B0435B70014A512 /* NetTCP.h */,
-				A121A3D30B0435B70014A512 /* IRCObject.h */,
-				A121A3D40B0435B70014A512 /* LineObject.h */,
-				A121A3D50B0435B70014A512 /* NetBase.h */,
+				A11195E00BB72A4C000663A3 /* NetTCP.h */,
+				A11195D60BB72A08000663A3 /* IRCObject.h */,
+				A11195D70BB72A08000663A3 /* LineObject.h */,
+				A11195D80BB72A08000663A3 /* NetBase.h */,
 				A121A39D0B042E1B0014A512 /* IRCObject.m */,
 				A121A39E0B042E1B0014A512 /* LineObject.m */,
 				A121A39F0B042E1B0014A512 /* NetBase.m */,
@@ -121,10 +121,10 @@
 			isa = PBXHeadersBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				A121A3D70B0435B70014A512 /* IRCObject.h in Headers */,
-				A121A3D80B0435B70014A512 /* LineObject.h in Headers */,
-				A121A3D90B0435B70014A512 /* NetBase.h in Headers */,
-				A121A3DA0B0435B70014A512 /* NetTCP.h in Headers */,
+				A11195E20BB72A99000663A3 /* NetTCP.h in Headers */,
+				A11195E30BB72A9E000663A3 /* IRCObject.h in Headers */,
+				A11195E40BB72AA0000663A3 /* LineObject.h in Headers */,
+				A11195E50BB72AA4000663A3 /* NetBase.h in Headers */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -209,6 +209,8 @@
 				OTHER_CFLAGS = (
 					"-include",
 					Misc/GNUstep.h,
+					"-include",
+					Source/osx/config.h,
 				);
 				PRODUCT_NAME = netclasses;
 				WRAPPER_EXTENSION = framework;
@@ -235,6 +237,8 @@
 				OTHER_CFLAGS = (
 					"-include",
 					Misc/GNUstep.h,
+					"-include",
+					Source/osx/config.h,
 				);
 				PRODUCT_NAME = netclasses;
 				WRAPPER_EXTENSION = framework;

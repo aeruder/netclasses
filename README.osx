@@ -24,19 +24,12 @@ Comments are welcome.
 ===============================================================================
 
 Step 1:
-    Generate the autoconfigure stuff:
-        ./configure
-    One note about ./configure, I am not using it for makefiles, so the 
-    --prefix and other flags will have -no- effect on the output.  It is
-    only used to check for various types and headers.
-    
-Step 2:
     xcodebuild
 
-Step 3:
+Step 2:
     Your result is in build/Release
 
-Step 4:
+Step 3:
     Profit
 
 Note:
