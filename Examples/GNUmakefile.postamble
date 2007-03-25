@@ -1,6 +1,0 @@
-after-clean::
-	$(MAKE) -C Skeleton -f GNUmakefile clean
-
-after-distclean::
-	$(MAKE) -C Skeleton -f GNUmakefile clean
-	

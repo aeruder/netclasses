@@ -72,7 +72,7 @@ static inline NSData *chomp_line(NSMutableData *data)
 - registeredWithServer
 {
 	[self joinChannel: 
-	  @"#gnustep,#netclasses" 
+	  @"#sidestep" 
 	  withPassword: nil];
 	return self;
 }

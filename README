@@ -37,23 +37,11 @@ Compiling:
 	make
 	make install
 
-	One note about ./configure, I am not using it for makefiles, so the 
-	--prefix and other flags will have -no- effect on the output.  It is
-	only used to check for various types and headers.
-
-======================
-Environment Variables:
-======================
-	GNUSTEP_INSTALLATION_DIR
-		Determines the root of where netclasses and its documentation
-		will be installed.  This is generally /usr/GNUstep/Local but
-		can be reassigned to other targets such as 
-		GNUSTEP_INSTALLATION_DIR=$GNUSTEP_USER_ROOT
-		to install into a user's home directory.
-
 ==============
 Documentation:
 ==============
+
+	FIXME
     Documentation/ holds the netclasses documentation.  This documentation
 	will not be compiled and installed with netclasses.  This must be done
 	separately.  Simply type make followed by make install in the 
@@ -68,6 +56,7 @@ Documentation:
 ====
 Use:
 ====
+	FIXME
 	Simply link to the framework after it is installed in your application.
 
 	See the Examples/ directory for examples of the use of netclasses.
