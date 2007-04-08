@@ -1,0 +1,6 @@
+.libs
+.deps
+*.lo
+config.h
+libnetclasses.la
+stamp-h1
