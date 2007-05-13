@@ -2,7 +2,7 @@
                                 IRCObjecct.h
                           -------------------
     begin                : Thu May 30 22:06:25 UTC 2002
-    copyright            : (C) 2002 by Andy Ruder
+    copyright            : (C) 2003 by Andy Ruder
     email                : aeruder@yahoo.com
  ***************************************************************************/
 
@@ -168,6 +168,10 @@ NSArray *SeparateIRCNickAndHost(NSString *prefix);
 
 - setAwayWithMessage: (NSString *)message;
 
+- sendPingWithArgument: (NSString *)aString;
+
+- sendPongWithArgument: (NSString *)aString;
+
 // Callbacks
 - registeredWithServer;
 
@@ -214,6 +218,10 @@ NSArray *SeparateIRCNickAndHost(NSString *prefix);
 
 - actionReceived: (NSString *)anAction to: (NSString *)to
               from: (NSString *)sender;
+
+- pingReceivedWithArgument: (NSString *)arg from: (NSString *)sender;
+
+- pongReceivedWithArgument: (NSString *)arg from: (NSString *)sender;
 
 - newNickNeededWhileRegistering;
 

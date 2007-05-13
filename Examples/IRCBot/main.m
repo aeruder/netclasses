@@ -2,7 +2,7 @@
                                 main.m
                           -------------------
     begin                : Sun Apr 28 21:18:23 UTC 2002
-    copyright            : (C) 2002 by Andy Ruder
+    copyright            : (C) 2003 by Andy Ruder
     email                : aeruder@yahoo.com
  ***************************************************************************/
 

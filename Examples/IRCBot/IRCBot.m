@@ -2,7 +2,7 @@
                                 IRCBot.m
                           -------------------
     begin                : Wed Jun  5 03:28:59 UTC 2002
-    copyright            : (C) 2002 by Andy Ruder
+    copyright            : (C) 2003 by Andy Ruder
     email                : aeruder@yahoo.com
  ***************************************************************************/
 

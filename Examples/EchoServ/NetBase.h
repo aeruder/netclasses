@@ -2,7 +2,7 @@
                                 NetBase.h
                           -------------------
     begin                : Fri Nov  2 01:19:16 UTC 2001
-    copyright            : (C) 2002 by Andy Ruder
+    copyright            : (C) 2003 by Andy Ruder
     email                : aeruder@yahoo.com
  ***************************************************************************/
 

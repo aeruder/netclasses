@@ -2,7 +2,7 @@
                                 IRCObject.m
                           -------------------
     begin                : Thu May 30 22:06:25 UTC 2002
-    copyright            : (C) 2002 by Andy Ruder
+    copyright            : (C) 2003 by Andy Ruder
     email                : aeruder@yahoo.com
  ***************************************************************************/
 
@@ -575,12 +575,20 @@ static void rec_kick(IRCObject *client, NSString *command, NSString *prefix,
 static void rec_ping(IRCObject *client, NSString *command, NSString *prefix,
                        NSArray *paramList)
 {
-	if ([paramList count] < 1)
-	{
-		return;
-	}
+	NSString *arg;
 	
-	[client writeString: @"PONG :%@", [paramList objectAtIndex: 0]];
+	arg = [paramList componentsJoinedByString: @" "];
+	
+	[client pingReceivedWithArgument: arg from: prefix];
+}
+static void rec_pong(IRCObject *client, NSString *command, NSString *prefix,
+                     NSArray *paramList)
+{
+	NSString *arg;
+	
+	arg = [paramList componentsJoinedByString: @" "];
+	
+	[client pongReceivedWithArgument: arg from: prefix];
 }
 static void rec_wallops(IRCObject *client, NSString *command, NSString *prefix,
                           NSArray *paramList)
@@ -636,6 +644,7 @@ static void rec_error(IRCObject *client, NSString *command, NSString *prefix,
 	NSMapInsert(command_to_function, @"KICK", rec_kick);
 	NSMapInsert(command_to_function, @"INVITE", rec_invite);
 	NSMapInsert(command_to_function, @"PING", rec_ping);
+	NSMapInsert(command_to_function, @"PONG", rec_pong);
 	NSMapInsert(command_to_function, @"WALLOPS", rec_wallops);
 	NSMapInsert(command_to_function, @"ERROR", rec_error);
 
@@ -1669,6 +1678,28 @@ static void rec_error(IRCObject *client, NSString *command, NSString *prefix,
 	[self writeString: @"AWAY :%@", message];
 	return self;
 }
+- sendPingWithArgument: (NSString *)aString
+{
+	if (!aString)
+	{
+		aString = @"";
+	}
+
+	[self writeString: @"PING :%@", aString];
+	
+	return self;
+}
+- sendPongWithArgument: (NSString *)aString
+{
+	if (!aString)
+	{
+		aString = @"";
+	}
+
+	[self writeString: @"PONG :%@", aString];
+	
+	return self;
+}
 - registeredWithServer
 {
 	return self;
@@ -1748,6 +1779,14 @@ static void rec_error(IRCObject *client, NSString *command, NSString *prefix,
 }
 - actionReceived: (NSString *)anAction to: (NSString *)to
               from: (NSString *)sender
+{
+	return self;
+}
+- pingReceivedWithArgument: (NSString *)arg from: (NSString *)sender
+{
+	return self;
+}
+- pongReceivedWithArgument: (NSString *)arg from: (NSString *)sender
 {
 	return self;
 }
