@@ -111,5 +111,6 @@ AC_OUTPUT(
 	Makefile
 	Source/Makefile
 	Examples/Makefile
+	Source/libnetclasses.pc
 )
 

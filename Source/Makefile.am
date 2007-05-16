@@ -9,11 +9,11 @@ LineObject.m \
 NetBase.m \
 NetTCP.m
 
-pkgincludedir = $(includedir)/netclasses
-nobase_pkginclude_HEADERS= \
+pkginclude_HEADERS= \
 	netclasses/IRCObject.h \
 	netclasses/LineObject.h \
 	netclasses/NetBase.h \
 	netclasses/NetTCP.h
 
-
+pkgconfigdir = $(libdir)/pkgconfig
+pkgconfig_DATA = libnetclasses.pc

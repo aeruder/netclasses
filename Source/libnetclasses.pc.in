@@ -1,0 +1,15 @@
+prefix=@prefix@
+exec_prefix=@exec_prefix@
+bindir=@bindir@
+sbindir=@sbindir@
+libdir=@libdir@
+includedir=@includedir@
+
+Name: libnetclasses
+Description: Objective-C Networking Library
+Version: @VERSION@
+URL: http://netclasses.aeruder.net
+Requires: libobjcx libSS_runloop
+Conflicts:
+Libs: -L${libdir} -lnetclasses
+Cflags: -I${includedir}
