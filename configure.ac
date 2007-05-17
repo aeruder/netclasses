@@ -106,9 +106,18 @@ AC_CHECK_TYPES([socklen_t],,,[
 
 AC_CACHE_SAVE
 
+dnl Find the dot program
+HAVE_DOT="NO"
+AC_PATH_PROG(DOTPATH, dot)
+if test "x$DOTPATH" "!=" "x"; then
+	HAVE_DOT="YES"
+fi
+AC_SUBST(HAVE_DOT)
+
 dnl Output files
 AC_OUTPUT(
 	Makefile
+	Doxyfile
 	Source/Makefile
 	Examples/Makefile
 	Source/libnetclasses.pc

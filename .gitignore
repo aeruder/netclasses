@@ -17,3 +17,6 @@ autom4te.cache
 *.lo
 *.la
 stamp-h1
+doxygen.log
+Doxyfile
+docs
